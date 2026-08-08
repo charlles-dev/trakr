@@ -10,7 +10,7 @@ O **Trakr** é um monorepo para uma maleta de ferramentas inteligente com detec�
 
 | Módulo           | Descrição                                              | Stack                     |
 | ---------------- | ------------------------------------------------------ | ------------------------- |
-| [`app/`](app/)   | O Visualizador: dashboard, lista de ferramentas e alertas         | Flutter (BLE)             |
+| [`app/`](app/)   | O Visualizador: dashboard, lista de ferramentas e alertas         | Kotlin + Jetpack Compose + Room |
 | [`firmware/`](firmware/) | O Cérebro da Maleta: leitor RFID, Bluetooth e máquina de estados  | ESP32 + PlatformIO        |
 | [`hardware/`](hardware/) | BOM, datasheets e esquemas elétricos                            | KiCad / Fritzing          |
 | [`cad/`](cad/)          | Design 3D paramétrico da carcaça                           | Fusion 360 (Python)       |
@@ -35,7 +35,7 @@ O **Trakr** é um monorepo para uma maleta de ferramentas inteligente com detec�
 
 ```
 trakr/
-├── app/            # App Flutter (BLE + notificações locais + cache Isar)
+├── app/            # App Android (Kotlin + Jetpack Compose + Room)
 ├── firmware/       # Firmware ESP32 (PlatformIO, máquina de estados)
 ├── hardware/       # BOM, datasheets, schematics
 ├── cad/            # Design 3D paramétrico + exports
