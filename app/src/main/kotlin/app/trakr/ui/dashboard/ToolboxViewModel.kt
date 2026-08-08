@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.trakr.core.ble.BleDeviceInfo
 import app.trakr.core.ble.BleManager
 import app.trakr.data.AppContainer
 import app.trakr.model.EventRecord
@@ -28,6 +29,8 @@ class ToolboxViewModel : ViewModel() {
     val toolboxes: Flow<List<Toolbox>> = repository.observeToolboxes()
 
     val current: StateFlow<Selection> = ToolboxStore.current
+
+    val devices: StateFlow<List<BleDeviceInfo>> = BleManager.devices
 
     val tools: Flow<List<Tool>> = ToolboxStore.current
         .flatMapLatest { selection -> repository.observeTools(selection.id) }

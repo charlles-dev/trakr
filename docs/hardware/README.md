@@ -66,3 +66,9 @@ Tabela de Ligações (Pinout)
 * **TP4056 OUT (+):** Pino VIN / 5V do ESP32
 
 * **TP4056 OUT (-):** GND do ESP32
+
+Consumo e Autonomia
+-------------------
+
+Para medir o consumo de cada estado (deep sleep, varredura, BLE) e estimar a
+autonomia da 18650, siga o [Protocolo de Medição de Consumo](power-measurement.md).

@@ -59,6 +59,7 @@ fun DashboardScreen(
     val tools by viewModel.tools.collectAsStateWithLifecycle(initialValue = emptyList())
     val toolboxes by viewModel.toolboxes.collectAsStateWithLifecycle(initialValue = emptyList())
     val current by viewModel.current.collectAsStateWithLifecycle()
+    val devices by viewModel.devices.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -107,23 +108,35 @@ fun DashboardScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
-        if (tools.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(stringResource(R.string.dashboard_empty))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding),
+        ) {
+            if (devices.isNotEmpty()) {
+                Text(
+                    text = if (devices.size == 1) {
+                        "Maleta conectada: ${devices[0].name}"
+                    } else {
+                        "Maletas conectadas: ${devices.joinToString { it.name }}"
+                    },
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-            ) {
-                items(tools, key = { it.id }) { tool ->
-                    ToolRow(tool)
+            if (tools.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(stringResource(R.string.dashboard_empty))
+                }
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(tools, key = { it.id }) { tool ->
+                        ToolRow(tool)
+                    }
                 }
             }
         }

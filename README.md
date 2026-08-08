@@ -96,6 +96,7 @@ trakr/
 * [Protocolo BLE/GATT](./docs/protocol/gatt.md) — UUIDs, payloads e comandos (interação firmware ↔ app).
 * [Esquemático de Wiring (SVG)](./hardware/schematics/wiring.svg) — diagrama de fiação da maleta.
 * [Datasheets dos componentes](./hardware/datasheets/README.md) — links verificados para cada módulo.
+* [Protocolo de Medição de Consumo](./docs/hardware/power-measurement.md) — como medir a autonomia da bateria.
 * [Checklist de Validação do CAD](./docs/cad/validation.md) — o que falta para validar e imprimir.
 
 ## 🚀 Como Começar
@@ -123,8 +124,8 @@ Para dar os primeiros passos com o ecossistema Trakr, escolha por onde deseja co
 - [x] Cadastro direto de novas tags no app (add/remove via GATT Control)
 - [x] Múltiplos perfis de inventário (por canteiro de obra) e seleção no app
 - [x] Histórico de eventos (aberturas, tool_missing/tool_back, boot) com export CSV
-- [ ] Medição de consumo energético em deep sleep (varredura com EN + UART off)
-- [ ] Suporte a múltiplas maletas simultâneas (BLE multi-device)
+- [x] Protocolo de medição de consumo energético (EN + UART off ativos no deep sleep; medição pendente de hardware — ver [`docs/hardware/power-measurement.md`](./docs/hardware/power-measurement.md))
+- [x] Suporte a múltiplas maletas simultâneas (BLE multi-device)
 
 ## 🤝 Contribuição
 
