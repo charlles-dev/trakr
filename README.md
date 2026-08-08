@@ -118,14 +118,11 @@ Para dar os primeiros passos com o ecossistema Trakr, escolha por onde deseja co
 
 ## 🔄 Roadmap
 
-- [x] Estrutura inicial do monorepo (firmware, app, hardware, CAD)
-- [x] Migração do app para Kotlin + Jetpack Compose + Room
-- [x] BLE end-to-end: inventário, alertas e sincronização via GATT
-- [x] Cadastro direto de novas tags no app (add/remove via GATT Control)
-- [x] Múltiplos perfis de inventário (por canteiro de obra) e seleção no app
-- [x] Histórico de eventos (aberturas, tool_missing/tool_back, boot) com export CSV
-- [x] Protocolo de medição de consumo energético (EN + UART off ativos no deep sleep; medição pendente de hardware — ver [`docs/hardware/power-measurement.md`](./docs/hardware/power-measurement.md))
-- [x] Suporte a múltiplas maletas simultâneas (BLE multi-device)
+O inventário completo está em [`docs/roadmap.md`](./docs/roadmap.md): lá você
+encontra o **histórico de entregas concluídas** (monorepo, BLE end-to-end,
+perfis de maleta, histórico + CSV, deep sleep + protocolo de consumo,
+múltiplas maletas) e as **próximas features sugeridas** em 3 fases —
+sempre 100% offline-first, sem nuvem.
 
 ## 🤝 Contribuição
 

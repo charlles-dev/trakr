@@ -53,3 +53,9 @@ Fluxo de Operação Autônoma
 4. **Resolução Local:** O ESP32 cruza as leituras com seu `inventory.json`. Se faltar um ID, ele aciona o Buzzer interno instantaneamente.
 
 5. **Notificação Remota:** Se houver um celular Android pareado por perto, o ESP32 envia o pacote de erro via BLE. O _Foreground Service_ do Kotlin intercepta e exibe a notificação no celular.
+
+Roadmap de Entregas e Features
+------------------------------
+
+O registro do que **já foi entregue** e das **próximas sugestões** (3 fases,
+sempre offline) vive em [`roadmap.md`](./roadmap.md).
