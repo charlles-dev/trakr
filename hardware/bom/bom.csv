@@ -1,0 +1,11 @@
+# Trakr - Lista de Materiais
+
+*(Em andamento — preencher com links e preços)*
+
+| # | Componente       | Referência | Qtd | Custo unit. | Link            | Obs.           |
+|---|------------------|------------|-----|-------------|-----------------|----------------|
+| 1 | Microcontrolador | ESP32 DevKit  | 1   | —           | —               | Cérebro        |
+| 2 | Leitor RFID/NFC  | YRM100      | 1   | —           | —               | UART + antena  |
+| 3 | Carregador LiPo  | TP4056      | 1   | —           | —               | Com proteção   |
+| 4 | Bateria LiPo     | 3.7V 2500mAh| 1   | —           | —               |                |
+| 5 | Toggle switch    | —            | 1   | —           | —               | Power          |

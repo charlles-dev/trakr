@@ -1,0 +1,70 @@
+# ===== Trakr - .gitignore mestre =====
+
+# ---- Sistema ----
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# ===== Flutter / Dart (app) =====
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.packages
+app/build/
+app/.pub/
+app/.pub-cache/
+app/android/.gradle/
+app/android/local.properties
+app/android/app/.cxx/
+app/ios/Pods/
+app/ios/.symlinks/
+app/ios/Flutter/ephemeral/
+app/windows/flutter/ephemeral/
+app/linux/flutter/ephemeral/
+app/macos/Flutter/ephemeral/
+app/*.iml
+app/coverage/
+
+# ===== PlatformIO / ESP32 (firmware) =====
+firmware/.pio/
+firmware/.pioenvs/
+firmware/.piolibdeps/
+firmware/libdeps/
+firmware/.sconsign.dblite
+firmware/.clang_complete
+firmware/.clangd
+
+# ===== Python (cad) =====
+cad/scripts/__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# ===== C/C++ =====
+*.o
+*.obj
+*.exe
+*.elf
+*.bin
+*.hex
+*.map
+*.a
+
+# ===== CAD / fabricação =====
+cad/exports/*.step
+*.3mf
+*.stl
+
+# ===== Docs gerados / ferramentas =====
+node_modules/
+.env
+.env.local
+logs/
+*.log
+
+# ===== IDE =====
+.idea/
+.vscode/
+*.code-workspace

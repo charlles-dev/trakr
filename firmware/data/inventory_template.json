@@ -1,0 +1,7 @@
+{
+  "toolbox": "Trakr",
+  "tools": [
+    { "id": 1, "name": "Chave de Fenda", "tag": "E0040100...", "present": true },
+    { "id": 2, "name": "Chave Allen 4mm", "tag": "E0040100...", "present": true }
+  ]
+}
