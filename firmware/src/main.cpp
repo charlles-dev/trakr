@@ -22,13 +22,16 @@
 #include "TrakYrm100.h"
 #include "TrakBle.h"
 #include "TrakLed.h"
+#include "TrakEvents.h"
 
 static TrakInventory gInventory;
 static TrakYrm100 gYrm;
 static TrakBle gBle;
 static TrakLed gLed;
+static TrakEvents gEvents;
 
 static const char* kInventoryPath = "/inventory.json";
+static const char* kEventsPath = "/events.json";
 
 enum class State {
   LEITURA,
@@ -73,6 +76,32 @@ static void alarmOff() {
   gLed.set(TrakLed::Color::OFF);
 }
 
+// ---------------- Histórico de eventos ----------------
+// Persiste em events.json (LittleFS) e publica via GATT (Event notify +
+// History read). ts é millis() relativo ao boot.
+
+// Último estado da tampa; sobrevive ao deep sleep (RTC memory).
+static RTC_DATA_ATTR bool gLastLidClosed = false;
+
+static void pushEvent(const String& type, const String& id, const String& name) {
+  String ev = gEvents.add(type, id, name);
+  gEvents.save(LittleFS, kEventsPath);
+  gBle.notifyEvent(ev);
+  gBle.setHistory(gEvents.toJsonString());
+  Serial.printf("[TRAKR] Evento: %s\n", ev.c_str());
+}
+
+// Detecta transição de tampa (open/closed) no boot (wake por ímã).
+static void detectLidTransition() {
+#ifndef TRAKR_SIM
+  const bool lidClosed = digitalRead(HALL_PIN) == LOW;
+  if (lidClosed != gLastLidClosed) {
+    pushEvent(lidClosed ? "lid_closed" : "lid_open", "", "");
+    gLastLidClosed = lidClosed;
+  }
+#endif
+}
+
 // ---------------- Varredura ----------------
 #ifdef TRAKR_SIM
 static void simulateRead(std::vector<String>& outEpcs) {
@@ -95,21 +124,48 @@ static void sweepAndPublish() {
   gYrm.collectEpc(readEpcs, kSweepMs);
 #endif
 
+  // Estado antes do sweep: ferramentas que estavam ausentes.
+  std::vector<String> missingBefore;
+  for (const auto& t : gInventory.tools()) {
+    if (!t.present) missingBefore.push_back(t.id);
+  }
+
   gInventory.sweep(readEpcs);
   gBle.notifyInventory(gInventory.toJsonString());
 
   for (const auto* tool : gInventory.newlyMissing()) {
-    String ev = "{\"type\":\"tool_missing\",\"tool_id\":\"";
-    ev += tool->id;
-    ev += "\",\"name\":\"";
-    ev += tool->name;
-    ev += "\"}";
-    Serial.printf("[TRAKR] !!! Ferramenta ausente: %s\n", tool->name.c_str());
-    gBle.notifyEvent(ev);
+    pushEvent("tool_missing", tool->id, tool->name);
+  }
+
+  // Ferramentas que estavam ausentes e voltaram a ser lidas.
+  for (const auto& t : gInventory.tools()) {
+    if (t.present) {
+      for (const auto& id : missingBefore) {
+        if (t.id == id) pushEvent("tool_back", t.id, t.name);
+      }
+    }
   }
 }
 
 // ---------------- Comandos do app (JSON via GATT Control) ----------------
+// Caminho do arquivo de inventário por perfil: "main" -> inventory.json,
+// outros -> inventory_<id>.json (um arquivo por maleta).
+static String profilePath(const String& profileId) {
+  if (profileId == "main") return String("/inventory.json");
+  return String("/inventory_") + profileId + ".json";
+}
+
+static void loadProfile(const String& profileId) {
+  gInventory.setProfileId(profileId);
+  const String path = profilePath(profileId);
+  if (!gInventory.load(LittleFS, path.c_str())) {
+    // Perfil novo: cria arquivo vazio (nothing to load).
+    if (!gInventory.save(LittleFS, path.c_str())) {
+      Serial.println("[TRAKR] ERRO: falha ao criar perfil");
+    }
+  }
+}
+
 static void handleControlCommand(const String& json) {
   Serial.printf("[TRAKR] Comando recebido: %s\n", json.c_str());
 
@@ -124,6 +180,13 @@ static void handleControlCommand(const String& json) {
 
   if (strcmp(cmd, "rescan") == 0) {
     enter(State::LEITURA);
+    return;
+  }
+
+  if (strcmp(cmd, "select_toolbox") == 0) {
+    const char* id = doc["id"] | "main";
+    loadProfile(id);
+    gBle.notifyInventory(gInventory.toJsonString());
     return;
   }
 
@@ -154,8 +217,9 @@ static void handleControlCommand(const String& json) {
   }
 
   // Persistência no LittleFS (fonte da verdade) + publicação via BLE.
-  if (!gInventory.save(LittleFS, kInventoryPath)) {
-    Serial.println("[TRAKR] ERRO: falha ao salvar inventory.json");
+  const String path = profilePath(gInventory.profileId());
+  if (!gInventory.save(LittleFS, path.c_str())) {
+    Serial.printf("[TRAKR] ERRO: falha ao salvar %s\n", path.c_str());
     return;
   }
   gBle.notifyInventory(gInventory.toJsonString());
@@ -193,8 +257,12 @@ void setup() {
   initFeedback();
   gYrm.begin(Serial2, YRM100_BAUD, YRM100_RX_PIN, YRM100_TX_PIN);
 
+  gEvents.load(LittleFS, kEventsPath);
+
   gBle.init(TRAKR_DEVICE_NAME);
   gBle.setControlCallback(handleControlCommand);
+  gBle.setHistory(gEvents.toJsonString());
+  detectLidTransition();
 
   enter(State::LEITURA);
 }

@@ -33,7 +33,8 @@ bool TrakInventory::load(fs::FS& fs, const char* path) {
 
 bool TrakInventory::save(fs::FS& fs, const char* path) const {
   JsonDocument doc;
-  doc["toolbox"] = "Trakr";
+  doc["toolbox"] = profile_id_;
+  doc["id"] = profile_id_;
   JsonArray arr = doc["tools"].to<JsonArray>();
   for (const auto& t : tools_) {
     JsonObject o = arr.add<JsonObject>();
@@ -112,7 +113,8 @@ bool TrakInventory::removeTool(const String& id) {
 String TrakInventory::toJsonString() const {
   String out;
   JsonDocument doc;
-  doc["toolbox"] = "Trakr";
+  doc["toolbox"] = profile_id_;
+  doc["id"] = profile_id_;
   JsonArray arr = doc["tools"].to<JsonArray>();
   for (const auto& t : tools_) {
     JsonObject o = arr.add<JsonObject>();

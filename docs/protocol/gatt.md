@@ -25,11 +25,12 @@ Este documento é a **fonte da verdade** do protocolo de comunicação entre a m
 
 | UUID | Nome | Propriedades | Descrição |
 | --- | --- | --- | --- |
-| `60c1f001-...` | **Inventory** | READ + NOTIFY | Inventário completo em JSON (formato idêntico ao `inventory.json`). |
-| `60c1f002-...` | **Event** | READ + NOTIFY | Eventos assíncronos (ex: ferramenta faltando) em JSON. |
+| `60c1f001-...` | **Inventory** | READ + NOTIFY | Inventário do perfil ativo em JSON (formato idêntico ao `inventory_<id>.json`). |
+| `60c1f002-...` | **Event** | READ + NOTIFY | Último evento assíncrono em JSON. |
 | `60c1f003-...` | **Control** | WRITE | Comandos do app para o firmware (JSON). |
+| `60c1f004-...` | **History** | READ | Histórico completo de eventos (array JSON, máx. 100). |
 
-> **Fluxo de sincronização:** no `onServicesDiscovered`, o app assina as notificações de *Inventory* e *Event* e envia `{"cmd":"rescan"}` no *Control*; o firmware responde notificando o inventário completo.
+> **Fluxo de sincronização:** no `onServicesDiscovered`, o app envía `{"cmd":"select_toolbox"}` do perfil local ativo, assina *Inventory*/"Event" e lê *History*; o firmware responde notificando o inventário completo.
 
 ## Payloads
 
@@ -37,17 +38,32 @@ Este documento é a **fonte da verdade** do protocolo de comunicação entre a m
 
 ```json
 {
-  "toolbox": "Trakr",
+  "toolbox": "main",
+  "id": "main",
   "tools": [
     { "id": "01", "name": "Chave de Fenda Cross", "tag": "E28011606000020400000001", "present": true }
   ]
 }
 ```
 
+> O campo `id` identifica o perfil de maleta ativo; o arquivo no LittleFS é `inventory_<id>.json` (`main` → `inventory.json`).
+
+### Historico (read — History)
+
+```json
+[
+  { "ts": 123456, "type": "tool_missing", "tool_id": "01", "name": "Chave de Fenda Cross" },
+  { "ts": 123000, "type": "lid_closed", "tool_id": "", "name": "" }
+]
+```
+
+* `ts`: `millis()` relativo ao boot — usado só para ordenar; o app marca a data de chegada local (*created_at*).
+* Tipos: `tool_missing`, `tool_back`, `lid_open`, `lid_closed`, `boot`.
+
 ### Evento de ferramenta ausente (notify)
 
 ```json
-{ "type": "tool_missing", "tool_id": "01", "name": "Chave de Fenda Cross" }
+{ "type": "tool_missing", "tool_id": "01", "name": "Chave de Fenda Cross", "ts": 123456 }
 ```
 
 ### Comandos do app (control — WRITE)
@@ -55,8 +71,9 @@ Este documento é a **fonte da verdade** do protocolo de comunicação entre a m
 | Comando | Payload | Efeito no firmware |
 | --- | --- | --- |
 | Varrer novamente | `{"cmd":"rescan"}` | Executa `LEITURA` (sweep UHF + publish). |
-| Adicionar ferramenta | `{"cmd":"add_tool","name":"...","tag":"E2..."}` | Adiciona ao inventário local e salva em LittleFS; re-notifica inventário. |
-| Remover ferramenta | `{"cmd":"remove_tool","id":"01"}` | Remove do inventário local e salva em LittleFS; re-notifica inventário. |
+| Adicionar ferramenta | `{"cmd":"add_tool","name":"...","tag":"E2..."}` | Adiciona ao inventário do perfil ativo e salva em LittleFS; re-notifica inventário. |
+| Remover ferramenta | `{"cmd":"remove_tool","id":"01"}` | Remove do inventário do perfil ativo e salva em LittleFS; re-notifica inventário. |
+| Selecionar perfil | `{"cmd":"select_toolbox","id":"obra-x"}` | Carrega `inventory_obra-x.json` (cria vazio se não existir) e notifica o inventário. |
 
 > **Ressalva:** os comandos `add_tool`/`remove_tool` são processados pelo firmware: adicionam/removem no `inventory.json` (LittleFS) e re-notificam o inventário completo. Enquanto desconectada, o app grava localmente (fallback offline, a maleta segue como fonte da verdade).
 
@@ -69,14 +86,18 @@ sequenceDiagram
     participant R as RFID YRM100
 
     A->>F: GATT connect + MTU 512
+    A->>F: WRITE Control: {"cmd":"select_toolbox","id":"main"}
+    F-->>A: NOTIFY Inventory (perfil ativo)
     A->>F: WRITE Control: {"cmd":"rescan"}
     F->>R: CMD_START_INVENTORY (0x15)
     R-->>F: EPCs das tags
     F->>F: sweep() vs inventory.json
     F-->>A: NOTIFY Inventory (JSON completo)
+    F-->>A: NOTIFY Event (tool_missing / tool_back)
+    A->>F: READ History (histórico completo)
+    F-->>A: array JSON de eventos
+    A->>A: persistência Room (eventos)
     alt Ferramenta faltante
-        F->>F: buzzer + evento
-        F-->>A: NOTIFY Event: tool_missing
         A->>A: notificação push local
     end
     A->>F: WRITE Control: {"cmd":"remove_tool","id":"02"}

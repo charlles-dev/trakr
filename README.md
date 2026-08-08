@@ -121,11 +121,11 @@ Para dar os primeiros passos com o ecossistema Trakr, escolha por onde deseja co
 - [x] Migração do app para Kotlin + Jetpack Compose + Room
 - [x] BLE end-to-end: inventário, alertas e sincronização via GATT
 - [x] Cadastro direto de novas tags no app (add/remove via GATT Control)
+- [x] Múltiplos perfis de inventário (por canteiro de obra) e seleção no app
+- [x] Histórico de eventos (aberturas, tool_missing/tool_back, boot) com export CSV
 - [ ] Medição de consumo energético em deep sleep (varredura com EN + UART off)
-- [ ] Múltiplos perfis de inventário (por canteiro de obra)
-- [ ] Histórico de eventos (aberturas, alarmes, checkouts)
 - [ ] Envio opcional de relatórios para nuvem (pós-opcional)
-- [ ] Suporte a múltiplas maletas no mesmo app
+- [ ] Suporte a múltiplas maletas simultâneas (BLE multi-device)
 
 ## 🤝 Contribuição
 

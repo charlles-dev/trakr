@@ -4,21 +4,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.trakr.core.ble.BleManager
 import app.trakr.data.AppContainer
-import app.trakr.model.MAIN_TOOLBOX_ID
 import app.trakr.model.Tool
+import app.trakr.model.ToolboxStore
 import app.trakr.repository.ToolboxRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class ToolListViewModel : ViewModel() {
 
     private val repository = ToolboxRepository(AppContainer.database.toolboxDao())
 
-    val tools: Flow<List<Tool>> = repository.observeTools(MAIN_TOOLBOX_ID)
+    val tools: Flow<List<Tool>> = ToolboxStore.current
+        .flatMapLatest { selection -> repository.observeTools(selection.id) }
 
     /** Mensagem de status para o usuário (Snackbar). */
     private val _message = MutableStateFlow<String?>(null)
@@ -28,10 +31,6 @@ class ToolListViewModel : ViewModel() {
         _message.value = null
     }
 
-    /**
-     * Envia {add_tool} para a maleta. Se estiver desconectada,
-     * grava localmente (fallback offline) — a maleta continua a fonte da verdade.
-     */
     fun addTool(name: String, epc: String) {
         val cleanName = name.trim()
         val cleanEpc = epc.trim().uppercase()
@@ -39,9 +38,10 @@ class ToolListViewModel : ViewModel() {
             _message.value = "Nome e tag são obrigatórios"
             return
         }
+        val toolboxId = ToolboxStore.current.value.id
         val tool = Tool(
             id = UUID.randomUUID().toString(),
-            toolboxId = MAIN_TOOLBOX_ID,
+            toolboxId = toolboxId,
             name = cleanName,
             epc = cleanEpc,
             present = true,

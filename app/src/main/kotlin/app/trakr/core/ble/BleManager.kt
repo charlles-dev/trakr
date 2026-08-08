@@ -17,6 +17,8 @@ import app.trakr.core.notifications.NotificationService
 import app.trakr.data.AppContainer
 import app.trakr.data.InventoryParser
 import app.trakr.model.AlertEvent
+import app.trakr.model.EventRecord
+import app.trakr.model.ToolboxStore
 import app.trakr.repository.ToolboxRepository
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
@@ -166,11 +168,21 @@ object BleManager {
 
             gatt.requestMtu(REQUESTED_MTU)
 
+            // Sincroniza a maleta para o perfil ativo no app e pede o histórico.
+            val selection = ToolboxStore.current.value
             service.getCharacteristic(BleProfile.CONTROL_UUID)?.let { control ->
                 try {
+                    writeCharacteristic(gatt, control, """{"cmd":"select_toolbox","id":"${selection.id}"}""")
                     writeCharacteristic(gatt, control, """{"cmd":"rescan"}""")
                 } catch (e: SecurityException) {
                     _status.value = BleStatus.Error("Sem permissão de escrita BLE")
+                }
+            }
+            service.getCharacteristic(BleProfile.HISTORY_UUID)?.let { history ->
+                try {
+                    readHistory(gatt, history)
+                } catch (e: SecurityException) {
+                    _status.value = BleStatus.Error("Sem permissão de leitura BLE")
                 }
             }
 
@@ -207,6 +219,44 @@ object BleManager {
                 BleProfile.INVENTORY_UUID -> onInventory(text)
                 BleProfile.EVENT_UUID -> onEvent(text)
             }
+        }
+
+        override fun onCharacteristicRead(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            value: ByteArray,
+            status: Int,
+        ) {
+            if (status != BluetoothGatt.GATT_SUCCESS) return
+            if (characteristic.uuid == BleProfile.HISTORY_UUID) {
+                onHistory(value.toString(Charsets.UTF_8))
+            }
+        }
+
+        @Deprecated("Compatibilidade com Android < 13")
+        @Suppress("DEPRECATION")
+        override fun onCharacteristicRead(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            status: Int,
+        ) {
+            if (status != BluetoothGatt.GATT_SUCCESS) return
+            if (characteristic.uuid == BleProfile.HISTORY_UUID) {
+                onHistory(characteristic.value.toString(Charsets.UTF_8))
+            }
+        }
+    }
+
+    private fun readHistory(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                gatt.readCharacteristic(characteristic)
+            } else {
+                @Suppress("DEPRECATION")
+                gatt.readCharacteristic(characteristic)
+            }
+        } catch (e: SecurityException) {
+            _status.value = BleStatus.Error("Sem permissão de leitura BLE")
         }
     }
 
@@ -276,6 +326,11 @@ object BleManager {
         sendControl("""{"cmd":"remove_tool","id":"$id"}""", onUnavailable)
     }
 
+    /** Troca o perfil ativo da maleta: {"cmd":"select_toolbox","id":...} */
+    fun selectToolbox(id: String) {
+        sendControl("""{"cmd":"select_toolbox","id":"$id"}""") {}
+    }
+
     private fun onInventory(json: String) {
         val (toolbox, tools) = InventoryParser.parseInventory(json)
         scope.launch { repository.saveInventory(toolbox, tools) }
@@ -283,6 +338,7 @@ object BleManager {
 
     private fun onEvent(json: String) {
         val event = InventoryParser.parseEvent(json) ?: return
+        val toolboxId = ToolboxStore.current.value.id
         scope.launch {
             repository.insertAlert(
                 AlertEvent(
@@ -291,7 +347,25 @@ object BleManager {
                     createdAt = System.currentTimeMillis(),
                 ),
             )
+            // Espelha o evento no histórico local da maleta ativa.
+            repository.upsertEvent(
+                EventRecord(
+                    toolboxId = toolboxId,
+                    type = event.type,
+                    toolId = event.toolId,
+                    toolName = event.toolName,
+                ),
+            )
         }
-        context?.let { NotificationService(it).showMissingToolAlert(event.toolName) }
+        // Notificação push apenas para retirada de ferramenta.
+        if (event.type == "tool_missing") {
+            context?.let { NotificationService(it).showMissingToolAlert(event.toolName) }
+        }
+    }
+
+    private fun onHistory(json: String) {
+        val toolboxId = ToolboxStore.current.value.id
+        val events = InventoryParser.parseHistory(json, toolboxId)
+        scope.launch { repository.saveHistory(toolboxId, events) }
     }
 }

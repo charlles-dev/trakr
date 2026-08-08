@@ -24,6 +24,9 @@ class TrakBle {
   void notifyInventory(const String& json);
   void notifyEvent(const String& json);
 
+  // Publica o histórico completo (array JSON) para leitura via GATT (READ).
+  void setHistory(const String& json);
+
   // chamado pelos callbacks NimBLE
   void onClientConnected() { client_connected_ = true; }
   void onClientDisconnected() { client_connected_ = false; notifications_enabled_ = false; }
@@ -32,6 +35,7 @@ class TrakBle {
  private:
   NimBLECharacteristic* inventoryChar_ = nullptr;
   NimBLECharacteristic* eventChar_ = nullptr;
+  NimBLECharacteristic* historyChar_ = nullptr;
   bool client_connected_ = false;
   bool notifications_enabled_ = false;
   ControlCallback control_cb_;

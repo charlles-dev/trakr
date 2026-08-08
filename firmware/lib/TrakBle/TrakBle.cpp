@@ -71,6 +71,11 @@ void TrakBle::init(const char* deviceName) {
   eventChar_->setCallbacks(new TrakBleCharCallbacks(this));
   eventChar_->setValue((uint8_t*)"{}", 2);
 
+  historyChar_ = service->createCharacteristic(
+      TRAKR_CHAR_HISTORY_UUID,
+      NIMBLE_PROPERTY::READ);
+  historyChar_->setValue((uint8_t*)"[]", 2);
+
   NimBLECharacteristic* controlChar = service->createCharacteristic(
       TRAKR_CHAR_CONTROL_UUID,
       NIMBLE_PROPERTY::WRITE);
@@ -96,4 +101,9 @@ void TrakBle::notifyEvent(const String& json) {
   if (!eventChar_ || !notificationsEnabled()) return;
   eventChar_->setValue((uint8_t*)json.c_str(), json.length());
   eventChar_->notify();
+}
+
+void TrakBle::setHistory(const String& json) {
+  if (!historyChar_) return;
+  historyChar_->setValue((uint8_t*)json.c_str(), json.length());
 }

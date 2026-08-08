@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import app.trakr.model.AlertEvent
+import app.trakr.model.EventRecord
 import app.trakr.model.Tool
 import app.trakr.model.Toolbox
 import kotlinx.coroutines.flow.Flow
@@ -38,4 +39,22 @@ interface ToolboxDao {
 
     @Query("SELECT * FROM alerts ORDER BY created_at DESC")
     fun observeAlerts(): Flow<List<AlertEvent>>
+
+    @Query("SELECT * FROM events WHERE toolboxId = :toolboxId ORDER BY ts DESC")
+    fun observeEvents(toolboxId: String): Flow<List<EventRecord>>
+
+    @Query("SELECT * FROM events WHERE toolboxId = :toolboxId ORDER BY ts DESC")
+    suspend fun getEvents(toolboxId: String): List<EventRecord>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertEvents(events: List<EventRecord>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertEvent(event: EventRecord)
+
+    @Query("DELETE FROM events WHERE toolboxId = :toolboxId")
+    suspend fun clearEvents(toolboxId: String)
+
+    @Query("SELECT * FROM toolboxes ORDER BY name")
+    suspend fun getToolboxes(): List<Toolbox>
 }
