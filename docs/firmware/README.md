@@ -16,9 +16,12 @@ Dependências (platformio.ini)
 
 * `bblanchon/ArduinoJson` (Para manipular o `inventory.json`)
 
-* Biblioteca para BLE (inclusa no core do ESP32)
+* `h2zero/NimBLE-Arduino` (Servidor GATT para notificar o app Android)
 
-* SoftwareSerial (Para comunicação com o YRM100, se não usar UART de hardware)
+* **YRM100** comunicação via **UART2 de hardware** (`Serial2`) — GPIO16/17. Não é necessário `SoftwareSerial`.
+
+A pinagem de todo o projeto está centralizada em `firmware/include/pins.h`
+e documentada em [`docs/hardware/Wiring.md`](../hardware/Wiring.md).
 
 Gravando o Banco de Dados Local (LittleFS)
 ------------------------------------------

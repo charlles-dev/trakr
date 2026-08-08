@@ -5,39 +5,41 @@ O Trakr opera em uma arquitetura **Edge-Master / Thin-Client**, desenhada para a
 Diagrama do Sistema
 -------------------
 
-    graph TD
-        subgraph "Hardware (Maleta Edge-Master)"
-            TAG[Tags UHF Anti-Metal] <.. RF ..> ANT[Antena 2dBi]
-            ANT <--> YRM[Leitor UHF YRM100]
-            HALL[Sensor Hall 3144] --> |Interrupt| ESP
-            PWR[Bateria 18650] --> ESP
-    
-            subgraph "ESP32 (Cérebro)"
-                ESP_CORE[Máquina de Estados]
-                MEM[(LittleFS: inventory.json)]
-                ESP_CORE <--> MEM
-            end
-    
-            YRM <-->|UART| ESP_CORE
-            ESP_CORE --> BUZ[Alarme Local]
+    ```mermaid
+graph TD
+    subgraph "Hardware (Maleta Edge-Master)"
+        TAG[Tags UHF Anti-Metal] <.. RF ..> ANT[Antena 2dBi]
+        ANT <--> YRM[Leitor UHF YRM100]
+        HALL[Sensor Hall 3144] --> |Interrupt| ESP
+        PWR[Bateria 18650] --> ESP
+
+        subgraph "ESP32 (Cérebro)"
+            ESP_CORE[Máquina de Estados]
+            MEM[(LittleFS: inventory.json)]
+            ESP_CORE <--> MEM
         end
-    
-        subgraph "Conectividade (BLE)"
-            ESP_CORE <-->|GATT Server| BLE[Bluetooth Low Energy]
-        end
-    
-        subgraph "Mobile (App Android Kotlin)"
-            BLE <--> SVC[Foreground Service BLE]
-            SVC <--> APP[App Jetpack Compose]
-            APP <--> ROOM[(Room SQLite Cache)]
-            SVC --> PUSH[Notificação Push Local]
-        end
-    
-        classDef hardware fill:#2b2d42,stroke:#8d99ae,stroke-width:2px,color:#fff;
-        classDef mobile fill:#023e8a,stroke:#0077b6,stroke-width:2px,color:#fff;
-    
-        class ESP_CORE,MEM,YRM,ANT,HALL,BUZ,TAG,PWR hardware;
-        class APP,ROOM,PUSH,BLE,SVC mobile;
+
+        YRM <-->|UART| ESP_CORE
+        ESP_CORE --> BUZ[Alarme Local]
+    end
+
+    subgraph "Conectividade (BLE)"
+        ESP_CORE <-->|GATT Server| BLE[Bluetooth Low Energy]
+    end
+
+    subgraph "Mobile (App Android Kotlin)"
+        BLE <--> SVC[Foreground Service BLE]
+        SVC <--> APP[App Jetpack Compose]
+        APP <--> ROOM[(Room SQLite Cache)]
+        SVC --> PUSH[Notificação Push Local]
+    end
+
+    classDef hardware fill:#2b2d42,stroke:#8d99ae,stroke-width:2px,color:#fff;
+    classDef mobile fill:#023e8a,stroke:#0077b6,stroke-width:2px,color:#fff;
+
+    class ESP_CORE,MEM,YRM,ANT,HALL,BUZ,TAG,PWR hardware;
+    class APP,ROOM,PUSH,BLE,SVC mobile;
+```
 
 Fluxo de Operação Autônoma
 --------------------------

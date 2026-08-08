@@ -6,4 +6,6 @@
     <string name="tab_alerts">Alertas</string>
     <string name="dashboard_empty">Conecte sua maleta por BLE</string>
     <string name="notification_tool_missing">Ferramenta retirada: %1$s</string>
+    <string name="ble_channel_name">Conexão com a maleta</string>
+    <string name="ble_connected_message">Trakr conectado à Maleta 01</string>
 </resources>
