@@ -1,0 +1,106 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+:root {
+  --color-bg: #0A0E27;
+  --color-green: #3A5F4F;
+  --color-orange: #FF8C00;
+  --color-text: #E0E4F5;
+  --color-text-muted: #8A91B8;
+  
+  --font-main: 'Outfit', sans-serif;
+  
+  --glass-bg: rgba(58, 95, 79, 0.15);
+  --glass-border: rgba(58, 95, 79, 0.3);
+  --glass-blur: blur(12px);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-main);
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Reusable Glassmorphism Card */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.glass-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border-color: var(--color-orange);
+}
+
+/* Buttons */
+.btn-primary {
+  display: inline-block;
+  background: var(--color-orange);
+  color: #111;
+  font-weight: 800;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
+}
+
+.btn-primary:hover {
+  background: #FFA533;
+  box-shadow: 0 0 25px rgba(255, 140, 0, 0.7);
+  transform: scale(1.05);
+}
+
+/* Highlight Text */
+.text-orange {
+  color: var(--color-orange);
+}
+
+.text-green {
+  color: var(--color-green);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease forwards;
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+
+/* Grid Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+section {
+  padding: 6rem 0;
+}

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TRAKR - Autonomous Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;family=Sora:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#99c1ae",
+                    "surface-variant": "#333535",
+                    "primary": "#c1c4e6",
+                    "on-tertiary-fixed": "#2f1500",
+                    "secondary-container": "#2b5041",
+                    "primary-container": "#0a0e27",
+                    "surface": "#121414",
+                    "on-primary-fixed-variant": "#414561",
+                    "inverse-surface": "#e2e2e2",
+                    "on-primary-container": "#777a99",
+                    "inverse-primary": "#595c79",
+                    "secondary-fixed-dim": "#a7cfbb",
+                    "inverse-on-surface": "#2f3131",
+                    "on-secondary": "#113729",
+                    "error-container": "#93000a",
+                    "surface-tint": "#c1c4e6",
+                    "tertiary-fixed-dim": "#ffb77d",
+                    "tertiary-fixed": "#ffdcc3",
+                    "on-error": "#690005",
+                    "on-surface-variant": "#c7c5ce",
+                    "on-background": "#e2e2e2",
+                    "on-secondary-fixed": "#002115",
+                    "on-tertiary-fixed-variant": "#6e3900",
+                    "surface-container-lowest": "#0d0e0f",
+                    "outline": "#919098",
+                    "on-error-container": "#ffdad6",
+                    "surface-container": "#1e2020",
+                    "secondary-fixed": "#c3ecd7",
+                    "primary-fixed-dim": "#c1c4e6",
+                    "surface-container-low": "#1a1c1c",
+                    "on-tertiary": "#4d2600",
+                    "error": "#ffb4ab",
+                    "surface-container-highest": "#333535",
+                    "surface-container-high": "#282a2b",
+                    "on-secondary-fixed-variant": "#294e3f",
+                    "on-primary": "#2b2f49",
+                    "tertiary": "#ffb77d",
+                    "on-surface": "#e2e2e2",
+                    "background": "#121414",
+                    "secondary": "#a7cfbb",
+                    "on-primary-fixed": "#161a33",
+                    "on-tertiary-container": "#bc6600",
+                    "outline-variant": "#46464d",
+                    "surface-dim": "#121414",
+                    "primary-fixed": "#dee0ff",
+                    "surface-bright": "#38393a",
+                    "tertiary-container": "#1e0b00",
+                    "hazard-orange": "#FF8C00",
+                    "military-green": "#3A5F4F"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "container-max": "1440px",
+                    "margin-desktop": "64px",
+                    "margin-mobile": "16px",
+                    "unit": "4px",
+                    "gutter": "24px"
+            },
+            "fontFamily": {
+                    "label-caps": [
+                            "JetBrains Mono"
+                    ],
+                    "status-code": [
+                            "JetBrains Mono"
+                    ],
+                    "body-md": [
+                            "Hanken Grotesk"
+                    ],
+                    "display-lg-mobile": [
+                            "Sora"
+                    ],
+                    "display-lg": [
+                            "Sora"
+                    ],
+                    "body-lg": [
+                            "Hanken Grotesk"
+                    ],
+                    "headline-md": [
+                            "Sora"
+                    ]
+            },
+            "fontSize": {
+                    "label-caps": [
+                            "12px",
+                            {
+                                    "lineHeight": "16px",
+                                    "letterSpacing": "0.1em",
+                                    "fontWeight": "500"
+                            }
+                    ],
+                    "status-code": [
+                            "14px",
+                            {
+                                    "lineHeight": "20px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "body-md": [
+                            "16px",
+                            {
+                                    "lineHeight": "24px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "display-lg-mobile": [
+                            "32px",
+                            {
+                                    "lineHeight": "40px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "display-lg": [
+                            "48px",
+                            {
+                                    "lineHeight": "56px",
+                                    "letterSpacing": "-0.02em",
+                                    "fontWeight": "700"
+                            }
+                    ],
+                    "body-lg": [
+                            "18px",
+                            {
+                                    "lineHeight": "28px",
+                                    "fontWeight": "400"
+                            }
+                    ],
+                    "headline-md": [
+                            "24px",
+                            {
+                                    "lineHeight": "32px",
+                                    "fontWeight": "600"
+                            }
+                    ]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(58, 95, 79, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid;
+            border-image: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 100%) 1;
+        }
+        .btn-glow {
+            box-shadow: 0 0 15px rgba(255, 140, 0, 0.5);
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 25px rgba(255, 140, 0, 0.8);
+        }
+        .scanline {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
+            background-size: 100% 4px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="bg-primary-container text-on-surface font-body-md antialiased min-h-screen flex flex-col relative overflow-x-hidden">
+<div class="fixed inset-0 scanline z-50 mix-blend-overlay"></div>
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 border-b border-white/20 bg-surface/10 backdrop-blur-xl shadow-[0_0_15px_rgba(193,196,230,0.1)]">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto backdrop-blur-md bg-secondary-container/10">
+<div class="font-display-lg text-display-lg font-bold text-primary tracking-tighter">TRAKR</div>
+<nav class="hidden md:flex space-x-8">
+<a class="text-on-surface-variant font-label-caps hover:text-primary transition-colors duration-300" href="#">Fleet</a>
+<a class="text-on-surface-variant font-label-caps hover:text-primary transition-colors duration-300" href="#">Telemetry</a>
+<a class="text-on-surface-variant font-label-caps hover:text-primary transition-colors duration-300" href="#">Security</a>
+<a class="text-on-surface-variant font-label-caps hover:text-primary transition-colors duration-300" href="#">Logistics</a>
+</nav>
+<div class="flex items-center space-x-4">
+<button class="hidden md:inline-flex text-on-surface-variant font-label-caps hover:text-primary transition-colors duration-300">Terminal</button>
+<button class="bg-hazard-orange text-black font-label-caps px-6 py-2 uppercase tracking-widest btn-glow transition-all duration-300 hover:scale-105 active:scale-95">Deploy System</button>
+</div>
+</div>
+</header>
+<main class="flex-grow pt-24">
+<!-- Hero Section -->
+<section class="relative min-h-[90vh] flex items-center justify-center px-margin-mobile md:px-margin-desktop py-24 overflow-hidden">
+<div class="absolute inset-0 z-0">
+<img alt="A high-tech industrial toolbox glowing orange on a workbench in a cinematic, futuristic control room setting." class="w-full h-full object-cover opacity-60" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBn3E9gP9HdPTRtEC23szJsAFs0VqPP-Jrj_df_2yG4-BhrW4bQeYopXFSccQjzTzBZHbXcxi2BelsSGfvR-XiWdqF1Io2YyagYI8MFSfEhGvpklPkJf9P5QTbVBBWTKejtt0H8mvKBy9dLM_9mLYDP6fAvKQo7GpooOqdLgjd0QWPpBGRd6qYdODCOITcfh3UslPk-ZEHvajj_z3RnnuC6e6P33E9jLUe-I6JgR6xN58epeBK62OC_Yk-KzMRySoj98RrCbBIV8bs"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary-container via-transparent to-primary-container"></div>
+</div>
+<div class="relative z-10 max-w-container-max mx-auto text-center glass-panel p-8 md:p-16 rounded-lg max-w-4xl">
+<h1 class="font-display-lg-mobile md:font-display-lg text-primary mb-6 uppercase">Autonomous Intelligence.<br/>Industrial Grade.</h1>
+<p class="font-body-lg text-on-surface-variant mb-10 max-w-2xl mx-auto">The world's first edge-computing smart toolbox. Bringing military-grade tracking and AI directly to the field.</p>
+<button class="bg-hazard-orange text-black font-label-caps px-8 py-4 uppercase tracking-widest btn-glow transition-all duration-300 hover:scale-105 active:scale-95">Deploy System</button>
+</div>
+</section>
+<!-- Features Grid -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div class="text-center mb-16">
+<span class="font-label-caps text-hazard-orange block mb-4 uppercase tracking-widest">System Capabilities</span>
+<h2 class="font-headline-md text-primary">Engineered for Extremes</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+<div class="glass-panel p-8 rounded-lg group hover:bg-secondary-container/20 transition-colors duration-500">
+<div class="flex items-center mb-6">
+<span class="material-symbols-outlined text-hazard-orange text-4xl mr-4" style="font-variation-settings: 'FILL' 1;">memory</span>
+<h3 class="font-headline-md text-primary">Edge Intelligence</h3>
+</div>
+<p class="font-body-md text-on-surface-variant">Local AI processing enables instantaneous decision making without relying on cloud connectivity. Process critical sensor data directly at the source.</p>
+<div class="mt-6 border-t border-military-green/30 pt-4 flex justify-between items-center">
+<span class="font-status-code text-on-surface-variant">PROC_LATENCY</span>
+<span class="font-status-code text-primary">&lt; 2ms</span>
+</div>
+</div>
+<div class="glass-panel p-8 rounded-lg group hover:bg-secondary-container/20 transition-colors duration-500">
+<div class="flex items-center mb-6">
+<span class="material-symbols-outlined text-hazard-orange text-4xl mr-4" style="font-variation-settings: 'FILL' 1;">router</span>
+<h3 class="font-headline-md text-primary">UHF RFID</h3>
+</div>
+<p class="font-body-md text-on-surface-variant">Military-spec asset tracking with centimeter precision. Simultaneous multi-tag read capabilities ensure inventory is constantly monitored.</p>
+<div class="mt-6 border-t border-military-green/30 pt-4 flex justify-between items-center">
+<span class="font-status-code text-on-surface-variant">SCAN_RATE</span>
+<span class="font-status-code text-primary">1000 tags/sec</span>
+</div>
+</div>
+<div class="glass-panel p-8 rounded-lg group hover:bg-secondary-container/20 transition-colors duration-500">
+<div class="flex items-center mb-6">
+<span class="material-symbols-outlined text-hazard-orange text-4xl mr-4" style="font-variation-settings: 'FILL' 1;">battery_charging_full</span>
+<h3 class="font-headline-md text-primary">Ultra Low-Power</h3>
+</div>
+<p class="font-body-md text-on-surface-variant">Advanced power management protocols allow for months of continuous field operation on a single charge cycle, vital for remote deployments.</p>
+<div class="mt-6 border-t border-military-green/30 pt-4 flex justify-between items-center">
+<span class="font-status-code text-on-surface-variant">UPTIME_EST</span>
+<span class="font-status-code text-primary">180 Days</span>
+</div>
+</div>
+<div class="glass-panel p-8 rounded-lg group hover:bg-secondary-container/20 transition-colors duration-500">
+<div class="flex items-center mb-6">
+<span class="material-symbols-outlined text-hazard-orange text-4xl mr-4" style="font-variation-settings: 'FILL' 1;">smartphone</span>
+<h3 class="font-headline-md text-primary">Thin Client Mobile</h3>
+</div>
+<p class="font-body-md text-on-surface-variant">Seamless control matrix via BLE bridging. Transform any standard mobile device into a secure, encrypted terminal for system management.</p>
+<div class="mt-6 border-t border-military-green/30 pt-4 flex justify-between items-center">
+<span class="font-status-code text-on-surface-variant">ENC_LEVEL</span>
+<span class="font-status-code text-primary">AES-256</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Tech Stack Section -->
+<section class="relative py-32 px-margin-mobile md:px-margin-desktop overflow-hidden border-t border-b border-white/10">
+<div class="absolute inset-0 z-0">
+<img alt="A glowing green and orange circuit board schematic illustrating data flow from hardware sensors to a mobile device." class="w-full h-full object-cover opacity-40 mix-blend-luminosity" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGgGXmdjQx5lD5Hvb5IVOpyeVVXLdFEI3aqhM8hdl2ZIImP7i9gigHljQ1R5wMVeVFC5HZ1tnkfBqT-7bUGzfjgFuHSP6ZwWC38qF7ZU7ZNUxfFuo7HgQ_tMZcTCHeddPLj_WPZDd4nixBwO1Peig3SHKC_tQkBu6rMmB4rUJRwB0YtCXlBuALi6QiUPTueVyE4BH56nd5YWuOzCpHKj004u62UcO0L-czeddE8ACB2RTmf0b1-n389miyDdNIYFcRb_flaq1c5EA"/>
+<div class="absolute inset-0 bg-primary-container/80"></div>
+</div>
+<div class="relative z-10 max-w-container-max mx-auto">
+<div class="max-w-2xl">
+<span class="font-label-caps text-hazard-orange block mb-4 uppercase tracking-widest">Architecture</span>
+<h2 class="font-display-lg-mobile md:font-display-lg text-primary mb-8">Hardware to Mobile Bridge</h2>
+<p class="font-body-lg text-on-surface-variant mb-8">Our proprietary BLE GATT architecture creates an unbreakable, low-latency bridge between the rugged edge hardware and the mobile control layer. This enables real-time telemetry streaming and secure command execution in hostile RF environments.</p>
+<div class="space-y-4 font-status-code text-on-surface-variant">
+<div class="flex items-center p-4 bg-black/40 rounded border border-military-green/30">
+<span class="material-symbols-outlined mr-4 text-hazard-orange">sensors</span>
+<span>&gt; INITIALIZE_SENSOR_ARRAY</span>
+</div>
+<div class="flex items-center p-4 bg-black/40 rounded border border-military-green/30">
+<span class="material-symbols-outlined mr-4 text-hazard-orange">bluetooth_connected</span>
+<span>&gt; ESTABLISH_BLE_GATT_BRIDGE</span>
+</div>
+<div class="flex items-center p-4 bg-black/40 rounded border border-military-green/30">
+<span class="material-symbols-outlined mr-4 text-hazard-orange">sync_lock</span>
+<span>&gt; SYNC_THIN_CLIENT_MOBILE</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA -->
+<section class="py-32 px-margin-mobile md:px-margin-desktop text-center max-w-container-max mx-auto">
+<h2 class="font-display-lg-mobile md:font-display-lg text-primary mb-6">Ready for Deployment</h2>
+<p class="font-body-lg text-on-surface-variant mb-10 max-w-xl mx-auto">Initiate system integration protocols and upgrade your field operations to cinematic industrial grade.</p>
+<button class="bg-hazard-orange text-black font-label-caps px-10 py-5 uppercase tracking-widest text-lg btn-glow transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(255,140,0,0.4)]">Initiate Protocol</button>
+</section>
+</main>
+<!-- Footer -->
+<footer class="w-full border-t border-outline-variant/30 bg-surface-container-lowest">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop py-gutter max-w-container-max mx-auto">
+<div class="font-headline-md text-headline-md font-bold text-primary mb-6 md:mb-0">TRAKR</div>
+<nav class="flex flex-wrap justify-center gap-6 mb-6 md:mb-0">
+<a class="text-on-surface-variant font-label-caps hover:text-tertiary transition-all text-[12px] uppercase tracking-widest" href="#">Privacy Protocol</a>
+<a class="text-on-surface-variant font-label-caps hover:text-tertiary transition-all text-[12px] uppercase tracking-widest" href="#">Service Terms</a>
+<a class="text-on-surface-variant font-label-caps hover:text-tertiary transition-all text-[12px] uppercase tracking-widest" href="#">API Documentation</a>
+<a class="text-on-surface-variant font-label-caps hover:text-tertiary transition-all text-[12px] uppercase tracking-widest" href="#">Contact Control</a>
+</nav>
+<div class="font-body-md text-body-md text-on-surface-variant text-sm text-center md:text-right">
+                © 2024 TRAKR SYSTEMS. ALL RIGHTS RESERVED. CINEMATIC INDUSTRIAL GRADE.
+            </div>
+</div>
+</footer>
+</body></html>
