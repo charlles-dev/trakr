@@ -1,0 +1,11 @@
+{
+  "toolbox": "Trakr",
+  "tools": [
+    { "id": "01", "name": "Chave de Fenda Cross", "tag": "E28011606000020400000001", "present": true },
+    { "id": "02", "name": "Chave de Fenda Fenda", "tag": "E28011606000020400000002", "present": true },
+    { "id": "03", "name": "Alicate Universal", "tag": "E28011606000020400000003", "present": true },
+    { "id": "04", "name": "Chave Allen 4mm", "tag": "E28011606000020400000004", "present": true },
+    { "id": "05", "name": "Trena 5m", "tag": "E28011606000020400000005", "present": true },
+    { "id": "06", "name": "Martelo 300g", "tag": "E28011606000020400000006", "present": true }
+  ]
+}

@@ -1,4 +1,4 @@
-package app.trakr.ui.dashboard
+package app.trakr.ui.tools
 
 import androidx.lifecycle.ViewModel
 import app.trakr.data.AppContainer
@@ -7,7 +7,7 @@ import app.trakr.model.Tool
 import app.trakr.repository.ToolboxRepository
 import kotlinx.coroutines.flow.Flow
 
-class ToolboxViewModel : ViewModel() {
+class ToolListViewModel : ViewModel() {
 
     private val repository = ToolboxRepository(AppContainer.database.toolboxDao())
 

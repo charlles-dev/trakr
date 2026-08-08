@@ -4,12 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import app.trakr.model.AlertEvent
 import app.trakr.model.Tool
 import app.trakr.model.Toolbox
 
 @Database(
-    entities = [Toolbox::class, Tool::class],
-    version = 1,
+    entities = [Toolbox::class, Tool::class, AlertEvent::class],
+    version = 2,
     exportSchema = false,
 )
 abstract class TrakrDatabase : RoomDatabase() {

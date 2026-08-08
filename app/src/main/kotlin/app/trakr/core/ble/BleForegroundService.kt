@@ -27,7 +27,12 @@ class BleForegroundService : Service() {
         super.onCreate()
         createChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
-        // TODO: iniciar o BleEngine e conectar na maleta (GATT).
+        BleManager.start(this)
+    }
+
+    override fun onDestroy() {
+        BleManager.stop()
+        super.onDestroy()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int =

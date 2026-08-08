@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import app.trakr.model.AlertEvent
 import app.trakr.model.Tool
 import app.trakr.model.Toolbox
 import kotlinx.coroutines.flow.Flow
@@ -22,4 +23,13 @@ interface ToolboxDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertTools(tools: List<Tool>)
+
+    @Query("DELETE FROM tools WHERE toolboxId = :toolboxId")
+    suspend fun clearTools(toolboxId: String)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAlert(alert: AlertEvent)
+
+    @Query("SELECT * FROM alerts ORDER BY created_at DESC")
+    fun observeAlerts(): Flow<List<AlertEvent>>
 }
