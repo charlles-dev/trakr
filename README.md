@@ -124,7 +124,6 @@ Para dar os primeiros passos com o ecossistema Trakr, escolha por onde deseja co
 - [x] Múltiplos perfis de inventário (por canteiro de obra) e seleção no app
 - [x] Histórico de eventos (aberturas, tool_missing/tool_back, boot) com export CSV
 - [ ] Medição de consumo energético em deep sleep (varredura com EN + UART off)
-- [ ] Envio opcional de relatórios para nuvem (pós-opcional)
 - [ ] Suporte a múltiplas maletas simultâneas (BLE multi-device)
 
 ## 🤝 Contribuição
