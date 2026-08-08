@@ -30,6 +30,7 @@ object InventoryParser {
                 name = o.optString("name", "Ferramenta ${i + 1}"),
                 icon = "wrench",
                 present = o.optBoolean("present", true),
+                epc = o.optString("tag", o.optString("epc", "")),
             )
         }
         return toolbox to tools

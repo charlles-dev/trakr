@@ -1,10 +1,41 @@
 #include "TrakYrm100.h"
 
+#include "pins.h"
+
 static const uint8_t IR_FRAME_HEADER = 0xBB;
 
 void TrakYrm100::begin(HardwareSerial& serial, uint32_t baud, uint8_t rx, uint8_t tx) {
   port_ = &serial;
-  port_->begin(baud, SERIAL_8N1, rx, tx);
+  baud_ = baud;
+  rx_pin_ = rx;
+  tx_pin_ = tx;
+  enablePower();
+}
+
+void TrakYrm100::enablePower() {
+  if (power_enabled_) return;
+#ifdef YRM100_EN_PIN
+  pinMode(YRM100_EN_PIN, OUTPUT);
+  digitalWrite(YRM100_EN_PIN, HIGH);  // EN alto = módulo energizado
+#endif
+  if (port_) port_->begin(baud_, SERIAL_8N1, rx_pin_, tx_pin_);
+  power_enabled_ = true;
+  Serial.println("[TRAKR] YRM100 energizado");
+}
+
+void TrakYrm100::disablePower() {
+  if (!power_enabled_) return;
+#ifndef TRAKR_SIM
+  // Sem EN: ao menos para a varredura antes de desligar o UART.
+  sendFrame(CMD_STOP_INVENTORY, nullptr, 0);
+#endif
+  if (port_) port_->end();  // encerra UART2 (economiza corrente e evita ruído)
+#ifdef YRM100_EN_PIN
+  digitalWrite(YRM100_EN_PIN, LOW);
+  pinMode(YRM100_EN_PIN, INPUT_PULLDOWN);  // trava LOW no deep sleep
+#endif
+  power_enabled_ = false;
+  Serial.println("[TRAKR] YRM100 desenergizado");
 }
 
 void TrakYrm100::sendFrame(uint8_t cmd, const uint8_t* payload, uint8_t payloadLen) {
@@ -101,9 +132,4 @@ uint8_t TrakYrm100::collectEpc(std::vector<String>& outEpcs, uint32_t maxReadMs)
 
   sendFrame(CMD_STOP_INVENTORY, nullptr, 0);
   return 0;
-}
-
-void TrakYrm100::disablePower() {
-  // Sem pin de controle de energia mapeado nas docs atuais.
-  // Se o YRM100 tiver EN, ligue-o aqui para desligar o rádio no deep sleep.
 }

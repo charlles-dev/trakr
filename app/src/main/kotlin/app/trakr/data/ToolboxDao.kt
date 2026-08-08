@@ -24,6 +24,12 @@ interface ToolboxDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertTools(tools: List<Tool>)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertTool(tool: Tool)
+
+    @Query("DELETE FROM tools WHERE id = :id")
+    suspend fun deleteTool(id: String)
+
     @Query("DELETE FROM tools WHERE toolboxId = :toolboxId")
     suspend fun clearTools(toolboxId: String)
 

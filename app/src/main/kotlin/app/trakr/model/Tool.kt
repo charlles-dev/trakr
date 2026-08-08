@@ -23,4 +23,5 @@ data class Tool(
     val name: String,
     val icon: String = "wrench",
     val present: Boolean = true,
+    val epc: String = "",
 )

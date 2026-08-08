@@ -22,4 +22,9 @@ class ToolboxRepository(private val dao: ToolboxDao) {
     }
 
     suspend fun insertAlert(event: AlertEvent) = dao.insertAlert(event)
+
+    /** Fallback local quando a maleta está desconectada (edição offline). */
+    suspend fun addToolLocal(tool: Tool) = dao.upsertTool(tool)
+
+    suspend fun removeToolLocal(id: String) = dao.deleteTool(id)
 }

@@ -29,6 +29,13 @@ class TrakInventory {
   // Marca presença/ausência conforme os EPCs lidos pelo YRM100.
   void sweep(const std::vector<String>& readEpcs);
 
+  // Adiciona ferramenta nova (id gerado automaticamente, sequencial).
+  // Retorna false se o EPC já existir.
+  bool addTool(const String& name, const String& epc);
+
+  // Remove ferramenta pelo id. Retorna true se encontrou.
+  bool removeTool(const String& id);
+
   // Serializa o inventário no mesmo formato do inventory.json.
   String toJsonString() const;
 

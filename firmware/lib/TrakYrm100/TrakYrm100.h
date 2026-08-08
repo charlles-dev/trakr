@@ -16,16 +16,28 @@
 
 class TrakYrm100 {
  public:
+  // Inicializa o UART e energiza o módulo (pino EN, se definido em pins.h).
   void begin(HardwareSerial& serial, uint32_t baud, uint8_t rx, uint8_t tx);
 
   // Executa uma varredura contínua de inventário por maxReadMs.
   // Retorna lista de EPCs (hex, 12 bytes) lidos. 0 = sucesso, 1 = falha.
   uint8_t collectEpc(std::vector<String>& outEpcs, uint32_t maxReadMs);
 
-  void disablePower();  // desliga o rádio para economizar energia
+  // Desliga o rádio para economizar energia no deep sleep:
+  //  - pino EN (YRM100_EN_PIN) em LOW, se o módulo possuir pino EN;
+  //  - encerra a UART2 (Serial2.end()), poupando corrente e pinos;
+  // O módulo é reenergizado no próximo begin() (wake).
+  void disablePower();
+  void enablePower();
+
+  bool isPowerEnabled() const { return power_enabled_; }
 
  private:
   HardwareSerial* port_ = nullptr;
+  uint32_t baud_ = 115200;
+  uint8_t rx_pin_ = 16;
+  uint8_t tx_pin_ = 17;
+  bool power_enabled_ = false;
 
   void sendFrame(uint8_t cmd, const uint8_t* payload, uint8_t payloadLen);
   bool awaitFrame(uint8_t& cmd, uint8_t* data, uint8_t& dataLen, uint32_t timeoutMs);

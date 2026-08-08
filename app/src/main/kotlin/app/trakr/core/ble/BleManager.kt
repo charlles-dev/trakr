@@ -242,6 +242,40 @@ object BleManager {
         }
     }
 
+    // ---------------- Comandos para a maleta (GATT Control) ----------------
+
+    /**
+     * Envia comando JSON pela characteristic de controle.
+     * Usa o inventário local (Room) como fallback quando desconectado.
+     */
+    private fun sendControl(json: String, onUnavailable: () -> Unit) {
+        val g = gatt
+        val control = g?.getService(BleProfile.SERVICE_UUID)
+            ?.getCharacteristic(BleProfile.CONTROL_UUID)
+        if (g == null || control == null) {
+            onUnavailable()
+            return
+        }
+        try {
+            writeCharacteristic(g, control, json)
+        } catch (e: SecurityException) {
+            _status.value = BleStatus.Error("Sem permissão de escrita BLE")
+        }
+    }
+
+    /** Adiciona ferramenta na maleta: {"cmd":"add_tool","name":...,"tag":...} */
+    fun addTool(name: String, epc: String, onUnavailable: () -> Unit) {
+        sendControl(
+            """{"cmd":"add_tool","name":"$name","tag":"$epc"}""",
+            onUnavailable,
+        )
+    }
+
+    /** Remove ferramenta da maleta: {"cmd":"remove_tool","id":...} */
+    fun removeTool(id: String, onUnavailable: () -> Unit) {
+        sendControl("""{"cmd":"remove_tool","id":"$id"}""", onUnavailable)
+    }
+
     private fun onInventory(json: String) {
         val (toolbox, tools) = InventoryParser.parseInventory(json)
         scope.launch { repository.saveInventory(toolbox, tools) }
