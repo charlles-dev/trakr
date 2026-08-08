@@ -18,10 +18,17 @@ Dependências (platformio.ini)
 
 * `h2zero/NimBLE-Arduino` (Servidor GATT para notificar o app Android)
 
+* `fastled/FastLED` (Driver do LED RGB WS2812B — ver `lib/TrakLed`)
+
 * **YRM100** comunicação via **UART2 de hardware** (`Serial2`) — GPIO16/17. Não é necessário `SoftwareSerial`.
 
 A pinagem de todo o projeto está centralizada em `firmware/include/pins.h`
-e documentada em [`docs/hardware/Wiring.md`](../hardware/Wiring.md).
+e documentada em [`docs/hardware/README.md`](../hardware/README.md). O pino
+`YRM100_EN_PIN` (GPIO14) controla a energia do módulo UHF no deep sleep —
+desligue a `#define` se a sua placa YRM100 não tiver pino de habilitação.
+
+O protocolo GATT (UUIDs, características e comandos) é definido em
+`firmware/include/ble_profile.h` e descrito em [`docs/protocol/gatt.md`](../protocol/gatt.md).
 
 Gravando o Banco de Dados Local (LittleFS)
 ------------------------------------------

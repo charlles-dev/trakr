@@ -84,10 +84,19 @@ trakr/
 │   └── lib/      # Bibliotecas internas (TrakBle, TrakInventory, TrakYrm100)
 ├── hardware/     # Esquemáticos eletrônicos, pinagem e BoM
 │   ├── bom/      # Lista de materiais
-│   └── schematics/ # Circuitos e documentação de conexão
+│   ├── schematics/ # Circuitos e documentação de conexão (wiring.svg)
+│   └── datasheets/ # Datasheets dos componentes
 ├── cad/          # Scripts do Fusion 360, peças 3D e exports (.3mf)
 └── docs/         # Documentação completa e diagramas de arquitetura
+    └── protocol/ # Protocolo BLE/GATT (gatt.md)
 ```
+
+## 📡 Documentação Técnica
+
+* [Protocolo BLE/GATT](./docs/protocol/gatt.md) — UUIDs, payloads e comandos (interação firmware ↔ app).
+* [Esquemático de Wiring (SVG)](./hardware/schematics/wiring.svg) — diagrama de fiação da maleta.
+* [Datasheets dos componentes](./hardware/datasheets/README.md) — links verificados para cada módulo.
+* [Checklist de Validação do CAD](./docs/cad/validation.md) — o que falta para validar e imprimir.
 
 ## 🚀 Como Começar
 
@@ -111,7 +120,8 @@ Para dar os primeiros passos com o ecossistema Trakr, escolha por onde deseja co
 - [x] Estrutura inicial do monorepo (firmware, app, hardware, CAD)
 - [x] Migração do app para Kotlin + Jetpack Compose + Room
 - [x] BLE end-to-end: inventário, alertas e sincronização via GATT
-- [ ] Cadastro direto de novas tags no app
+- [x] Cadastro direto de novas tags no app (add/remove via GATT Control)
+- [ ] Medição de consumo energético em deep sleep (varredura com EN + UART off)
 - [ ] Múltiplos perfis de inventário (por canteiro de obra)
 - [ ] Histórico de eventos (aberturas, alarmes, checkouts)
 - [ ] Envio opcional de relatórios para nuvem (pós-opcional)

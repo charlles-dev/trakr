@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <style>
+      .box { fill: #f4f6f8; stroke: #2b2d42; stroke-width: 2; rx: 8; }
+      .pin { fill: #8d99ae; stroke: #2b2d42; stroke-width: 1; }
+      .pintxt { font-size: 11px; fill: #1a1a2e; }
+      .title { font-size: 18px; font-weight: bold; fill: #2b2d42; }
+      .subtitle { font-size: 12px; fill: #555b6e; }
+      .wire { stroke: #457b9d; stroke-width: 2.5; fill: none; }
+      .wire-gnd { stroke: #e63946; stroke-width: 2.5; fill: none; }
+      .wire-pwr { stroke: #2a9d8f; stroke-width: 2.5; fill: none; }
+      .lbl { font-size: 11px; fill: #1d3557; }
+      .gpio { fill: #a8dadc; stroke: #1d3557; stroke-width: 1; }
+      .gpio-txt { font-size: 10px; fill: #1d3557; text-anchor: middle; }
+      .mod-txt { font-size: 12px; font-weight: bold; fill: #2b2d42; }
+      .head { font-size: 14px; font-weight: bold; fill: #ffffff; }
+    </style>
+  </defs>
+
+  <text x="600" y="34" class="title" text-anchor="middle">Trakr — Wiring Diagram (referência de montagem)</text>
+  <text x="600" y="54" class="subtitle" text-anchor="middle">Fonte: firmware/include/pins.h · docs/hardware/README.md</text>
+
+  <!-- ======= ESP32 ======= -->
+  <g>
+    <rect x="700" y="150" width="340" height="420" class="box" />
+    <text x="870" y="185" class="mod-txt" text-anchor="middle">ESP32-WROOM-32</text>
+    <text x="870" y="205" class="subtitle" text-anchor="middle">UART2 · BLE · Deep Sleep (ext0)</text>
+
+    <!-- pin list (right side) -->
+    <rect x="940" y="225" width="70" height="30" class="gpio" />
+    <text x="975" y="244" class="gpio-txt">GPIO25</text>
+    <rect x="940" y="265" width="70" height="30" class="gpio" />
+    <text x="975" y="284" class="gpio-txt">GPIO26</text>
+    <rect x="940" y="305" width="70" height="30" class="gpio" />
+    <text x="975" y="324" class="gpio-txt">GPIO33</text>
+    <rect x="940" y="345" width="70" height="30" class="gpio" />
+    <text x="975" y="364" class="gpio-txt">GPIO16</text>
+    <rect x="940" y="385" width="70" height="30" class="gpio" />
+    <text x="975" y="404" class="gpio-txt">GPIO17</text>
+    <rect x="940" y="425" width="70" height="30" class="gpio" />
+    <text x="975" y="444" class="gpio-txt">GPIO14</text>
+    <rect x="940" y="465" width="70" height="30" class="gpio" />
+    <text x="975" y="484" class="gpio-txt">VIN</text>
+    <rect x="940" y="505" width="70" height="30" class="gpio" />
+    <text x="975" y="524" class="gpio-txt">GND</text>
+  </g>
+
+  <!-- ======= YRM100 (left top) ======= -->
+  <g>
+    <rect x="60" y="120" width="300" height="190" class="box" />
+    <text x="210" y="150" class="mod-txt" text-anchor="middle">YRM100 — Leitor UHF</text>
+    <text x="210" y="170" class="subtitle" text-anchor="middle">Módulo UHF (R2 serial, 115200 baud)</text>
+
+    <rect x="90" y="200" width="110" height="28" class="gpio" />
+    <text x="145" y="219" class="gpio-txt">TX</text>
+    <rect x="90" y="238" width="110" height="28" class="gpio" />
+    <text x="145" y="257" class="gpio-txt">RX</text>
+    <rect x="90" y="276" width="110" height="28" class="gpio" />
+    <text x="145" y="295" class="gpio-txt">VCC (3.3/5V)</text>
+
+    <!-- wire TX/GPIO16 ; RX/GPIO17 -->
+    <path d="M 200 214 C 400 214, 700 260, 940 260" class="wire" />
+    <text x="560" y="222" class="lbl">U2RXD → GPIO16 (RX do ESP32)</text>
+    <path d="M 200 252 C 400 252, 700 400, 940 400" class="wire" />
+    <text x="560" y="320" class="lbl">U2TXD → GPIO17 (TX do ESP32)</text>
+    <path d="M 200 288 C 400 288, 700 440, 940 440" class="wire-pwr" />
+    <text x="560" y="416" class="lbl">VCC → 3.3V (compartilhado)</text>
+    <path d="M 200 312 C 400 312, 700 500, 940 440" stroke="#f4a261" stroke-width="2" stroke-dasharray="6 4" fill="none" />
+    <text x="560" y="492" class="lbl">EN → GPIO14 (opcional, se a placa tiver EN)</text>
+  </g>
+
+  <!-- ======= Sensor Hall (left mid) ======= -->
+  <g>
+    <rect x="60" y="380" width="300" height="170" class="box" />
+    <text x="210" y="410" class="mod-txt" text-anchor="middle">Sensor Hall A3144</text>
+    <text x="210" y="430" class="subtitle" text-anchor="middle">Tampa fechada / aberta (wake-up)</text>
+
+    <rect x="90" y="455" width="110" height="28" class="gpio" />
+    <text x="145" y="474" class="gpio-txt">OUT</text>
+    <rect x="90" y="493" width="110" height="28" class="gpio" />
+    <text x="145" y="512" class="gpio-txt">VCC (3.3V)</text>
+
+    <path d="M 200 494 C 430 494, 700 320, 940 320" class="wire" />
+    <text x="545" y="508" class="lbl">OUT → GPIO33 (RTC/ext0)</text>
+    <path d="M 200 507 C 430 507, 700 440, 940 452" class="wire-pwr" />
+  </g>
+
+  <!-- ======= Buzzer (mid) ======= -->
+  <g>
+    <rect x="60" y="580" width="300" height="120" class="box" />
+    <text x="210" y="626" class="mod-txt" text-anchor="middle">Buzzer ativo 5V</text>
+    <rect x="90" y="648" width="110" height="28" class="gpio" />
+    <text x="145" y="667" class="gpio-txt">+ (sinal)</text>
+    <text x="210" y="680" class="pin-txt">− → GND</text>
+    <path d="M 200 662 C 400 662, 700 240, 940 240" class="wire" />
+    <text x="560" y="238" class="lbl">Sinal → GPIO25</text>
+  </g>
+
+  <!-- ======= WS2812B (right mid) ======= -->
+  <g>
+    <rect x="60" y="730" width="300" height="120" class="box" />
+    <text x="210" y="745" class="mod-txt" text-anchor="middle">LED WS2812B (light pipe)</text>
+    <text x="210" y="765" class="subtitle" text-anchor="middle">Alimentado em 5V — sinal 3.3V</text>
+    <rect x="90" y="800" width="110" height="28" class="gpio" />
+    <text x="145" y="819" class="gpio-txt">DIN</text>
+    <text x="210" y="828" class="pin-txt">VCC → 5V · GND</text>
+    <path d="M 200 814 C 430 814, 700 280, 950 280" class="wire" />
+    <text x="640" y="296" class="lbl">DIN → GPIO26</text>
+  </g>
+
+  <!-- ======= TP4056 / Bateria (right bottom) ======= -->
+  <g>
+    <rect x="700" y="600" width="380" height="180" class="box" />
+    <text x="890" y="635" class="mod-txt" text-anchor="middle">TP4056 (USB-C) + Bateria 18650</text>
+    <text x="890" y="655" class="subtitle" text-anchor="middle">B+ / B− da bateria · OUT → VIN do ESP32</text>
+    <rect x="790" y="700" width="110" height="28" class="gpio" />
+    <text x="845" y="719" class="pin-txt">OUT +</text>
+    <rect x="790" y="740" width="110" height="28" class="gpio" />
+    <text x="845" y="759" class="pin-txt">OUT −</text>
+
+    <path d="M 900 714 C 900 470, 1010 470, 1010 455" class="wire-pwr" />
+    <text x="1030" y="560" class="lbl">OUT+ → VIN (5V)</text>
+    <path d="M 900 754 C 900 530, 1010 530, 1010 480" class="wire-gnd" />
+    <text x="1030" y="610" class="lbl">OUT− → GND (comum)</text>
+  </g>
+
+  <!-- legend -->
+  <g transform="translate(700, 60)">
+    <text class="subtitle">Legenda:</text>
+    <path d="M 0 22 h 40" class="wire" />
+    <text x="50" y="27" class="lbl">Sinal digital</text>
+    <path d="M 120 22 h 40" class="wire-pwr" />
+    <text x="170" y="27" class="lbl">Alimentação (+)</text>
+    <path d="M 260 22 h 40" class="wire-gnd" />
+    <text x="310" y="27" class="lbl">GND (−)</text>
+  </g>
+</svg>

@@ -39,6 +39,8 @@ Tabela de Ligações (Pinout)
 
 * **RX:** Pino GPIO 17 (TX2 do ESP32)
 
+* **EN (se disponível):** Pino GPIO 14 — usado pelo firmware (`YRM100_EN_PIN`) para energizar/desenergizar o módulo no deep sleep. **Confirmar no datasheet da sua placa**; se a sua não tiver pino EN/PE, remova a definição de `YRM100_EN_PIN` em `firmware/include/pins.h` (o firmware desliga apenas o UART, reduzindo parte do consumo).
+
 * _(Nota: O YRM100 se comunica via UART. O ESP32 envia comandos em HEX para iniciar a leitura)._
 
 ### Sensor Hall (A3144) -> ESP32
@@ -53,7 +55,7 @@ Tabela de Ligações (Pinout)
 
 * **Buzzer (+):** Pino GPIO 25
 
-* **LED (Data/Positivo):** Pino GPIO 26
+* **LED (Data):** Pino GPIO 26 — LED RGB endereçável **WS2812B** (o firmware usa FastLED com o padrão GRB no pino `LED_RGB_PIN`). Se optar por um LED comum, ajuste `TrakLed` em `firmware/lib/TrakLed/`.
 
 ### Energia (TP4056 & Bateria 18650)
 

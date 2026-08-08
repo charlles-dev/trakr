@@ -37,3 +37,8 @@ A caixa tem um buraco de ~5mm.
 ### 3. Pés de Absorção (TPU)
 
 Os rebaixos inferiores (_cutouts_) servem para colar pezinhos de borracha impresso em material flexível (TPU) ou discos anti-derrapantes comerciais (EVA).
+
+### 4. Validação e Exports
+
+* Os arquivos `.3mf`/`.stl` de referência ficarão em [`cad/exports/`](../../cad/exports/README.md) (aguardando geração do script).
+* Antes de imprimir, preencha o [Checklist de Validação](validation.md).
