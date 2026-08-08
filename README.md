@@ -48,7 +48,7 @@ Ao contrário de sistemas convencionais dependentes de nuvem, **a maleta Trakr �
 * 🧠 **Edge Intelligence (Autonomia Total):** O ESP32 armazena o inventário (`inventory.json` via LittleFS). Se uma ferramenta faltar ao fechar a tampa, a maleta processa a falha e dispara alarmes (Buzzer/LED) imediatamente, sem precisar do celular.
 * 📡 **Varredura UHF RFID em Massa:** Utiliza o módulo YRM100 com antena cerâmica para ler o interior da maleta de uma só vez, captando múltiplas tags flexíveis *anti-metal* simultaneamente.
 * 🔋 **Ultra Low-Power:** Deep Sleep com wake-up via Sensor Hall (despertar apenas por mudança magnética da tampa), alimentado por bateria 18650 carregada via TP4056 (USB-C).
-* 📱 **App Offline-First (Thin Client):** Aplicativo Kotlin com interface *tech-oriented* em *Dark Mode*. Ele se conecta via Bluetooth LE (BLE), espelha o banco de dados da maleta no cache local do celular (Room/SQLite) e emite notificações push inteligentes (ex: *"Atenção: Falta a Chave Phillips 1/4"*).
+* 📱 **App Offline-First (Thin Client):** Aplicativo Kotlin com interface *tech-oriented* em *Dark Mode*. Ele se conecta via Bluetooth LE (BLE), espelha o banco de dados da maleta no cache local do celular (Room/SQLite) e emite notificações push locais (ex: *"Ferramenta retirada: Chave Phillips 1/4"*).
 * ⚙️ **Design Mecânico Paramétrico:** Gerado via script nativo no Autodesk Fusion 360. A estrutura inclui suportes para insertos térmicos de latão (M3), *cable management* integrado, guias de luz (*Light Pipe*) para o LED de status interno e cutouts para pés em TPU.
 
 ## 🏗️ Arquitetura do Sistema

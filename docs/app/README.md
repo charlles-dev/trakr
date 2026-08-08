@@ -7,9 +7,9 @@ Pré-requisitos
 
 * Android Studio (Iguana ou superior)
 
-* SDK Android API 34+
+* SDK Android API 35+
 
-* Celular físico com Android 9.0+ para testar o Bluetooth (Emuladores não suportam BLE nativo bem).
+* Celular físico com Android 8.0+ para testar o Bluetooth (Emuladores não suportam BLE nativo bem).
 
 Dependências Principais (build.gradle)
 --------------------------------------

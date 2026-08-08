@@ -264,6 +264,11 @@ void setup() {
   gBle.setHistory(gEvents.toJsonString());
   detectLidTransition();
 
+  // Evento "boot": registrado em ligação/reset — não em wake magnético (tampa).
+  if (wakeCause == ESP_SLEEP_WAKEUP_UNDEFINED) {
+    pushEvent("boot", "", "");
+  }
+
   enter(State::LEITURA);
 }
 

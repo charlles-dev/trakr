@@ -110,7 +110,10 @@ sequenceDiagram
 O firmware loga no serial (`115200 baud`) a cada varrimento, incluindo o JSON do inventário publicado via GATT:
 
 ```
+[TRAKR] Boot | wake cause: 0
 [TRAKR] Inventario carregado: 6 ferramentas
-[TRAKR] Boot | wake cause: 3
+[TRAKR] Historico carregado: 12 eventos
 [TRAKR] BLE iniciado com GATT pronto
-[TRAKR] !!! Ferramenta ausente: Chave de Fenda Cross
+[TRAKR] Evento: {"ts":123,"type":"boot"}
+[TRAKR] Evento: {"ts":456,"type":"tool_missing","tool_id":"01","name":"Chave de Fenda Cross"}
+```

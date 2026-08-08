@@ -57,8 +57,8 @@ Exemplos:
 
 ### Testes
 
-- App: `./gradlew test` (ainda em expansão — adicione testes para novas lógicas).
-- Firmware: `pio test` (estrutura de teste ainda a ser implementada; validações manuais via `TRAKR_SIM` são aceitas como evidência).
+- App: ainda não há testes automatizados (`app/src/test` vazio); validação via `./gradlew assembleDebug` + testes manuais com celular físico (emulador não suporta BLE nativo). Pull requests com testes para lógica nova são bem-vindos.
+- Firmware: estrutura de teste (`pio test`) ainda a ser implementada; validações manuais via `-DTRAKR_SIM` são aceitas como evidência.
 
 ## Reportando bugs
 
