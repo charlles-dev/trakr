@@ -102,9 +102,9 @@ def criar_passa_cabo(comp, extrudes, bx, by):
 
     # Slot de 1.6 mm de largura (eixo X), vertical, atravessando a ponte
     sk_f = comp.sketches.add(comp.yZConstructionPlane)
-    sk_f.sketchCurves.sketchLines.addTwoPointRectangle(
-        adsk.core.Point3D.create(by - 0.12, -0.05, 0),
-        adsk.core.Point3D.create(by + 0.12, 0.4, 0))
+    p1 = sk_f.modelToSketchSpace(adsk.core.Point3D.create(0, by - 0.12, -0.05))
+    p2 = sk_f.modelToSketchSpace(adsk.core.Point3D.create(0, by + 0.12, 0.4))
+    sk_f.sketchCurves.sketchLines.addTwoPointRectangle(p1, p2)
     ext_f = extrudes.createInput(
         sk_f.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
     ext_f.setSymmetricExtent(adsk.core.ValueInput.createByReal(0.08), True)
@@ -122,10 +122,9 @@ def criar_quinas(comp, extrudes, posicoes_x, largura_parede):
     for x in posicoes_x:
         sk = comp.sketches.add(comp.yZConstructionPlane)
         # Este sketch vive em x=0; o transform translada o anel até o x desejado
-        sk.sketchCurves.sketchCircles.addByCenterRadius(
-            adsk.core.Point3D.create(cy, cz, 0), 0.55)
-        sk.sketchCurves.sketchCircles.addByCenterRadius(
-            adsk.core.Point3D.create(cy, cz, 0), 0.18)
+        pc = sk.modelToSketchSpace(adsk.core.Point3D.create(0, cy, cz))
+        sk.sketchCurves.sketchCircles.addByCenterRadius(pc, 0.55)
+        sk.sketchCurves.sketchCircles.addByCenterRadius(pc, 0.18)
         ring = pegar_anel(sk)
         if not ring:
             continue
@@ -370,15 +369,16 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
     # Grade do buzzer na parede esquerda (3 furos de 3 mm)
     sk_buzz = b_comp.sketches.add(b_comp.yZConstructionPlane)
     for bz in [-2.4, -2.8, -3.2]:
-        sk_buzz.sketchCurves.sketchCircles.addByCenterRadius(
-            adsk.core.Point3D.create(width / 2 - 1.0, bz, 0), 0.15)
+        pc = sk_buzz.modelToSketchSpace(
+            adsk.core.Point3D.create(0, width / 2, bz))
+        sk_buzz.sketchCurves.sketchCircles.addByCenterRadius(pc, 0.15)
     col_buzz = adsk.core.ObjectCollection.create()
     for p in sk_buzz.profiles:
         col_buzz.add(p)
     if col_buzz.count > 0:
         e_buzz = b_comp.features.extrudeFeatures.createInput(
             col_buzz, adsk.fusion.FeatureOperations.CutFeatureOperation)
-        e_buzz.setDistanceExtent(False, adsk.core.ValueInput.createByReal(0.6))
+        e_buzz.setSymmetricExtent(adsk.core.ValueInput.createByReal(0.6), True)
         b_comp.features.extrudeFeatures.add(e_buzz)
 
     # Boss + pocket do ímã (8 x 3 mm) na parede frontal interna
@@ -471,9 +471,11 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
     # Travas de abertura (tampa para em ~100-115°), coladas no lip traseiro
     for sx in [length * 0.12, length * 0.88]:
         sk_stop = b_comp.sketches.add(b_comp.yZConstructionPlane)
-        sk_stop.sketchCurves.sketchLines.addTwoPointRectangle(
-            adsk.core.Point3D.create(width - 0.45, 0.0, 0),
-            adsk.core.Point3D.create(width - 0.25, 0.3, 0))
+        p1 = sk_stop.modelToSketchSpace(
+            adsk.core.Point3D.create(0, width - 0.45, 0.0))
+        p2 = sk_stop.modelToSketchSpace(
+            adsk.core.Point3D.create(0, width - 0.25, 0.3))
+        sk_stop.sketchCurves.sketchLines.addTwoPointRectangle(p1, p2)
         e_stop = b_comp.features.extrudeFeatures.createInput(
             sk_stop.profiles.item(0), adsk.fusion.FeatureOperations.JoinFeatureOperation)
         e_stop.setSymmetricExtent(adsk.core.ValueInput.createByReal(0.35), True)
@@ -598,9 +600,11 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
     # Asas do limitador de abertura (batem nas travas da base, ~100-115°)
     for wx in [length * 0.12, length * 0.88]:
         sk_wing = t_comp.sketches.add(t_comp.yZConstructionPlane)
-        sk_wing.sketchCurves.sketchLines.addTwoPointRectangle(
-            adsk.core.Point3D.create(width + 0.05, -0.5, 0),
-            adsk.core.Point3D.create(width + 0.25, 0.0, 0))
+        p1 = sk_wing.modelToSketchSpace(
+            adsk.core.Point3D.create(0, width + 0.05, -0.5))
+        p2 = sk_wing.modelToSketchSpace(
+            adsk.core.Point3D.create(0, width + 0.25, 0.0))
+        sk_wing.sketchCurves.sketchLines.addTwoPointRectangle(p1, p2)
         e_wing = t_comp.features.extrudeFeatures.createInput(
             sk_wing.profiles.item(0), adsk.fusion.FeatureOperations.JoinFeatureOperation)
         e_wing.setSymmetricExtent(adsk.core.ValueInput.createByReal(0.35), True)
@@ -740,8 +744,9 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
         pin_comp = pin_occ.component
         pin_comp.name = "Maleta_Pino_Dobradica"
         sk_pin = pin_comp.sketches.add(pin_comp.yZConstructionPlane)
-        sk_pin.sketchCurves.sketchCircles.addByCenterRadius(
-            adsk.core.Point3D.create(width + 0.15, 0.05, 0), 0.17)
+        pc = sk_pin.modelToSketchSpace(
+            adsk.core.Point3D.create(0, width + 0.15, 0.05))
+        sk_pin.sketchCurves.sketchCircles.addByCenterRadius(pc, 0.17)
         e_pin = pin_comp.features.extrudeFeatures.createInput(
             sk_pin.profiles.item(0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation)
         e_pin.setSymmetricExtent(adsk.core.ValueInput.createByReal(length * 0.35), True)
@@ -752,8 +757,9 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
 
         # Cabeça do pino (r 3 mm) na ponta em x = 0.15L, retém o pino
         sk_pinh = pin_comp.sketches.add(pin_comp.yZConstructionPlane)
-        sk_pinh.sketchCurves.sketchCircles.addByCenterRadius(
-            adsk.core.Point3D.create(width + 0.15, 0.05, 0), 0.3)
+        pc = sk_pinh.modelToSketchSpace(
+            adsk.core.Point3D.create(0, width + 0.15, 0.05))
+        sk_pinh.sketchCurves.sketchCircles.addByCenterRadius(pc, 0.3)
         e_pinh = pin_comp.features.extrudeFeatures.createInput(
             sk_pinh.profiles.item(0), adsk.fusion.FeatureOperations.JoinFeatureOperation)
         e_pinh.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-0.2))
