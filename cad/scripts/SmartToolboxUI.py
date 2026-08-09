@@ -101,16 +101,19 @@ def criar_passa_cabo(comp, extrudes, bx, by):
     extrudes.add(inp)
 
     # Slot de 1.6 mm de largura (eixo X), vertical, atravessando a ponte
-    sk_f = comp.sketches.add(comp.yZConstructionPlane)
-    p1 = sk_f.modelToSketchSpace(adsk.core.Point3D.create(0, by - 0.12, -0.05))
-    p2 = sk_f.modelToSketchSpace(adsk.core.Point3D.create(0, by + 0.12, 0.4))
+    pl_in = comp.constructionPlanes.createInput()
+    pl_in.setByOffset(comp.yZConstructionPlane,
+                      adsk.core.ValueInput.createByReal(bx))
+    pl_f = comp.constructionPlanes.add(pl_in)
+    sk_f = comp.sketches.add(pl_f)
+    p1 = sk_f.modelToSketchSpace(
+        adsk.core.Point3D.create(bx, by - 0.12, -0.05))
+    p2 = sk_f.modelToSketchSpace(
+        adsk.core.Point3D.create(bx, by + 0.12, 0.4))
     sk_f.sketchCurves.sketchLines.addTwoPointRectangle(p1, p2)
     ext_f = extrudes.createInput(
         sk_f.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
-    ext_f.setSymmetricExtent(adsk.core.ValueInput.createByReal(0.08), True)
-    mat = adsk.core.Matrix3D.create()
-    mat.translation = adsk.core.Vector3D.create(bx, 0, 0)
-    ext_f.transform = mat
+    ext_f.setSymmetricExtent(adsk.core.ValueInput.createByReal(0.3), True)
     extrudes.add(ext_f)
 
 
