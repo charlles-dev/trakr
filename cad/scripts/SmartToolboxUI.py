@@ -123,9 +123,12 @@ def criar_quinas(comp, extrudes, posicoes_x, largura_parede):
     # na altura do aro (z = 0.05) — mesmo local na base e na tampa.
     cy, cz = largura_parede + 0.15, 0.05
     for x in posicoes_x:
-        sk = comp.sketches.add(comp.yZConstructionPlane)
-        # Este sketch vive em x=0; o transform translada o anel até o x desejado
-        pc = sk.modelToSketchSpace(adsk.core.Point3D.create(0, cy, cz))
+        pl_in = comp.constructionPlanes.createInput()
+        pl_in.setByOffset(comp.yZConstructionPlane,
+                          adsk.core.ValueInput.createByReal(x))
+        pl_f = comp.constructionPlanes.add(pl_in)
+        sk = comp.sketches.add(pl_f)
+        pc = sk.modelToSketchSpace(adsk.core.Point3D.create(x, cy, cz))
         sk.sketchCurves.sketchCircles.addByCenterRadius(pc, 0.55)
         sk.sketchCurves.sketchCircles.addByCenterRadius(pc, 0.18)
         ring = pegar_anel(sk)
@@ -134,9 +137,6 @@ def criar_quinas(comp, extrudes, posicoes_x, largura_parede):
         inp = extrudes.createInput(
             ring, adsk.fusion.FeatureOperations.JoinFeatureOperation)
         inp.setSymmetricExtent(adsk.core.ValueInput.createByReal(0.45), True)
-        mat = adsk.core.Matrix3D.create()
-        mat.translation = adsk.core.Vector3D.create(x, 0, 0)
-        inp.transform = mat
         extrudes.add(inp)
 
 
@@ -199,8 +199,11 @@ def exportar_stls(root, design):
         os.makedirs(pasta, exist_ok=True)
         em = design.exportManager
         for occ in root.occurrences:
+            contagem = {}
             for body in occ.component.bRepBodies:
-                nome = body.parentComponent.name.replace(' ', '_') + '.stl'
+                base = body.parentComponent.name.replace(' ', '_')
+                contagem[base] = contagem.get(base, 0) + 1
+                nome = '%s_%02d.stl' % (base, contagem[base])
                 opt = em.createSTLExportOptions(body, os.path.join(pasta, nome))
                 opt.meshRefinement = adsk.fusion.MeshRefinementSettings.MeshRefinementMedium
                 em.execute(opt)
@@ -341,7 +344,7 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
             p_ledge, adsk.fusion.FeatureOperations.JoinFeatureOperation)
         e_ledge.startExtent = adsk.fusion.OffsetStartDefinition.create(
             adsk.core.ValueInput.createByReal(-tray_h))
-        e_ledge.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-0.3))
+        e_ledge.setDistanceExtent(True, adsk.core.ValueInput.createByReal(0.3))
         b_comp.features.extrudeFeatures.add(e_ledge)
 
     # Recorte USB-C na parede frontal (passa também pela bandeja)
@@ -404,7 +407,7 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
         sk_mag_hole.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
     e_mag_hole.startExtent = adsk.fusion.OffsetStartDefinition.create(
         adsk.core.ValueInput.createByReal(-0.1))
-    e_mag_hole.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-0.35))
+    e_mag_hole.setDistanceExtent(True, adsk.core.ValueInput.createByReal(0.35))
     b_comp.features.extrudeFeatures.add(e_mag_hole)
 
     # Pilar interno que sobe até a tampa (sensor Hall A3144 + fiação)
@@ -428,7 +431,7 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
         sk_hall.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
     e_hall.startExtent = adsk.fusion.OffsetStartDefinition.create(
         adsk.core.ValueInput.createByReal(2.4))
-    e_hall.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-0.3))
+    e_hall.setDistanceExtent(True, adsk.core.ValueInput.createByReal(0.3))
     b_comp.features.extrudeFeatures.add(e_hall)
 
     # Pockets dos pés TPU na base inferior
@@ -457,7 +460,7 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
         sk_yr.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
     e_yr.startExtent = adsk.fusion.OffsetStartDefinition.create(
         adsk.core.ValueInput.createByReal(-base_depth + 0.25))
-    e_yr.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-0.2))
+    e_yr.setDistanceExtent(True, adsk.core.ValueInput.createByReal(0.2))
     b_comp.features.extrudeFeatures.add(e_yr)
 
     # Standoffs M3 para a placa de controle (z -4.0 até o fundo)
@@ -473,18 +476,19 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
 
     # Travas de abertura (tampa para em ~100-115°), coladas no lip traseiro
     for sx in [length * 0.12, length * 0.88]:
-        sk_stop = b_comp.sketches.add(b_comp.yZConstructionPlane)
+        pl_in = b_comp.constructionPlanes.createInput()
+        pl_in.setByOffset(b_comp.yZConstructionPlane,
+                          adsk.core.ValueInput.createByReal(sx))
+        pl_f = b_comp.constructionPlanes.add(pl_in)
+        sk_stop = b_comp.sketches.add(pl_f)
         p1 = sk_stop.modelToSketchSpace(
-            adsk.core.Point3D.create(0, width - 0.45, 0.0))
+            adsk.core.Point3D.create(sx, width - 0.45, 0.0))
         p2 = sk_stop.modelToSketchSpace(
-            adsk.core.Point3D.create(0, width - 0.25, 0.3))
+            adsk.core.Point3D.create(sx, width - 0.25, 0.3))
         sk_stop.sketchCurves.sketchLines.addTwoPointRectangle(p1, p2)
         e_stop = b_comp.features.extrudeFeatures.createInput(
             sk_stop.profiles.item(0), adsk.fusion.FeatureOperations.JoinFeatureOperation)
         e_stop.setSymmetricExtent(adsk.core.ValueInput.createByReal(0.35), True)
-        mat_s = adsk.core.Matrix3D.create()
-        mat_s.translation = adsk.core.Vector3D.create(sx, 0, 0)
-        e_stop.transform = mat_s
         b_comp.features.extrudeFeatures.add(e_stop)
 
     # ==========================================================
@@ -556,7 +560,7 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
         sk_mag_t.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
     e_mag_t.startExtent = adsk.fusion.OffsetStartDefinition.create(
         adsk.core.ValueInput.createByReal(lid_depth - wall))
-    e_mag_t.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-0.35))
+    e_mag_t.setDistanceExtent(True, adsk.core.ValueInput.createByReal(0.35))
     t_comp.features.extrudeFeatures.add(e_mag_t)
 
     # Furo do guia de luz no topo da tampa (5 mm)
@@ -567,7 +571,7 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
         sk_lp_hole.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
     e_lp_hole.startExtent = adsk.fusion.OffsetStartDefinition.create(
         adsk.core.ValueInput.createByReal(lid_depth))
-    e_lp_hole.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-0.6))
+    e_lp_hole.setDistanceExtent(True, adsk.core.ValueInput.createByReal(0.6))
     t_comp.features.extrudeFeatures.add(e_lp_hole)
 
     # Alça na tampa (2 pilares que alcançam a barra + barra)
@@ -602,18 +606,19 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
 
     # Asas do limitador de abertura (batem nas travas da base, ~100-115°)
     for wx in [length * 0.12, length * 0.88]:
-        sk_wing = t_comp.sketches.add(t_comp.yZConstructionPlane)
+        pl_in = t_comp.constructionPlanes.createInput()
+        pl_in.setByOffset(t_comp.yZConstructionPlane,
+                          adsk.core.ValueInput.createByReal(wx))
+        pl_f = t_comp.constructionPlanes.add(pl_in)
+        sk_wing = t_comp.sketches.add(pl_f)
         p1 = sk_wing.modelToSketchSpace(
-            adsk.core.Point3D.create(0, width + 0.05, -0.5))
+            adsk.core.Point3D.create(wx, width - 0.2, -0.5))
         p2 = sk_wing.modelToSketchSpace(
-            adsk.core.Point3D.create(0, width + 0.25, 0.0))
+            adsk.core.Point3D.create(wx, width + 0.25, 0.0))
         sk_wing.sketchCurves.sketchLines.addTwoPointRectangle(p1, p2)
         e_wing = t_comp.features.extrudeFeatures.createInput(
             sk_wing.profiles.item(0), adsk.fusion.FeatureOperations.JoinFeatureOperation)
         e_wing.setSymmetricExtent(adsk.core.ValueInput.createByReal(0.35), True)
-        mat_w = adsk.core.Matrix3D.create()
-        mat_w.translation = adsk.core.Vector3D.create(wx, 0, 0)
-        e_wing.transform = mat_w
         t_comp.features.extrudeFeatures.add(e_wing)
 
     # ==========================================================
@@ -676,7 +681,9 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
     if col_grid.count > 0:
         ext_grid = tray_comp.features.extrudeFeatures.createInput(
             col_grid, adsk.fusion.FeatureOperations.CutFeatureOperation)
-        ext_grid.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-1.2))
+        ext_grid.startExtent = adsk.fusion.OffsetStartDefinition.create(
+            adsk.core.ValueInput.createByReal(0.25))
+        ext_grid.setDistanceExtent(True, adsk.core.ValueInput.createByReal(0.15))
         tray_comp.features.extrudeFeatures.add(ext_grid)
 
     # Recorte USB-C alinhado com o da base (mesmo X em coordenadas de mundo)
@@ -687,7 +694,7 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
         adsk.core.Point3D.create(usb_tr_x0 + 1.3, wall + 0.2, 0))
     e_usb_tr = tray_comp.features.extrudeFeatures.createInput(
         sk_usb_tr.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
-    e_usb_tr.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-0.5))
+    e_usb_tr.setDistanceExtent(False, adsk.core.ValueInput.createByReal(0.6))
     tray_comp.features.extrudeFeatures.add(e_usb_tr)
 
     # Berço da bateria 18650 (U: paredes laterais + traseira, aberto na frente)
@@ -721,7 +728,7 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
     if col_cables.count > 0:
         e_cables = tray_comp.features.extrudeFeatures.createInput(
             col_cables, adsk.fusion.FeatureOperations.CutFeatureOperation)
-        e_cables.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-1.2))
+        e_cables.setDistanceExtent(False, adsk.core.ValueInput.createByReal(1.2))
         tray_comp.features.extrudeFeatures.add(e_cables)
 
     # Furo de passagem de cabos no piso, na frente do berço (para a placa)
@@ -730,7 +737,7 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
         adsk.core.Point3D.create(cradle_x + bat_len / 2, cradle_y - 0.7, 0), 0.25)
     e_pass = tray_comp.features.extrudeFeatures.createInput(
         sk_pass.profiles.item(0), adsk.fusion.FeatureOperations.CutFeatureOperation)
-    e_pass.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-1.75))
+    e_pass.setDistanceExtent(False, adsk.core.ValueInput.createByReal(1.75))
     tray_comp.features.extrudeFeatures.add(e_pass)
 
     # Bandeja assentada no ledge: topo na altura do aro, fundo em z=-tray_h
@@ -746,29 +753,31 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
         pin_occ = root.occurrences.addNewComponent(adsk.core.Matrix3D.create())
         pin_comp = pin_occ.component
         pin_comp.name = "Maleta_Pino_Dobradica"
-        sk_pin = pin_comp.sketches.add(pin_comp.yZConstructionPlane)
+        pl_in = pin_comp.constructionPlanes.createInput()
+        pl_in.setByOffset(pin_comp.yZConstructionPlane,
+                          adsk.core.ValueInput.createByReal(length * 0.5))
+        pl_f = pin_comp.constructionPlanes.add(pl_in)
+        sk_pin = pin_comp.sketches.add(pl_f)
         pc = sk_pin.modelToSketchSpace(
-            adsk.core.Point3D.create(0, width + 0.15, 0.05))
+            adsk.core.Point3D.create(length * 0.5, width + 0.15, 0.05))
         sk_pin.sketchCurves.sketchCircles.addByCenterRadius(pc, 0.17)
         e_pin = pin_comp.features.extrudeFeatures.createInput(
             sk_pin.profiles.item(0), adsk.fusion.FeatureOperations.NewBodyFeatureOperation)
         e_pin.setSymmetricExtent(adsk.core.ValueInput.createByReal(length * 0.35), True)
-        mat_pin = adsk.core.Matrix3D.create()
-        mat_pin.translation = adsk.core.Vector3D.create(length * 0.5, 0, 0)
-        e_pin.transform = mat_pin
         pin_comp.features.extrudeFeatures.add(e_pin)
 
         # Cabeça do pino (r 3 mm) na ponta em x = 0.15L, retém o pino
-        sk_pinh = pin_comp.sketches.add(pin_comp.yZConstructionPlane)
+        pl_in = pin_comp.constructionPlanes.createInput()
+        pl_in.setByOffset(pin_comp.yZConstructionPlane,
+                          adsk.core.ValueInput.createByReal(length * 0.15 + 0.2))
+        pl_f = pin_comp.constructionPlanes.add(pl_in)
+        sk_pinh = pin_comp.sketches.add(pl_f)
         pc = sk_pinh.modelToSketchSpace(
-            adsk.core.Point3D.create(0, width + 0.15, 0.05))
+            adsk.core.Point3D.create(length * 0.15 + 0.2, width + 0.15, 0.05))
         sk_pinh.sketchCurves.sketchCircles.addByCenterRadius(pc, 0.3)
         e_pinh = pin_comp.features.extrudeFeatures.createInput(
             sk_pinh.profiles.item(0), adsk.fusion.FeatureOperations.JoinFeatureOperation)
-        e_pinh.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-0.2))
-        mat_pinh = adsk.core.Matrix3D.create()
-        mat_pinh.translation = adsk.core.Vector3D.create(length * 0.15 + 0.2, 0, 0)
-        e_pinh.transform = mat_pinh
+        e_pinh.setDistanceExtent(True, adsk.core.ValueInput.createByReal(0.2))
         pin_comp.features.extrudeFeatures.add(e_pinh)
 
         # Pés TPU (4 cilindros, encaixam nos pockets da base — fundo rente)
