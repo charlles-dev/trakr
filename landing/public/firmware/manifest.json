@@ -1,0 +1,36 @@
+{
+  "name": "Trakr Fleet Firmware",
+  "version": "1.0.0",
+  "home_assistant_domain": "trakr",
+  "funding_url": "https://github.com/sponsors/trakr",
+  "new_install_prompt_erasable": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32",
+      "parts": [
+        {
+          "path": "dummy.bin",
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "chipFamily": "ESP32-S3",
+      "parts": [
+        {
+          "path": "dummy.bin",
+          "offset": 0
+        }
+      ]
+    },
+    {
+      "chipFamily": "ESP8266",
+      "parts": [
+        {
+          "path": "dummy.bin",
+          "offset": 0
+        }
+      ]
+    }
+  ]
+}

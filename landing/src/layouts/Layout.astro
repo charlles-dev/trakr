@@ -1,0 +1,67 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>{title}</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet"/>
+</head>
+<body class="bg-primary-container text-on-surface font-body-md antialiased min-h-screen flex flex-col relative overflow-x-hidden">
+  
+  <!-- Global Effects -->
+  <div class="fixed inset-0 scanline z-50 mix-blend-overlay"></div>
+  <div class="fixed inset-0 animated-grid z-0 opacity-40 pointer-events-none"></div>
+  
+  <!-- Ambient Lighting Glows -->
+  <div class="fixed top-[-20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-secondary-container/20 blur-[120px] pointer-events-none z-0"></div>
+  <div class="fixed bottom-[-20%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-hazard-orange/5 blur-[120px] pointer-events-none z-0"></div>
+
+  <!-- TopNavBar -->
+  <header class="fixed top-0 w-full z-50 border-b border-white/10 bg-primary-container/60 backdrop-blur-xl shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+    <div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
+      <div class="font-display-lg text-[2rem] font-bold text-primary tracking-tighter">TRAKR</div>
+      <nav class="hidden md:flex space-x-8">
+        <a class="text-on-surface-variant font-label-caps hover:text-primary transition-colors duration-300 uppercase" href="#">Fleet</a>
+        <a class="text-on-surface-variant font-label-caps hover:text-primary transition-colors duration-300 uppercase" href="#">Telemetry</a>
+        <a class="text-on-surface-variant font-label-caps hover:text-primary transition-colors duration-300 uppercase" href="#">Security</a>
+        <a class="text-on-surface-variant font-label-caps hover:text-primary transition-colors duration-300 uppercase" href="#">Logistics</a>
+      </nav>
+      <div class="flex items-center space-x-4">
+        <button class="hidden md:inline-flex text-on-surface-variant font-label-caps hover:text-primary transition-colors duration-300 uppercase">Terminal</button>
+        <button class="bg-hazard-orange text-black font-label-caps px-6 py-2 uppercase tracking-widest btn-glow hover:bg-[#ff9d2e]">Deploy System</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow pt-24 relative z-10">
+    <slot />
+  </main>
+
+  <script is:inline>
+    // Global Scroll Reveal Logic
+    document.addEventListener('DOMContentLoaded', () => {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+          }
+        });
+      }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+
+      document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+    });
+  </script>
+</body>
+</html>
