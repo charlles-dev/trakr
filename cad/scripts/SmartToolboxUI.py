@@ -378,9 +378,7 @@ def gerar_maleta(length, width, base_depth, lid_depth, wall, acessorios,
     if col_buzz.count > 0:
         e_buzz = b_comp.features.extrudeFeatures.createInput(
             col_buzz, adsk.fusion.FeatureOperations.CutFeatureOperation)
-        e_buzz.startExtent = adsk.fusion.OffsetStartDefinition.create(
-            adsk.core.ValueInput.createByReal(0.0))
-        e_buzz.setDistanceExtent(False, adsk.core.ValueInput.createByReal(-0.5))
+        e_buzz.setDistanceExtent(False, adsk.core.ValueInput.createByReal(0.6))
         b_comp.features.extrudeFeatures.add(e_buzz)
 
     # Boss + pocket do ímã (8 x 3 mm) na parede frontal interna
