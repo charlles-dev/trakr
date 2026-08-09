@@ -932,10 +932,10 @@ class ToolboxCommandCreatedHandler(adsk.core.CommandCreatedEventHandler):
             material.listItems.add('TPU', False)
 
             inputs.addBoolValueInput('acessorios', 'Gerar acessórios '
-                                     '(pino, pés TPU, guia de luz)', True, True)
-            inputs.addBoolValueInput('exportar', 'Exportar STL após gerar', True, True)
+                                     '(pino, pés TPU, guia de luz)', True, '', True)
+            inputs.addBoolValueInput('exportar', 'Exportar STL após gerar', True, '', True)
             inputs.addBoolValueInput('abrir_tampa', 'Visualizar tampa aberta (100°)',
-                                     True, False)
+                                     True, '', False)
         except:
             app = adsk.core.Application.get()
             app.userInterface.messageBox(traceback.format_exc())
