@@ -1,9 +1,13 @@
 ---
-// Trakr Simulator Mini-Game 3D - UX OVERHAUL (FIXED)
+// Trakr Setup Simulator — 5-phase interactive mini-game (Three.js + Web Serial)
+// Phase 1: Firmware flash (Web Serial / demo fallback)
+// Phase 2: Assembly (drag & drop 7 components into their berths)
+// Phase 3: Add case to phone (BLE scan + pairing with virtual smartphone)
+// Phase 4: Register tags (tagged tools dropped into the case, read by YRM100)
+// Phase 5: In/out test (take tools out and back in — case beeps, phone notifies)
 ---
-
 <div id="trakr-game-container" class="w-full max-w-6xl mx-auto rounded-[1rem] overflow-hidden border border-[#222] shadow-[0_0_80px_rgba(255,107,80,0.15)] relative mt-32 mb-32 bg-[#050505]">
-    
+
     <!-- Top Bar -->
     <div class="absolute top-0 left-0 w-full h-8 bg-[#0a0a0a] border-b border-[#222] flex items-center px-4 justify-between z-20 pointer-events-none">
         <div class="flex gap-2">
@@ -12,100 +16,141 @@
             <div class="w-2.5 h-2.5 rounded-full bg-[#333]"></div>
         </div>
         <div class="text-[#888] font-mono text-[9px] uppercase tracking-[0.3em] flex items-center gap-2">
-            <iconify-icon icon="lucide:cpu"></iconify-icon> Trakr_3D_Engine_v2.exe
+            <iconify-icon icon="lucide:cpu"></iconify-icon> trakr_setup.exe — v1.0.0
         </div>
     </div>
 
-    <!-- UI Overlay / HUD -->
-    <div id="ui-layer" class="absolute top-8 left-0 w-full p-6 pointer-events-none z-10 hidden flex-col items-center">
-        <div class="bg-black/60 backdrop-blur-md border border-[#333] p-6 rounded-xl shadow-2xl flex flex-col items-center min-w-[300px]">
+    <!-- HUD Overlay -->
+    <div id="hud-layer" class="absolute top-8 left-0 w-full p-5 pointer-events-none z-10 hidden flex-col gap-3">
+        <div class="bg-black/60 backdrop-blur-md border border-[#333] p-5 rounded-xl shadow-2xl flex flex-col min-w-[300px] max-w-md">
             <div id="ui-title" class="text-[#FF6B50] font-mono text-sm tracking-[0.3em] font-bold uppercase mb-2">
-                [ Phase 1: Assembly ]
+                [ Phase 1: Firmware ]
             </div>
-            <div id="ui-subtitle" class="text-[#aaa] text-xs font-mono text-center mb-6 h-8">
-                Drag and drop the components to their designated slots.
+            <div id="ui-subtitle" class="text-[#aaa] text-xs font-mono mb-4">
+                Connect the ESP32 over USB and flash the edge kernel.
             </div>
-            <div id="ui-progress" class="w-full h-1 bg-[#222] rounded mb-6 overflow-hidden">
+            <div class="w-full h-1 bg-[#222] rounded mb-4 overflow-hidden">
                 <div id="ui-progress-bar" class="h-full bg-[#FF6B50] w-0 transition-all duration-500"></div>
             </div>
-            <button id="sync-btn" class="w-full py-3 bg-[#FF6B50]/10 border border-[#FF6B50] text-[#FF6B50] font-mono text-xs font-bold tracking-[0.2em] uppercase hidden pointer-events-auto hover:bg-[#FF6B50] hover:text-black transition-all rounded shadow-[0_0_15px_rgba(255,107,80,0)] hover:shadow-[0_0_15px_rgba(255,107,80,0.5)]">
-                Sync Bluetooth
-            </button>
-            <button id="test-alarm-btn" class="w-full py-3 bg-red-600/10 border border-red-600 text-red-500 font-mono text-xs font-bold tracking-[0.2em] uppercase hidden pointer-events-auto hover:bg-red-600 hover:text-white transition-all rounded shadow-[0_0_15px_rgba(255,0,0,0)] hover:shadow-[0_0_15px_rgba(255,0,0,0.5)]">
-                Remove Tool (Test)
-            </button>
+            <div id="trk-panel" class="pointer-events-auto flex flex-col gap-2"></div>
         </div>
     </div>
 
     <!-- Start Overlay -->
-    <div id="game-overlay" class="absolute inset-0 bg-black/80 backdrop-blur-sm z-30 flex flex-col items-center justify-center p-6">
+    <div id="start-overlay" class="absolute inset-0 bg-black/80 backdrop-blur-sm z-30 flex flex-col items-center justify-center p-6">
         <div class="w-16 h-16 border border-[#FF6B50] rounded-full flex items-center justify-center mb-6">
             <iconify-icon icon="lucide:box" class="text-[#FF6B50] text-3xl"></iconify-icon>
         </div>
-        <h3 class="text-white font-mono text-2xl tracking-[0.2em] mb-4 text-center">TRAKR 3D SIMULATOR</h3>
-        <p class="text-[#888] text-sm max-w-lg text-center mb-10 leading-relaxed font-mono">
-            Assemble the hardware components onto the mainboard. Complete the software synchronization, and test the real-time UHF RFID tracking physics.
+        <h3 class="text-white font-mono text-2xl tracking-[0.2em] mb-4 text-center">TRAKR SETUP SIMULATOR</h3>
+        <p class="text-[#888] text-sm max-w-lg text-center mb-6 leading-relaxed font-mono">
+            Deploy a Trakr fleet from scratch: flash the firmware, assemble the case,
+            add it to your phone, register the RFID tags and test tools in and out —
+            the case beeps and your phone notifies.
         </p>
+        <div class="flex flex-col gap-1.5 mb-10 font-mono text-[10px] text-[#aaa] tracking-widest">
+            <div>[ 1 ] FIRMWARE — ESP32 on USB, click FLASH</div>
+            <div>[ 2 ] ASSEMBLY — click & seat 7 components</div>
+            <div>[ 3 ] ADD TO PHONE — BLE pairing</div>
+            <div>[ 4 ] REGISTER TAGS — RFID read</div>
+            <div>[ 5 ] IN/OUT TEST — beeps + notifications</div>
+        </div>
         <button id="start-game-btn" class="px-10 py-4 bg-[#FF6B50] text-black font-mono text-xs font-bold uppercase tracking-[0.3em] hover:bg-white transition-colors rounded pointer-events-auto shadow-[0_0_30px_rgba(255,107,80,0.3)] hover:shadow-[0_0_40px_rgba(255,255,255,0.4)]">
             Initialize Engine
         </button>
     </div>
-    
+
+    <!-- Victory Overlay -->
+    <div id="win-overlay" class="absolute inset-0 bg-black/85 backdrop-blur-sm z-30 hidden flex-col items-center justify-center p-6">
+        <div class="w-16 h-16 border-2 border-green-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_40px_rgba(74,222,128,0.4)]">
+            <iconify-icon icon="lucide:check" class="text-green-500 text-3xl"></iconify-icon>
+        </div>
+        <h3 class="text-white font-mono text-3xl tracking-[0.2em] mb-3 text-center">FLEET READY</h3>
+        <p class="text-[#888] text-sm max-w-md text-center mb-8 leading-relaxed font-mono">
+            Firmware flashed, case assembled and paired, 3/3 tags registered —
+            and every tool tested in and out with the case beeping and your
+            phone notifying. Zero tools left behind — guaranteed.
+        </p>
+        <div class="flex flex-wrap gap-4 justify-center">
+            <a href="https://github.com/charlles-dev/trakr" target="_blank" class="px-8 py-3 bg-[#1a1a1a] border border-[#333] hover:border-[#FF6B50] hover:text-[#FF6B50] text-white font-mono text-xs font-bold uppercase tracking-[0.2em] rounded pointer-events-auto transition-all">
+                Get the Code
+            </a>
+            <a href="#contact" class="px-8 py-3 bg-[#FF6B50] text-black font-mono text-xs font-bold uppercase tracking-[0.2em] rounded pointer-events-auto hover:bg-white transition-colors shadow-[0_0_30px_rgba(255,107,80,0.3)]">
+                Deploy Fleet
+            </a>
+            <button id="replay-btn" class="px-6 py-3 text-[#666] hover:text-white font-mono text-xs uppercase tracking-[0.2em] rounded pointer-events-auto transition-colors">
+                Replay
+            </button>
+        </div>
+    </div>
+
     <!-- 3D Canvas -->
     <div id="three-container" class="w-full h-[600px] md:h-[750px] outline-none select-none cursor-grab active:cursor-grabbing"></div>
 </div>
 
+<style is:global>
+    #trk-toast {
+        position: fixed; right: 20px; bottom: 20px; z-index: 60;
+        opacity: 0; transform: translateY(12px);
+        transition: opacity .25s ease, transform .25s ease;
+        pointer-events: none;
+        background: rgba(5, 5, 5, 0.9);
+        border: 1px solid #333; border-left-width: 3px;
+        padding: 10px 14px; border-radius: 8px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+    #trk-toast.toast-show { opacity: 1; transform: translateY(0); }
+    #trk-toast.kind-missing { border-left-color: #FF6B50; }
+    #trk-toast.kind-back { border-left-color: #4ade80; }
+</style>
+
 <!-- Three.js Libraries -->
 <script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script is:inline src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-<script is:inline src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DragControls.js"></script>
 
 <script is:inline>
-    // --- Audio Context Engine ---
+    // ============================================================
+    // AUDIO ENGINE
+    // ============================================================
     const AudioEngine = {
         ctx: null,
-        init: function() {
-            if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        init: function () {
+            if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
         },
-        playTone: function(freq, type, duration, vol=0.1) {
-            if(!this.ctx) return;
+        playTone: function (freq, type, duration, vol = 0.1) {
+            if (!this.ctx) return;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = type;
             osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            
             gain.gain.setValueAtTime(vol, this.ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-            
             osc.connect(gain);
             gain.connect(this.ctx.destination);
             osc.start();
             osc.stop(this.ctx.currentTime + duration);
         },
-        snap: function() { this.playTone(800, 'square', 0.1, 0.05); this.playTone(1200, 'sine', 0.15, 0.05); },
-        boot: function() { this.playTone(400, 'sine', 0.5, 0.1); setTimeout(()=>this.playTone(600, 'sine', 0.5, 0.1), 200); setTimeout(()=>this.playTone(800, 'sine', 0.8, 0.1), 400); },
-        alarm: function() { this.playTone(1000, 'sawtooth', 0.4, 0.2); setTimeout(()=>this.playTone(800, 'sawtooth', 0.4, 0.2), 200); }
+        snap: function () { this.playTone(800, 'square', 0.1, 0.05); this.playTone(1200, 'sine', 0.15, 0.05); },
+        boot: function () { this.playTone(400, 'sine', 0.5, 0.1); setTimeout(() => this.playTone(600, 'sine', 0.5, 0.1), 200); setTimeout(() => this.playTone(800, 'sine', 0.8, 0.1), 400); },
+        buzz: function () { this.playTone(440, 'square', 0.35, 0.12); setTimeout(() => this.playTone(440, 'square', 0.35, 0.12), 400); },
+        chirp: function () { this.playTone(1500, 'sine', 0.15, 0.06); }
     };
 
-    // --- High-Quality Canvas Textures ---
+    // ============================================================
+    // CANVAS TEXTURES (procedural, no external assets)
+    // ============================================================
     function createPCBTexture() {
         const canvas = document.createElement('canvas');
         canvas.width = 1024; canvas.height = 1024;
         const ctx = canvas.getContext('2d');
-        
-        // Base sleek dark green
         ctx.fillStyle = '#0a150e';
         ctx.fillRect(0, 0, 1024, 1024);
-        
-        // Clean Grid
         ctx.strokeStyle = '#112215';
         ctx.lineWidth = 2;
-        for(let i=0; i<1024; i+=32) {
+        for (let i = 0; i < 1024; i += 32) {
             ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 1024); ctx.stroke();
             ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(1024, i); ctx.stroke();
         }
-
-        // Draw symmetric circuitry lines
         ctx.strokeStyle = '#338844';
         ctx.lineWidth = 4;
         ctx.beginPath();
@@ -114,7 +159,6 @@
         ctx.moveTo(200, 200); ctx.lineTo(800, 200);
         ctx.moveTo(200, 800); ctx.lineTo(800, 800);
         ctx.stroke();
-
         return new THREE.CanvasTexture(canvas);
     }
 
@@ -122,37 +166,26 @@
         const canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 512;
         const ctx = canvas.getContext('2d');
-        
-        // Black PCB Base
         ctx.fillStyle = '#111111';
         ctx.fillRect(0, 0, 512, 512);
-
-        // Gold Pins on edges
         ctx.fillStyle = '#d4af37';
-        for(let i=40; i<480; i+=25) {
+        for (let i = 40; i < 480; i += 25) {
             ctx.fillRect(0, i, 20, 10);
             ctx.fillRect(492, i, 20, 10);
         }
-
-        // Silver Shield
         ctx.fillStyle = '#dddddd';
         ctx.fillRect(100, 50, 312, 350);
-        
-        // Logo
         ctx.fillStyle = '#333333';
         ctx.font = 'bold 50px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('ESP32', 256, 230);
         ctx.font = '30px sans-serif';
         ctx.fillText('WiFi / BLE', 256, 280);
-
-        // Antenna zig-zag on top
         ctx.strokeStyle = '#d4af37';
         ctx.lineWidth = 15;
         ctx.beginPath();
         ctx.moveTo(150, 20); ctx.lineTo(180, 20); ctx.lineTo(180, 40); ctx.lineTo(210, 40); ctx.lineTo(210, 20); ctx.lineTo(240, 20); ctx.lineTo(240, 40);
         ctx.stroke();
-
         return new THREE.CanvasTexture(canvas);
     }
 
@@ -160,74 +193,194 @@
         const canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 512;
         const ctx = canvas.getContext('2d');
-        
-        // White industrial panel
         ctx.fillStyle = '#f0f0f0';
         ctx.fillRect(0, 0, 512, 512);
-
-        // Tech borders
         ctx.strokeStyle = '#cccccc';
         ctx.lineWidth = 10;
         ctx.strokeRect(20, 20, 472, 472);
-        
-        // Inner square (patch)
         ctx.fillStyle = '#e0e0e0';
         ctx.fillRect(100, 100, 312, 312);
-
         ctx.fillStyle = '#888888';
         ctx.font = 'bold 40px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('UHF RFID', 256, 250);
         ctx.font = '20px sans-serif';
         ctx.fillText('900 MHz', 256, 290);
-
         return new THREE.CanvasTexture(canvas);
     }
 
-    function createPhoneTexture() {
+    function createYRMTexture() {
         const canvas = document.createElement('canvas');
-        canvas.width = 256; canvas.height = 512;
+        canvas.width = 512; canvas.height = 512;
         const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#050510';
-        ctx.fillRect(0, 0, 256, 512);
-        
-        // Radar circles
-        ctx.strokeStyle = '#00ff88';
-        ctx.lineWidth = 2;
-        ctx.beginPath(); ctx.arc(128, 256, 60, 0, Math.PI*2); ctx.stroke();
-        ctx.beginPath(); ctx.arc(128, 256, 90, 0, Math.PI*2); ctx.stroke();
-        
-        ctx.fillStyle = '#00ff88';
-        ctx.font = '20px monospace';
-        ctx.fillText("SYNC.READY", 70, 50);
+        ctx.fillStyle = '#0b1a10';
+        ctx.fillRect(0, 0, 512, 512);
+        ctx.strokeStyle = '#2a7a3f';
+        ctx.lineWidth = 8;
+        for (let i = 24; i < 512; i += 48) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 512); ctx.stroke();
+        }
+        ctx.fillStyle = '#d4af37';
+        for (let i = 30; i < 490; i += 34) {
+            ctx.fillRect(0, i, 26, 12);
+            ctx.fillRect(486, i, 26, 12);
+        }
+        ctx.fillStyle = '#eeeeee';
+        ctx.fillRect(150, 200, 212, 120);
+        ctx.fillStyle = '#333333';
+        ctx.font = 'bold 36px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('YRM100', 256, 255);
+        ctx.font = '24px sans-serif';
+        ctx.fillText('UHF READER', 256, 295);
         return new THREE.CanvasTexture(canvas);
     }
 
-    // --- Boot Game ---
+    function createTPTexture() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 256; canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#0d2b13';
+        ctx.fillRect(0, 0, 256, 256);
+        ctx.strokeStyle = '#2f8a45';
+        ctx.lineWidth = 6;
+        for (let i = 16; i < 256; i += 32) {
+            ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 256); ctx.stroke();
+        }
+        ctx.fillStyle = '#d4af37';
+        ctx.fillRect(196, 40, 52, 176);
+        ctx.fillStyle = '#eeeeee';
+        ctx.fillRect(60, 88, 136, 80);
+        ctx.fillStyle = '#333333';
+        ctx.font = 'bold 26px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('TP4056', 128, 128);
+        ctx.fillStyle = '#888888';
+        ctx.font = '16px sans-serif';
+        ctx.fillText('USB-C ? 1A', 128, 165);
+        return new THREE.CanvasTexture(canvas);
+    }
+
+    // Smartphone screen (radar / inventory modes)
+    const phoneCanvas = document.createElement('canvas');
+    phoneCanvas.width = 256; phoneCanvas.height = 512;
+    const phoneCtx = phoneCanvas.getContext('2d');
+
+    function drawPhone(mode, items, event) {
+        phoneCtx.fillStyle = '#050510';
+        phoneCtx.fillRect(0, 0, 256, 512);
+        phoneCtx.fillStyle = '#00ff88';
+        phoneCtx.font = '16px monospace';
+        phoneCtx.fillText('TRAKR CASE', 24, 40);
+        phoneCtx.fillStyle = '#444444';
+        phoneCtx.fillRect(24, 52, 208, 1);
+        if (mode === 'radar') {
+            phoneCtx.strokeStyle = '#00ff88';
+            phoneCtx.lineWidth = 2;
+            phoneCtx.beginPath(); phoneCtx.arc(128, 220, 60, 0, Math.PI * 2); phoneCtx.stroke();
+            phoneCtx.beginPath(); phoneCtx.arc(128, 220, 95, 0, Math.PI * 2); phoneCtx.stroke();
+            phoneCtx.fillStyle = '#00ff88';
+            phoneCtx.font = '18px monospace';
+            phoneCtx.fillText('SCANNING...', 68, 340);
+        } else {
+            phoneCtx.fillStyle = '#00ff88';
+            phoneCtx.font = '16px monospace';
+            phoneCtx.fillText('INVENTORY.DB', 24, 90);
+            phoneCtx.fillStyle = '#aaaaaa';
+            phoneCtx.font = '13px monospace';
+            if (!items || items.length === 0) {
+                phoneCtx.fillText('( empty )', 24, 130);
+            } else {
+                items.forEach((it, i) => {
+                    const y = 130 + i * 48;
+                    phoneCtx.fillStyle = '#FF6B50';
+                    phoneCtx.fillRect(24, y - 16, 4, 26);
+                    phoneCtx.fillStyle = '#ffffff';
+                    phoneCtx.fillText(it.name, 38, y);
+                    phoneCtx.fillStyle = '#666666';
+                    phoneCtx.font = '11px monospace';
+                    phoneCtx.fillText(it.id, 38, y + 18);
+                    phoneCtx.font = '13px monospace';
+                    phoneCtx.fillStyle = '#4ade80';
+                    phoneCtx.fillText('SYNCED', 180, y);
+                });
+            }
+            if (event) {
+                const bad = event.kind === 'missing';
+                phoneCtx.fillStyle = bad ? '#3a0d0d' : '#0d3a17';
+                phoneCtx.fillRect(12, 372, 232, 124);
+                phoneCtx.strokeStyle = bad ? '#FF6B50' : '#4ade80';
+                phoneCtx.lineWidth = 1;
+                phoneCtx.strokeRect(12.5, 372.5, 231, 123);
+                phoneCtx.fillStyle = bad ? '#FF6B50' : '#4ade80';
+                phoneCtx.font = 'bold 12px monospace';
+                phoneCtx.fillText(bad ? 'ALERT: TOOL_MISSING' : 'OK: TOOL_BACK', 24, 394);
+                phoneCtx.fillStyle = '#ffffff';
+                phoneCtx.font = '12px monospace';
+                phoneCtx.fillText(event.name, 24, 416);
+                phoneCtx.fillStyle = '#777777';
+                phoneCtx.font = '10px monospace';
+                phoneCtx.fillText(event.ts, 24, 438);
+                phoneCtx.fillStyle = bad ? '#FF6B50' : '#4ade80';
+                phoneCtx.fillText(bad ? 'BEEP: CASE ALARM' : 'BEEP: TOOL BACK', 24, 460);
+            }
+        }
+        phoneCanvas.__needsUpdate = true;
+    }
+
+    // ============================================================
+    // GAME STATE
+    // ============================================================
+    let PHASE = 0; // 1..5
+    let placed = 0, paired = false, registered = 0, testDone = false;
+    const INVENTORY = [];
+    let lastEvent = null;
+
+    const PHASE_TITLES = {
+        1: ['[ PHASE 1: FIRMWARE ]', 'ESP32 connected over USB — click FLASH to install the edge kernel.'],
+        2: ['[ PHASE 2: ASSEMBLY ]', 'Click each component, then click its berth to seat it.'],
+        3: ['[ PHASE 3: ADD TO PHONE ]', 'Scan for the case over BLE and pair it with your phone.'],
+        4: ['[ PHASE 4: REGISTER TAGS ]', 'Click a tool, then click inside the case so the YRM100 can read it.'],
+        5: ['[ PHASE 5: IN/OUT TEST ]', 'Click tools to take them out and back in — the case beeps and the phone notifies.']
+    };
+
+    function setPhaseTitle(p) {
+        document.getElementById('ui-title').innerText = PHASE_TITLES[p][0];
+        document.getElementById('ui-subtitle').innerText = PHASE_TITLES[p][1];
+    }
+
+    function setProgress(pct) {
+        document.getElementById('ui-progress-bar').style.width = pct + '%';
+    }
+
+    // ============================================================
+    // ENGINE
+    // ============================================================
     const startBtn = document.getElementById('start-game-btn');
     if (startBtn) {
         startBtn.addEventListener('click', () => {
             AudioEngine.init();
             AudioEngine.playTone(300, 'sine', 0.1);
-            document.getElementById('game-overlay').style.display = 'none';
-            document.getElementById('ui-layer').classList.remove('hidden');
-            document.getElementById('ui-layer').classList.add('flex');
+            document.getElementById('start-overlay').style.display = 'none';
+            document.getElementById('hud-layer').classList.remove('hidden');
+            document.getElementById('hud-layer').classList.add('flex');
             initThreeEngine();
         });
     }
+    const replayBtn = document.getElementById('replay-btn');
+    if (replayBtn) replayBtn.addEventListener('click', () => { window.location.reload(); });
 
     function initThreeEngine() {
         const container = document.getElementById('three-container');
         const width = container.clientWidth;
         const height = container.clientHeight;
 
-        // Scene & Camera
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050505);
-        scene.fog = new THREE.Fog(0x050505, 10, 40);
+        scene.fog = new THREE.Fog(0x050505, 18, 55);
 
-        const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 100);
-        camera.position.set(-10, 15, 10);
+        const camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 200);
+        camera.position.set(4.5, 5, 9.5);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
         renderer.setSize(width, height);
@@ -236,122 +389,66 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
-        // OrbitControls
         const orbit = new THREE.OrbitControls(camera, renderer.domElement);
         orbit.enableDamping = true;
-        orbit.dampingFactor = 0.05;
-        orbit.maxPolarAngle = Math.PI / 2.5;
-        orbit.minDistance = 5;
-        orbit.maxDistance = 25;
+        orbit.dampingFactor = 0.06;
+        orbit.maxPolarAngle = Math.PI / 2.3;
+        orbit.minDistance = 7;
+        orbit.maxDistance = 34;
+        orbit.target.set(1.5, 0.7, 1);
 
-        // Lighting
-        const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+        const ambient = new THREE.AmbientLight(0xffffff, 0.65);
         scene.add(ambient);
-
-        const spotLight = new THREE.SpotLight(0xffffff, 1.0);
-        spotLight.position.set(0, 20, 0);
-        spotLight.angle = Math.PI / 4;
-        spotLight.penumbra = 0.2;
+        const spotLight = new THREE.SpotLight(0xffffff, 1.1);
+        spotLight.position.set(6, 24, 8);
+        spotLight.angle = Math.PI / 3.5;
+        spotLight.penumbra = 0.35;
         spotLight.castShadow = true;
         spotLight.shadow.mapSize.width = 1024;
         spotLight.shadow.mapSize.height = 1024;
         scene.add(spotLight);
+        const rim = new THREE.DirectionalLight(0xff6b50, 0.35);
+        rim.position.set(-8, 10, -10);
+        scene.add(rim);
 
-        // Grid
-        const grid = new THREE.GridHelper(50, 50, 0x222222, 0x111111);
-        grid.position.y = -0.1;
+        const grid = new THREE.GridHelper(60, 60, 0x222222, 0x111111);
+        grid.position.y = -0.6;
         scene.add(grid);
 
-        // --- Materials & Textures ---
+        // Assembly environment (hidden until the flash completes)
+        const env = new THREE.Group();
+        env.visible = false;
+        scene.add(env);
+
+        // Flash stage (phase 1 — bench with the ESP32 on USB)
+        // (built after the shared materials are declared, see below)
+
+        // Tray interior (the case "mainboard" 12.5cm x 8.4cm)
         const pcbTex = createPCBTexture();
-        const espTex = createESPTexture();
-        const antTex = createAntennaTexture();
-        const phoneTex = createPhoneTexture();
-        
-        const matBoard = new THREE.MeshStandardMaterial({ map: pcbTex, roughness: 0.3, metalness: 0.1 });
-        const matSlot = new THREE.MeshStandardMaterial({ color: 0xFF6B50, wireframe: true, transparent: true, opacity: 0.2 });
-        
-        const matESPBase = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
-        const matESPTop = new THREE.MeshStandardMaterial({ map: espTex, roughness: 0.5 });
-        const espMaterials = [matESPBase, matESPBase, matESPTop, matESPBase, matESPBase, matESPBase];
-        
-        const matAntBase = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.9 });
-        const matAntTop = new THREE.MeshStandardMaterial({ map: antTex, roughness: 0.8 });
-        const antMaterials = [matAntBase, matAntBase, matAntTop, matAntBase, matAntBase, matAntBase];
-
-        const matBattery = new THREE.MeshStandardMaterial({ color: 0x1877f2, metalness: 0.4, roughness: 0.5 });
-        const matBuzzer = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 });
-        
-        // --- Modeling ---
-        const draggables = [];
-        const targets = [];
-
-        // 1. Mainboard
-        const mainboard = new THREE.Mesh(new THREE.BoxGeometry(10, 0.4, 7), matBoard);
+        const matBoard = new THREE.MeshStandardMaterial({ map: pcbTex, roughness: 0.35, metalness: 0.15 });
+        const mainboard = new THREE.Mesh(new THREE.BoxGeometry(12.5, 0.45, 8.4), matBoard);
+        mainboard.position.y = 0.225;
         mainboard.receiveShadow = true;
         mainboard.castShadow = true;
-        scene.add(mainboard);
+        env.add(mainboard);
 
-        // LED
+        // Status LED
         const ledMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
-        const ledMesh = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.1, 0.3), ledMat);
-        ledMesh.position.set(-4, 0.25, -2.5);
-        scene.add(ledMesh);
-        
-        const ledLight = new THREE.PointLight(0x000000, 0, 5);
-        ledLight.position.set(-4, 1, -2.5);
-        scene.add(ledLight);
+        const ledMesh = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.14, 0.4), ledMat);
+        ledMesh.position.set(5.6, 0.55, 3.5);
+        env.add(ledMesh);
+        const ledLight = new THREE.PointLight(0x000000, 0, 6);
+        ledLight.position.set(5.6, 1.4, 3.5);
+        env.add(ledLight);
 
-        // Slots
-        function createSlot(x, z, w, d, name) {
-            const slot = new THREE.Mesh(new THREE.BoxGeometry(w, 0.5, d), matSlot);
-            slot.position.set(x, 0.25, z);
-            slot.userData = { id: name, filled: false };
-            scene.add(slot);
-            targets.push(slot);
-            return slot;
-        }
-        createSlot(-2, 0, 2.5, 3.5, 'esp');
-        createSlot(3, -1.5, 1.2, 3.8, 'batt');
-        createSlot(3, 2, 1.2, 1.2, 'buzz');
-        createSlot(-0.5, 0, 3.5, 3.5, 'ant');
-
-        // Draggable Factory (Single Meshes to fix DragControls bugs)
-        function createDraggable(geometry, materials, startPos, name) {
-            const mesh = new THREE.Mesh(geometry, materials);
-            mesh.position.copy(startPos);
-            mesh.userData = { id: name, isPlaced: false };
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            scene.add(mesh);
-            draggables.push(mesh);
-            return mesh;
-        }
-
-        // ESP32 (Single Mesh)
-        createDraggable(new THREE.BoxGeometry(2.3, 0.5, 3.3), espMaterials, new THREE.Vector3(-8, 0.25, -4), 'esp');
-
-        // Battery (Single Mesh)
-        const battGeo = new THREE.CylinderGeometry(0.5, 0.5, 3.6, 24);
-        battGeo.rotateX(Math.PI/2);
-        createDraggable(battGeo, matBattery, new THREE.Vector3(8, 0.5, -4), 'batt');
-
-        // Buzzer (Single Mesh)
-        const buzzGeo = new THREE.CylinderGeometry(0.5, 0.5, 1, 16);
-        createDraggable(buzzGeo, matBuzzer, new THREE.Vector3(8, 0.5, 4), 'buzz');
-
-        // Antenna (Single Mesh)
-        createDraggable(new THREE.BoxGeometry(3.3, 0.2, 3.3), antMaterials, new THREE.Vector3(-8, 0.1, 4), 'ant');
-
-
-        // --- Particles (Sparks) ---
-        const sparkCount = 100;
+        // ---- Sparks ----
+        const sparkCount = 120;
         const sparkGeo = new THREE.BufferGeometry();
         const sparkPos = new Float32Array(sparkCount * 3);
         const sparkVel = [];
-        for(let i=0; i<sparkCount; i++) {
-            sparkPos[i*3] = 0; sparkPos[i*3+1] = -100; sparkPos[i*3+2] = 0; // hidden
-            sparkVel.push(new THREE.Vector3(0,0,0));
+        for (let i = 0; i < sparkCount; i++) {
+            sparkPos[i * 3 + 1] = -100;
+            sparkVel.push(new THREE.Vector3());
         }
         sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
         const sparkMat = new THREE.PointsMaterial({ color: 0xFFD700, size: 0.1, transparent: true, blending: THREE.AdditiveBlending });
@@ -359,242 +456,887 @@
         scene.add(sparks);
 
         function emitSparks(pos) {
-            const posAttr = sparks.geometry.attributes.position;
-            for(let i=0; i<sparkCount; i++) {
-                posAttr.setXYZ(i, pos.x, pos.y + 0.5, pos.z);
-                sparkVel[i].set((Math.random()-0.5)*10, Math.random()*10, (Math.random()-0.5)*10);
+            const attr = sparks.geometry.attributes.position;
+            for (let i = 0; i < sparkCount; i++) {
+                attr.setXYZ(i, pos.x, pos.y + 0.5, pos.z);
+                sparkVel[i].set((Math.random() - 0.5) * 9, Math.random() * 9, (Math.random() - 0.5) * 9);
             }
-            posAttr.needsUpdate = true;
+            attr.needsUpdate = true;
         }
 
-        // --- Fixed Drag Logic ---
-        const dragControls = new THREE.DragControls(draggables, camera, renderer.domElement);
-        
-        let componentsPlaced = 0;
-
-        dragControls.addEventListener('dragstart', (e) => {
-            orbit.enabled = false;
-            e.object.position.y += 1;
-            container.style.cursor = 'grabbing';
-            AudioEngine.playTone(300, 'triangle', 0.1, 0.02);
+        // ============================================================
+        // SLOTS (one material per slot — fixed shared-material bug)
+        // ============================================================
+        const SLOTS = [
+            { id: 'esp',  x: -4.9,  z: 0,     w: 2.4, d: 3.4 },   // ESP32-WROOM-32  51.5x25.4mm
+            { id: 'yrm',  x: -1.3,  z: 0,     w: 3.8, d: 2.9 },   // YRM100 UHF reader 40x30mm
+            { id: 'ant',  x: 2.2,   z: 2.75,  w: 2.5, d: 2.5 },   // ceramic IPEX antenna 25x25mm
+            { id: 'batt', x: 4.4,   z: -1.6,  w: 3.4, d: 1.3 },   // 18650 cell (axis X)
+            { id: 'tp',   x: 4.65,  z: -3.3,  w: 2.2, d: 1.8 },   // TP4056 charge board
+            { id: 'led',  x: -4.9,  z: 2.55,  w: 1.1, d: 1.1 },   // WS2812B RGB LED
+            { id: 'hall', x: -2.6,  z: 2.9,   w: 1.9, d: 1.5 }    // Hall sensor (lid)
+        ];
+        const slotMeshes = {};
+        const matSlotBase = new THREE.MeshStandardMaterial({ color: 0xFF6B50, wireframe: true, transparent: true, opacity: 0.22, depthWrite: false });
+        SLOTS.forEach((s) => {
+            const m = new THREE.Mesh(new THREE.BoxGeometry(s.w, 0.5, s.d), matSlotBase.clone());
+            m.position.set(s.x, 0.25, s.z);
+            m.userData = { id: s.id, filled: false, slot: s };
+            env.add(m);
+            slotMeshes[s.id] = m;
         });
 
-        dragControls.addEventListener('drag', (e) => {
-            e.object.position.y = 1.5;
+        // ============================================================
+        // COMPONENTS (reusable material stacks)
+        // ============================================================
+        const matDark = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+        const matSteel = new THREE.MeshStandardMaterial({ color: 0xbfc4cc, metalness: 0.85, roughness: 0.3 });
+        const matGold = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.8, roughness: 0.25 });
+        const matBlue = new THREE.MeshStandardMaterial({ color: 0x1877f2, metalness: 0.45, roughness: 0.5 });
+        const espTex = createESPTexture();
+        const antTex = createAntennaTexture();
+        const yrmTex = createYRMTexture();
+        const tpTex = createTPTexture();
+        const matTop = new THREE.MeshStandardMaterial({ map: espTex, roughness: 0.5 });
+        const matAntTop = new THREE.MeshStandardMaterial({ map: antTex, roughness: 0.8 });
+        const matYrmTop = new THREE.MeshStandardMaterial({ map: yrmTex, roughness: 0.55 });
+        const matTpTop = new THREE.MeshStandardMaterial({ map: tpTex, roughness: 0.55 });
+
+        const COMP_START = {
+            esp:  [-10.8, -6], yrm:  [10.8, 6.5], ant: [10.8, -6],
+            batt: [-10.8, 6.5], tp:   [10.8, 3.6], led: [-10.8, 3.6], hall: [10.8, -3.4]
+        };
+        const HALVES = { esp: 0.225, yrm: 0.175, ant: 0.075, batt: 0.55, tp: 0.15, led: 0.175, hall: 0.15 };
+
+        function setHome(obj) {
+            obj.userData.home = obj.position.clone();
+        }
+
+        function buildESP() {
+            const m = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.45, 3.3), [matDark, matDark, matTop, matDark, matDark, matDark]);
+            m.userData.id = 'esp'; m.userData.half = HALVES.esp;
+            return m;
+        }
+        function buildYRM() {
+            const m = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.35, 2.7), [matDark, matDark, matYrmTop, matDark, matDark, matDark]);
+            m.userData.id = 'yrm'; m.userData.half = HALVES.yrm;
+            return m;
+        }
+        function buildAnt() {
+            const m = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.15, 2.5), [new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.9 }), new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.9 }), matAntTop, new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.9 }), new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.9 }), new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.9 })]);
+            m.userData.id = 'ant'; m.userData.half = HALVES.ant;
+            return m;
+        }
+        function buildBatt() {
+            const g = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 3.2, 20), matBlue);
+            body.rotation.z = Math.PI / 2;
+            const n1 = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.12, 16), matSteel);
+            n1.rotation.z = Math.PI / 2; n1.position.x = 1.62;
+            const n2 = n1.clone(); n2.position.x = -1.62;
+            g.add(body, n1, n2);
+            g.userData.id = 'batt'; g.userData.half = HALVES.batt;
+            return g;
+        }
+        function buildTP() {
+            const g = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.3, 1.5), [matDark, matDark, matTpTop, matDark, matDark, matDark]);
+            const usb = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.22, 0.14), matGold);
+            usb.position.set(0, -0.2, 0.8);
+            g.add(body, usb);
+            g.userData.id = 'tp'; g.userData.half = HALVES.tp;
+            return g;
+        }
+        function buildLED() {
+            const g = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.35, 0.9), matDark);
+            const lens = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.1, 0.55), new THREE.MeshBasicMaterial({ color: 0x222222 }));
+            lens.position.y = 0.225;
+            g.add(body, lens);
+            g.userData.id = 'led'; g.userData.half = HALVES.led;
+            g.userData.lens = lens;
+            return g;
+        }
+        function buildHall() {
+            const g = new THREE.Group();
+            const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.3, 1.4), [matDark, matDark, new THREE.MeshStandardMaterial({ color: 0x1f2a52, roughness: 0.7 }), matDark, matDark, matDark]);
+            for (let i = -1; i <= 1; i++) {
+                const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.2, 0.08), matGold);
+                leg.position.set(i * 0.6, -0.24, 0.35);
+                g.add(leg);
+            }
+            g.add(body);
+            g.userData.id = 'hall'; g.userData.half = HALVES.hall;
+            return g;
+        }
+
+        const builders = { esp: buildESP, yrm: buildYRM, ant: buildAnt, batt: buildBatt, tp: buildTP, led: buildLED, hall: buildHall };
+        const components = [];
+        Object.keys(builders).forEach((id) => {
+            const comp = builders[id]();
+            const [sx, sz] = COMP_START[id];
+            comp.position.set(sx, 0.5, sz);
+            comp.castShadow = true;
+            comp.receiveShadow = true;
+            env.add(comp);
+            setHome(comp);
+            components.push(comp);
         });
 
-        dragControls.addEventListener('dragend', (e) => {
-            orbit.enabled = true;
-            container.style.cursor = 'grab';
-            
-            const obj = e.object;
-            const name = obj.userData.id;
+        // Lid (hinged at the back edge — Hall test)
+        const lid = new THREE.Group();
+        lid.position.set(0, 0.45, -4.6);
+        const lidMesh = new THREE.Mesh(new THREE.BoxGeometry(13.3, 0.16, 9.0), new THREE.MeshStandardMaterial({ color: 0x111111, transparent: true, opacity: 0.38, side: THREE.DoubleSide, roughness: 0.9 }));
+        lidMesh.position.z = 4.6;
+        lid.add(lidMesh);
+        lid.visible = false;
+        env.add(lid);
 
-            const target = targets.find(t => t.userData.id === name);
-            if (target && !target.userData.filled) {
-                if (obj.position.distanceTo(target.position) < 3.5) {
-                    obj.position.set(target.position.x, target.position.y + 0.1, target.position.z);
-                    
-                    if(name === 'batt' || name === 'buzz') obj.position.y = 0.6;
-                    if(name === 'esp') obj.position.y = 0.45;
-                    if(name === 'ant') obj.position.y = 0.3;
+        // Virtual smartphone (BLE app viewer)
+        const smart = new THREE.Group();
+        const pBody = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.3, 7.5), new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.2 }));
+        const phoneTex = new THREE.CanvasTexture(phoneCanvas);
+        drawPhone('radar', []);
+        const pScreen = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 7), new THREE.MeshBasicMaterial({ map: phoneTex }));
+        pScreen.rotation.x = -Math.PI / 2;
+        pScreen.position.y = 0.16;
+        smart.add(pBody, pScreen);
+        smart.position.set(-9, 1.4, -2.5);
+        smart.rotation.y = 0.5;
+        smart.visible = false;
+        env.add(smart);
 
-                    target.userData.filled = true;
-                    target.material.color.setHex(0x00FF00);
-                    target.material.opacity = 0.8;
-                    setTimeout(()=> target.material.opacity = 0.2, 200);
-                    
-                    emitSparks(target.position);
-                    AudioEngine.snap();
-                    
-                    componentsPlaced++;
-                    document.getElementById('ui-progress-bar').style.width = (componentsPlaced/4)*100 + '%';
-                    
-                    const hitIdx = draggables.indexOf(obj);
-                    if(hitIdx > -1) draggables.splice(hitIdx, 1);
+        // Pairing beam (line + traveling dot)
+        const beamGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-9, 2.4, -2.5), new THREE.Vector3(0, 1, 0)]);
+        const beam = new THREE.Line(beamGeo, new THREE.LineBasicMaterial({ color: 0x00aaff, transparent: true, opacity: 0 }));
+        beam.visible = false;
+        env.add(beam);
+        const beamDot = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), new THREE.MeshBasicMaterial({ color: 0x00ffd0 }));
+        beamDot.visible = false;
+        env.add(beamDot);
+        let beamT = 0, beamOn = false;
 
-                    if (componentsPlaced === 4) completePhase1();
+        // ============================================================
+        // TOOLS (phase 5 — parked far below until needed)
+        // ============================================================
+        function buildWrench() {
+            const g = new THREE.Group();
+            const handle = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.14, 0.42), matSteel);
+            const head = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.16, 14), matSteel);
+            head.rotation.z = Math.PI / 2; head.position.x = 1.3;
+            const tag = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.24), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 }));
+            tag.position.set(-0.3, 0.12, 0);
+            g.add(handle, head, tag);
+            g.userData.name = 'WRENCH_10MM';
+            return g;
+        }
+        function buildScrew() {
+            const g = new THREE.Group();
+            const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 1.3, 12), new THREE.MeshStandardMaterial({ color: 0xff6b50, roughness: 0.6 }));
+            const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.6, 10), matSteel);
+            shaft.position.y = -1.05;
+            const tag = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.24), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 }));
+            tag.position.set(0.05, 0.65, 0.18);
+            g.add(handle, shaft, tag);
+            g.userData.name = 'SCREWDRIVER_PH2';
+            return g;
+        }
+        function buildPliers() {
+            const g = new THREE.Group();
+            const a = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.14, 2.3), matSteel);
+            const b = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.14, 2.3), matSteel);
+            a.rotation.y = 0.28; b.rotation.y = -0.28;
+            const tag = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, 0.24), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 }));
+            tag.position.set(0, 0.12, 0.6);
+            g.add(a, b, tag);
+            g.userData.name = 'PLIERS_01';
+            return g;
+        }
+
+        const TOOL_HOME = [
+            new THREE.Vector3(10.5, 0.5, -6),
+            new THREE.Vector3(10.5, 0.5, 0),
+            new THREE.Vector3(10.5, 0.5, 6)
+        ];
+        // Berths inside the tray, in front of the UHF antenna
+        const BERTHS = [
+            new THREE.Vector3(1.5, 0, -2.0),
+            new THREE.Vector3(1.5, 0, 0.3),
+            new THREE.Vector3(2.2, 0, 1.2)
+        ];
+        const toolBuilders = [buildWrench, buildScrew, buildPliers];
+        const tools = [];
+        toolBuilders.forEach((b, i) => {
+            const t = b();
+            t.position.set(0, -40, 0);
+            t.userData.isTool = true;
+            t.userData.half = 0.35;
+            t.userData.home = TOOL_HOME[i].clone();
+            t.userData.berth = BERTHS[i].clone();
+            t.userData.inside = false;
+            t.castShadow = true;
+            env.add(t);
+            tools.push(t);
+        });
+
+        // Scan beam (antenna -> tool) for tag registration
+        // Cone points +Y; rotate geometry so the axis lies on +Z so
+        // lookAt() aims the tip at the registered tool.
+        const scanBeam = new THREE.Mesh(
+            new THREE.ConeGeometry(0.16, 1, 12),
+            new THREE.MeshBasicMaterial({ color: 0x00ff88, transparent: true, opacity: 0, depthWrite: false })
+        );
+        scanBeam.geometry.rotateX(-Math.PI / 2);
+        scanBeam.visible = false;
+        env.add(scanBeam);
+        let scanT = 0, scanOn = false, scanTarget = null;
+
+        // ============================================================
+        // FLASH STAGE (phase 1 — bench with the ESP32 on USB)
+        // ============================================================
+        const flashStage = new THREE.Group();
+        scene.add(flashStage);
+        let flashing = false;
+        const deskMat = new THREE.MeshStandardMaterial({ color: 0x241a12, roughness: 0.95 });
+        const desk = new THREE.Mesh(new THREE.BoxGeometry(18, 1.2, 11), deskMat);
+        desk.position.y = 0;
+        desk.receiveShadow = true;
+        flashStage.add(desk);
+
+        const flashLedMat = new THREE.MeshBasicMaterial({ color: 0x200000 });
+        const flashBoard = new THREE.Group();
+        const pcb = new THREE.Mesh(new THREE.BoxGeometry(5.4, 0.25, 2.9), [matDark, matDark, matTop, matDark, matDark, matDark]);
+        pcb.position.y = 0.125;
+        flashBoard.add(pcb);
+        for (let i = -2; i <= 2; i++) {
+            const pin = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.35, 0.1), matGold);
+            pin.position.set(i * 1.05, 0.28, 1.55);
+            flashBoard.add(pin);
+            const pin2 = pin.clone();
+            pin2.position.z = -1.55;
+            flashBoard.add(pin2);
+        }
+        const shield = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.12, 1.6), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.7, roughness: 0.4 }));
+        shield.position.set(-1.2, 0.32, 0);
+        flashBoard.add(shield);
+        const usbPort = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.2, 0.5), matSteel);
+        usbPort.position.set(1.4, 0.1, 1.3);
+        flashBoard.add(usbPort);
+        const flashLed = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.05, 0.16), flashLedMat);
+        flashLed.position.set(1.75, 0.28, 0.6);
+        flashBoard.add(flashLed);
+        flashBoard.position.set(1.5, 0.725, 0.5);
+        flashBoard.rotation.y = -0.4;
+        flashStage.add(flashBoard);
+
+        const cablePath = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(2.3, 0.82, 1.1),
+            new THREE.Vector3(3.4, 0.85, 2.6),
+            new THREE.Vector3(3.2, 0.62, 4.4),
+            new THREE.Vector3(2.2, 0.62, 6.2)
+        ]);
+        const cableMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
+        const cable = new THREE.Mesh(new THREE.TubeGeometry(cablePath, 24, 0.07, 8), cableMat);
+        flashStage.add(cable);
+        const plug = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.25, 1.4), new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.8, roughness: 0.4 }));
+        plug.position.set(2.15, 0.62, 6.9);
+        plug.rotation.y = -0.15;
+        flashStage.add(plug);
+
+        // ============================================================
+        // CLICK & DROP (no drag — camera always free)
+        // ============================================================
+        const allClickables = components.concat(tools);
+        const pickRay = new THREE.Raycaster();
+        let selected = null;
+        const selMat = new THREE.MeshBasicMaterial({ color: 0x00ffd0, transparent: true, opacity: 0.7, depthWrite: false });
+        const selRing = new THREE.Mesh(new THREE.RingGeometry(1.15, 1.4, 32), selMat);
+        selRing.rotation.x = -Math.PI / 2;
+        selRing.visible = false;
+        env.add(selRing);
+
+        function topLevelOf(obj) {
+            let cur = obj;
+            while (cur && allClickables.indexOf(cur) === -1) cur = cur.parent;
+            return cur || null;
+        }
+
+        function pickAt(clientX, clientY) {
+            const rect = container.getBoundingClientRect();
+            const ndc = new THREE.Vector2(
+                ((clientX - rect.left) / rect.width) * 2 - 1,
+                -((clientY - rect.top) / rect.height) * 2 + 1
+            );
+            pickRay.setFromCamera(ndc, camera);
+            const hits = pickRay.intersectObjects(allClickables, true);
+            for (const h of hits) {
+                const top = topLevelOf(h.object);
+                if (top) return top;
+            }
+            return null;
+        }
+
+        function planePoint(clientX, clientY) {
+            const rect = container.getBoundingClientRect();
+            const ndc = new THREE.Vector2(
+                ((clientX - rect.left) / rect.width) * 2 - 1,
+                -((clientY - rect.top) / rect.height) * 2 + 1
+            );
+            pickRay.setFromCamera(ndc, camera);
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.45);
+            const point = new THREE.Vector3();
+            pickRay.ray.intersectPlane(plane, point);
+            return point;
+        }
+
+        function selectObject(o) {
+            clearSelection();
+            selected = o;
+            selected.position.y += 1.2;
+            AudioEngine.chirp();
+        }
+
+        function clearSelection() {
+            if (selected) {
+                settleObject(selected);
+                selected = null;
+            }
+            selRing.visible = false;
+        }
+
+        function settleObject(o) {
+            if (o.userData.isTool) {
+                if (o.userData.registered) {
+                    if (o.userData.inside) {
+                        o.position.set(o.userData.berth.x, 0.45 + o.userData.half, o.userData.berth.z);
+                    } else {
+                        o.position.y = 0.45 + o.userData.half;
+                    }
                 } else {
-                    if(name === 'batt' || name === 'buzz') obj.position.y = 0.5;
-                    else if(name === 'esp') obj.position.y = 0.25;
-                    else obj.position.y = 0.1; 
+                    o.position.copy(o.userData.home);
+                }
+            } else if (o.userData.placed) {
+                o.position.y = 0.45 + o.userData.half;
+            } else {
+                o.position.copy(o.userData.home);
+            }
+        }
+
+        function placeComponent(o, slot) {
+            o.position.set(slot.position.x, 0.45 + o.userData.half, slot.position.z);
+            o.userData.placed = true;
+            slot.userData.filled = true;
+            slot.material.color.setHex(0x00FF00);
+            slot.material.opacity = 0.7;
+            setTimeout(() => { slot.material.opacity = 0.25; }, 250);
+            emitSparks(slot.position.clone().setY(0.6));
+            AudioEngine.snap();
+            placed++;
+            updateAssemblyPanel();
+            setProgress(20 + (placed / 7) * 20);
+            const idx = allClickables.indexOf(o);
+            if (idx > -1) allClickables.splice(idx, 1);
+            if (placed === 7) completePhase2();
+        }
+
+        container.addEventListener('click', (e) => {
+            if (!selected) {
+                const top = pickAt(e.clientX, e.clientY);
+                if (top) {
+                    const okComp = PHASE === 2 && !top.userData.isTool && !top.userData.placed;
+                    const okTool = top.userData.isTool;
+                    if (okComp || okTool) selectObject(top);
+                }
+                return;
+            }
+            const o = selected;
+            const hoover = topLevelOf(pickAt(e.clientX, e.clientY));
+            if (hoover === o) {
+                clearSelection();
+                return;
+            }
+            if (hoover) {
+                const okComp = PHASE === 2 && !hoover.userData.isTool && !hoover.userData.placed;
+                const okTool = hoover.userData.isTool;
+                if (okComp || okTool) {
+                    clearSelection();
+                    selectObject(hoover);
+                    return;
                 }
             }
+            if (o.userData.isTool) {
+                const p = planePoint(e.clientX, e.clientY);
+                const inside = Math.abs(p.x) < 6.2 && Math.abs(p.z) < 4.1;
+                if (PHASE === 4) {
+                    if (inside && !o.userData.registered) {
+                        registerTool(o);
+                    } else {
+                        o.position.copy(o.userData.home);
+                    }
+                } else if (PHASE === 5) {
+                    if (inside) {
+                        if (!o.userData.inside) {
+                            toolBack(o);
+                        } else {
+                            o.position.set(o.userData.berth.x, 0.45 + o.userData.half, o.userData.berth.z);
+                        }
+                    } else {
+                        o.position.set(p.x, 0.45 + o.userData.half, p.z);
+                        if (o.userData.inside) toolOut(o);
+                    }
+                }
+                selected = null;
+                selRing.visible = false;
+                return;
+            }
+            const slot = slotMeshes[o.userData.id];
+            if (PHASE === 2 && slot && !slot.userData.filled) {
+                if (o.position.distanceTo(slot.position) < 3.6) {
+                    placeComponent(o, slot);
+                    selected = null;
+                    selRing.visible = false;
+                    return;
+                }
+            }
+            clearSelection();
         });
 
-        dragControls.addEventListener('hoveron', () => container.style.cursor = 'grab');
-        dragControls.addEventListener('hoveroff', () => container.style.cursor = 'auto');
+        container.addEventListener('pointermove', (e) => {
+            if (selected && (PHASE >= 4)) {
+                const p = planePoint(e.clientX, e.clientY);
+                selRing.visible = true;
+                selRing.position.set(p.x, selected.position.y, p.z);
+                container.style.cursor = (Math.abs(p.x) < 6.2 && Math.abs(p.z) < 4.1) ? 'pointer' : 'crosshair';
+            } else {
+                selRing.visible = false;
+                container.style.cursor = pickAt(e.clientX, e.clientY) ? 'grab' : 'auto';
+            }
+        });
 
-        // --- Phase Management ---
-        let smartphone;
-        let isAlarm = false;
+        // ============================================================
+        // PHASE 1 — FIRMWARE (Web Serial with demo fallback)
+        // ============================================================
+        const TERM_LINES = [
+            ['esptool.py v4.6.2', 'text-[#888]'],
+            ['Chip: ESP32-WROOM-32 (4MB Flash)', 'text-[#888]'],
+            ['Erasing flash ................. OK', 'text-[#4ade80]'],
+            ['Writing 0x1000 trakr_fleet.bin . OK', 'text-[#4ade80]'],
+            ['Verifying hash ................ OK', 'text-[#4ade80]'],
+            ['Hard resetting...', 'text-[#888]']
+        ];
+        const BOOT_LINES = [
+            ['TRAKR v1.0.0 — EDGE KERNEL', 'text-[#FF6B50]'],
+            ['UHF: YRM100 INIT OK', 'text-[#4ade80]'],
+            ['BLE: ADVERTISING "TRAKR-CASE-01"', 'text-[#4ade80]'],
+            ['HALL: ARMED | LID: CLOSED', 'text-[#4ade80]'],
+            ['STANDBY: DEEP SLEEP 0.4mA', 'text-[#888]']
+        ];
 
-        function completePhase1() {
-            document.getElementById('ui-title').innerText = '[ BOOTING SYSTEM ]';
-            document.getElementById('ui-subtitle').innerText = 'Initializing Edge Kernel...';
-            AudioEngine.boot();
-
-            setTimeout(() => {
-                ledMat.color.setHex(0x00FF00);
-                ledLight.color.setHex(0x00FF00);
-                ledLight.intensity = 2;
-                startPhase2();
-            }, 1500);
+        function termWrite(termId, text, cls) {
+            const t = document.getElementById(termId);
+            if (!t) return;
+            const d = document.createElement('div');
+            d.textContent = text;
+            d.className = 'text-[10px] font-mono leading-relaxed ' + (cls || 'text-[#4ade80]');
+            t.appendChild(d);
+            t.scrollTop = t.scrollHeight;
         }
 
-        function startPhase2() {
-            document.getElementById('ui-title').innerText = '[ PHASE 2: PAIRING ]';
-            document.getElementById('ui-subtitle').innerText = 'System broadcasting BLE. Pair via software.';
-            
-            const targetCam = new THREE.Vector3(-12, 10, 0);
-            const cx = camera.position.x, cy = camera.position.y, cz = camera.position.z;
-            let t = 0;
-            const cAnim = setInterval(() => {
-                t+=0.02;
-                if(t>1) { t=1; clearInterval(cAnim); }
-                camera.position.set(cx + (targetCam.x-cx)*t, cy + (targetCam.y-cy)*t, cz + (targetCam.z-cz)*t);
-                orbit.target.set(-10, 0, 0);
-            }, 16);
-
-            smartphone = new THREE.Group();
-            const pBody = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.3, 7.5), new THREE.MeshStandardMaterial({color:0x222, metalness:0.8, roughness:0.2}));
-            const pScreen = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 7), new THREE.MeshBasicMaterial({map: phoneTex}));
-            pScreen.rotation.x = -Math.PI/2;
-            pScreen.position.y = 0.16;
-            smartphone.add(pBody, pScreen);
-            
-            smartphone.position.set(-20, 0.2, 0);
-            smartphone.rotation.y = Math.PI/12;
-            scene.add(smartphone);
-
-            let pt = 0;
-            const pAnim = setInterval(() => {
-                pt+=0.05;
-                if(pt>1) clearInterval(pAnim);
-                smartphone.position.x = -20 + (-10 - -20)*pt;
-            }, 16);
-
-            const syncBtn = document.getElementById('sync-btn');
-            syncBtn.classList.remove('hidden');
-
-            syncBtn.onclick = () => {
-                syncBtn.classList.add('hidden');
-                AudioEngine.playTone(1500, 'sine', 0.2);
-                document.getElementById('ui-subtitle').innerText = 'Handshake success. Neural link online.';
-                ledMat.color.setHex(0x00aaff);
-                ledLight.color.setHex(0x00aaff);
-                setTimeout(() => startPhase3(), 2000);
-            };
-        }
-
-        let scanningRings = [];
-        let tool3D;
-
-        function startPhase3() {
-            document.getElementById('ui-title').innerText = '[ PHASE 3: LIVE TRACKING ]';
-            document.getElementById('ui-subtitle').innerText = 'UHF Antenna scanning area. Remove asset to test security.';
-            
-            orbit.target.set(0,0,0);
-            camera.position.set(0, 15, 12);
-
-            const toolGeo = new THREE.BoxGeometry(0.5, 0.5, 3);
-            const toolMat = new THREE.MeshStandardMaterial({ color: 0xffaa00 });
-            tool3D = new THREE.Mesh(toolGeo, toolMat);
-            tool3D.position.set(0, 0.5, 0);
-            scene.add(tool3D);
-
-            const ringGeo = new THREE.RingGeometry(1, 1.2, 32);
-            const ringMat = new THREE.MeshBasicMaterial({color: 0x00aaff, side: THREE.DoubleSide, transparent: true, opacity: 0.8});
-            
-            setInterval(() => {
-                if(isAlarm) return;
-                const ring = new THREE.Mesh(ringGeo, ringMat.clone());
-                ring.rotation.x = -Math.PI/2;
-                ring.position.set(-0.5, 1, 0);
-                scene.add(ring);
-                scanningRings.push(ring);
-            }, 1000);
-
-            const testBtn = document.getElementById('test-alarm-btn');
-            testBtn.classList.remove('hidden');
-
-            testBtn.onclick = () => {
-                testBtn.classList.add('hidden');
-                const remAnim = setInterval(() => {
-                    if (tool3D) tool3D.position.y += 0.2;
-                    if(tool3D && tool3D.position.y > 10) {
-                        clearInterval(remAnim);
-                        triggerAlarm();
+        function buildPhase1Panel() {
+            document.getElementById('trk-panel').innerHTML =
+                '<button id="trk-flash" class="py-2.5 bg-[#FF6B50] text-black font-mono text-[10px] font-bold tracking-[0.15em] uppercase rounded hover:bg-white transition-all pointer-events-auto">Flash Firmware</button>' +
+                '<div id="trk-term" class="h-36 bg-black/80 border border-[#222] rounded p-2 overflow-y-auto font-mono text-left"></div>' +
+                '<div class="h-1 bg-[#222] rounded overflow-hidden"><div id="trk-flash-bar" class="h-full bg-[#4ade80] w-0 transition-all duration-300"></div></div>';
+            const flash = document.getElementById('trk-flash');
+            termWrite('trk-term', 'USB LINK: ESP32-WROOM-32 DETECTED', 'text-[#00aaff]');
+            termWrite('trk-term', 'Click FLASH to write the TRAKR kernel.', 'text-[#888]');
+            flash.addEventListener('click', () => {
+                flash.disabled = true;
+                flash.innerText = 'Flashing...';
+                flashing = true;
+                const bar = document.getElementById('trk-flash-bar');
+                let i = 0;
+                const seq = setInterval(() => {
+                    i++;
+                    bar.style.width = Math.min(100, i * 10) + '%';
+                    const li = Math.floor(i / 2);
+                    if (li < TERM_LINES.length && i % 2 === 0) termWrite('trk-term', TERM_LINES[li][0], TERM_LINES[li][1]);
+                    if (i === 4 || i === 8) emitSparks(new THREE.Vector3(1.5, 1.0, 0.5), 1);
+                    if (i >= 10) {
+                        clearInterval(seq);
+                        flash.innerText = 'Flashed';
+                        flashing = false;
+                        AudioEngine.boot();
+                        BOOT_LINES.forEach((b, bi) => setTimeout(() => termWrite('trk-term', b[0], b[1]), bi * 350));
+                        setTimeout(() => {
+                            termWrite('trk-term', 'KERNEL ONLINE — opening the assembly bay...', 'text-[#00ffd0]');
+                            setPhase(2);
+                        }, BOOT_LINES.length * 350 + 600);
                     }
-                }, 16);
-            };
+                }, 260);
+            });
         }
 
-        function triggerAlarm() {
-            isAlarm = true;
-            document.getElementById('ui-title').innerText = '[ ALARM ACTIVE ]';
-            document.getElementById('ui-title').classList.replace('text-[#FF6B50]', 'text-red-500');
-            document.getElementById('ui-subtitle').innerText = 'ASSET BREACH DETECTED!';
-            ledMat.color.setHex(0xFF0000);
-            ledLight.color.setHex(0xFF0000);
-            ledLight.intensity = 5;
+        // ============================================================
+        // PHASE 2 — ASSEMBLY panel (live checklist)
+        // ============================================================
+        function updateAssemblyPanel() {
+            const p = document.getElementById('trk-panel');
+            if (!p) return;
+            let html = '<div class="text-[10px] font-mono text-[#666] uppercase tracking-widest mb-1">Assembly checklist</div>';
+            SLOTS.forEach((s) => {
+                const done = slotMeshes[s.id].userData.filled;
+                html += '<div class="flex items-center justify-between text-[10px] font-mono py-0.5 ' + (done ? 'text-[#4ade80]' : 'text-[#555]') + '">' +
+                    '<span>[' + s.id + ']</span><span class="flex-1 mx-2 border-b border-dotted border-[#222]"></span>' +
+                    '<span>' + (done ? 'PLACED' : 'PENDING') + '</span></div>';
+            });
+            p.innerHTML = html;
+        }
+        function completePhase2() {
+            AudioEngine.boot();
+            setTimeout(() => setPhase(3), 1200);
+        }
 
-            let alarmCount = 0;
-            const sirentInt = setInterval(() => {
-                AudioEngine.alarm();
-                alarmCount++;
-                if(alarmCount > 10) clearInterval(sirentInt);
+        // ============================================================
+        // PHASE 3 — ADD CASE TO PHONE (BLE pairing)
+        // ============================================================
+        let pairDone = false, ringSpawn = null;
+
+        function buildPhase3Panel() {
+            document.getElementById('trk-panel').innerHTML =
+                '<button id="trk-scan" class="py-2.5 bg-[#00aaff]/10 border border-[#00aaff] text-[#00aaff] font-mono text-[10px] font-bold tracking-[0.15em] uppercase rounded hover:bg-[#00aaff] hover:text-black transition-all pointer-events-auto">Scan BLE Devices</button>' +
+                '<button id="trk-pair" class="hidden py-2.5 bg-[#4ade80]/10 border border-[#4ade80] text-[#4ade80] font-mono text-[10px] font-bold tracking-[0.15em] uppercase rounded hover:bg-[#4ade80] hover:text-black transition-all pointer-events-auto">Pair TRAKR-CASE-01</button>' +
+                '<div id="trk-term3" class="h-24 bg-black/80 border border-[#222] rounded p-2 overflow-y-auto font-mono text-left"></div>';
+
+            document.getElementById('trk-scan').addEventListener('click', () => {
+                const btn = document.getElementById('trk-scan');
+                btn.disabled = true;
+                btn.classList.add('opacity-40');
+                termWrite('trk-term3', 'Scanning 2.4GHz...', 'text-[#888]');
+                AudioEngine.chirp();
+                ringSpawn = setInterval(() => {
+                    const ring = new THREE.Mesh(
+                        new THREE.RingGeometry(0.8, 1.0, 32),
+                        new THREE.MeshBasicMaterial({ color: 0x00aaff, side: THREE.DoubleSide, transparent: true, opacity: 0.7, depthWrite: false })
+                    );
+                    ring.rotation.x = -Math.PI / 2;
+                    ring.position.set(0.5, 0.5, 0.5);
+                    scene.add(ring);
+                    scanning.push(ring);
+                }, 350);
+                setTimeout(() => {
+                    clearInterval(ringSpawn);
+                    termWrite('trk-term3', 'FOUND: TRAKR-CASE-01 (-52 dBm)', 'text-[#4ade80]');
+                    document.getElementById('trk-pair').classList.remove('hidden');
+                }, 1900);
+            });
+
+            document.getElementById('trk-pair').addEventListener('click', () => {
+                if (pairDone) return;
+                pairDone = true;
+                AudioEngine.snap();
+                beam.visible = true;
+                beam.material.opacity = 0.9;
+                beamDot.visible = true;
+                beamOn = true;
+                termWrite('trk-term3', 'PAIRING... KEY EXCHANGE OK', 'text-[#4ade80]');
+                termWrite('trk-term3', 'SYNC: INVENTORY.DB (0 items)', 'text-[#4ade80]');
+                drawPhone('inv', INVENTORY, null);
+                phoneTex.needsUpdate = true;
+                document.getElementById('trk-pair').disabled = true;
+                setTimeout(() => {
+                    termWrite('trk-term3', 'LINK ONLINE. CASE ADDED TO PHONE.', 'text-[#00ffd0]');
+                    setPhase(4);
+                }, 1600);
+            });
+        }
+
+        // ============================================================
+        // PHASE 4 — REGISTER TAGS (YRM100 reads each tagged tool)
+        // ============================================================
+        function buildPhase4Panel() {
+            document.getElementById('trk-panel').innerHTML =
+                '<div class="text-[10px] font-mono text-[#666] uppercase tracking-widest mb-1">Click a tool, then click inside the case (' + registered + '/3)</div>' +
+                '<div id="trk-term4" class="h-28 bg-black/80 border border-[#222] rounded p-2 overflow-y-auto font-mono text-left"></div>';
+            termWrite('trk-term4', 'YRM100: STANDBY — waiting for tags...', 'text-[#888]');
+        }
+
+        function registerTool(tool) {
+            tool.userData.registered = true;
+            tool.userData.inside = true;
+            tool.position.set(tool.userData.berth.x, 0.45 + tool.userData.half, tool.userData.berth.z);
+            const tagId = '0xE004' + Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+            INVENTORY.push({ name: tool.userData.name, id: tagId });
+            registered++;
+            emitSparks(tool.position.clone().setY(0.8));
+            AudioEngine.snap();
+            drawPhone('inv', INVENTORY, null);
+            phoneTex.needsUpdate = true;
+
+            scanOn = true;
+            scanTarget = tool;
+            const dir = new THREE.Vector3().subVectors(tool.position, new THREE.Vector3(2.2, 1.1, 2.75));
+            const len = dir.length();
+            scanBeam.scale.set(1, 1, len);
+            scanBeam.position.set(2.2, 1.1, 2.75);
+            scanBeam.lookAt(tool.position);
+            scanBeam.visible = true;
+
+            termWrite('trk-term4', '[TAG] ' + tagId + ' -> ' + tool.userData.name + ' SYNCED', 'text-[#4ade80]');
+            setProgress(60 + (registered / 3) * 20);
+
+            const idx = allClickables.indexOf(tool);
+            if (idx > -1) allClickables.splice(idx, 1);
+
+            if (registered >= 3) {
+                setTimeout(() => {
+                    termWrite('trk-term4', 'INVENTORY: 3 TAGS MAPPED.', 'text-[#FF6B50]');
+                    setPhase(5);
+                }, 1200);
+            }
+        }
+
+        // ============================================================
+        // PHASE 5 — IN/OUT TEST (case beeps, phone notifies)
+        // ============================================================
+        function notifyHUD(kind, text) {
+            let toast = document.getElementById('trk-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'trk-toast';
+                document.body.appendChild(toast);
+            }
+            toast.className = 'toast-show kind-' + kind;
+            toast.innerHTML =
+                '<div class="text-[9px] font-mono tracking-widest font-bold ' + (kind === 'missing' ? 'text-[#FF6B50]' : 'text-[#4ade80]') + '">' +
+                (kind === 'missing' ? 'ALERT: TOOL_MISSING' : 'OK: TOOL_BACK') + '</div>' +
+                '<div class="text-[11px] font-mono ' + (kind === 'missing' ? 'text-[#FF6B50]' : 'text-[#4ade80]') + '">' + text + '</div>';
+            clearTimeout(toast._t);
+            toast._t = setTimeout(() => { toast.className = ''; }, 2800);
+        }
+
+        function phoneEvent(kind, tool) {
+            lastEvent = { kind: kind, name: tool.userData.name, ts: new Date().toLocaleTimeString() };
+            drawPhone('inv', INVENTORY, lastEvent);
+            phoneTex.needsUpdate = true;
+        }
+
+        function toolOut(tool) {
+            tool.userData.inside = false;
+            AudioEngine.buzz();
+            phoneEvent('missing', tool);
+            notifyHUD('missing', tool.userData.name + ' was removed from the case');
+            termWrite('trk-term5', 'EVENT: tool_missing -> ' + tool.userData.name, 'text-[#FF6B50]');
+        }
+
+        function toolBack(tool) {
+            tool.userData.inside = true;
+            tool.position.set(tool.userData.berth.x, 0.45 + tool.userData.half, tool.userData.berth.z);
+            testDone = true;
+            AudioEngine.chirp();
+            phoneEvent('back', tool);
+            notifyHUD('back', tool.userData.name + ' is back in the case');
+            termWrite('trk-term5', 'EVENT: tool_back -> ' + tool.userData.name, 'text-[#4ade80]');
+        }
+
+        function animateLid(to, cb) {
+            const from = lid.rotation.x;
+            let t = 0;
+            const anim = setInterval(() => {
+                t += 0.05;
+                if (t >= 1) { t = 1; clearInterval(anim); if (cb) cb(); }
+                lid.rotation.x = from + (to - from) * (t * t * (3 - 2 * t));
+            }, 16);
+        }
+
+        function buildPhase5Panel() {
+            document.getElementById('trk-panel').innerHTML =
+                '<div class="text-[10px] font-mono text-[#666] uppercase tracking-widest mb-1">Click a tool to take it out — click it again to put it back</div>' +
+                '<button id="trk-close" class="py-2.5 bg-[#4ade80]/10 border border-[#4ade80] text-[#4ade80] font-mono text-[10px] font-bold tracking-[0.15em] uppercase rounded hover:bg-[#4ade80] hover:text-black transition-all pointer-events-auto">Close Lid & Verify</button>' +
+                '<div id="trk-term5" class="h-28 bg-black/80 border border-[#222] rounded p-2 overflow-y-auto font-mono text-left"></div>';
+            termWrite('trk-term5', 'HALL: LID OPEN — TRACKING ACTIVE', 'text-[#888]');
+
+            document.getElementById('trk-close').addEventListener('click', () => {
+                const btn = document.getElementById('trk-close');
+                if (btn.disabled) return;
+                if (!testDone) {
+                    termWrite('trk-term5', 'TEST REQUIRED: take a tool out and put it back first.', 'text-[#FF6B50]');
+                    AudioEngine.chirp();
+                    return;
+                }
+                btn.disabled = true;
+                animateLid(0, () => {
+                    termWrite('trk-term5', 'HALL: LID CLOSED — WAKE', 'text-[#00aaff]');
+                    termWrite('trk-term5', 'RESCAN: reading tags...', 'text-[#888]');
+                    AudioEngine.chirp();
+                    let n = 0;
+                    const sweep = setInterval(() => {
+                        const ring = new THREE.Mesh(
+                            new THREE.RingGeometry(0.8, 1.0, 32),
+                            new THREE.MeshBasicMaterial({ color: 0x4ade80, side: THREE.DoubleSide, transparent: true, opacity: 0.7, depthWrite: false })
+                        );
+                        ring.rotation.x = -Math.PI / 2;
+                        ring.position.set(0.5, 0.5, 0.5);
+                        scene.add(ring);
+                        scanning.push(ring);
+                        n++;
+                        if (n >= 4) clearInterval(sweep);
+                    }, 350);
+                    setTimeout(() => {
+                        const missing = tools.filter((t) => !t.userData.inside);
+                        if (missing.length === 0) {
+                            termWrite('trk-term5', 'RESCAN: 3/3 TOOLS PRESENT', 'text-[#4ade80]');
+                            termWrite('trk-term5', 'CASE SECURE. FLEET READY.', 'text-[#FF6B50]');
+                            AudioEngine.boot();
+                            showWin();
+                        } else {
+                            AudioEngine.buzz();
+                            const names = missing.map((t) => t.userData.name).join(', ');
+                            termWrite('trk-term5', 'MISSING: ' + names, 'text-[#FF6B50]');
+                            termWrite('trk-term5', 'CLOSE FAILED — PUT THEM BACK AND RETRY', 'text-[#FF6B50]');
+                            notifyHUD('missing', 'MISSING IN RESCAN: ' + names);
+                            setTimeout(() => {
+                                animateLid(-0.95, () => { btn.disabled = false; });
+                            }, 1800);
+                        }
+                    }, 1600);
+                });
+            });
+        }
+
+        function showWin() {
+            setTimeout(() => {
+                drawPhone('inv', INVENTORY, null);
+                phoneTex.needsUpdate = true;
+                setProgress(100);
+                document.getElementById('win-overlay').classList.remove('hidden');
+                document.getElementById('win-overlay').classList.add('flex');
             }, 800);
-
-            const endBtn = document.getElementById('sync-btn');
-            endBtn.classList.remove('hidden', 'bg-[#FF6B50]/10', 'border-[#FF6B50]', 'text-[#FF6B50]');
-            endBtn.classList.add('bg-red-600', 'text-white', 'border-red-600', 'hover:bg-red-500');
-            endBtn.innerText = 'Purchase Fleet';
-            endBtn.onclick = () => { window.location.hash = '#contact'; };
         }
 
-        // --- Render Loop ---
+        // ============================================================
+        // PHASE MANAGER
+        // ============================================================
+        function setPhase(p) {
+            PHASE = p;
+            setPhaseTitle(p);
+            clearSelection();
+            const panel = document.getElementById('trk-panel');
+            if (p === 1) buildPhase1Panel();
+            if (p === 2) {
+                env.visible = true;
+                flashStage.visible = false;
+                updateAssemblyPanel();
+                centerCamera(-17, 15, 12, 0, 0, 0);
+                setProgress(20);
+            }
+            if (p === 3) {
+                buildPhase3Panel();
+                centerCamera(-15, 9, 11, -3, 0, 0);
+                smart.visible = true;
+                drawPhone('radar');
+                phoneTex.needsUpdate = true;
+                setProgress(40);
+            }
+            if (p === 4) {
+                buildPhase4Panel();
+                centerCamera(-12, 10, 12, 0, 0, 0);
+                tools.forEach((t) => { t.position.copy(t.userData.home); });
+                setProgress(60);
+            }
+            if (p === 5) {
+                buildPhase5Panel();
+                centerCamera(-10, 8, 9, 0, 0, 0);
+                lid.visible = true;
+                lid.rotation.x = -0.95;
+                tools.forEach((t) => { if (allClickables.indexOf(t) === -1) allClickables.push(t); });
+                setProgress(80);
+            }
+        }
+
+        function centerCamera(px, py, pz, tx, ty, tz) {
+            const fromP = camera.position.clone();
+            const fromT = orbit.target.clone();
+            const toP = new THREE.Vector3(px, py, pz);
+            const toT = new THREE.Vector3(tx, ty, tz);
+            orbit.enabled = false;
+            let t = 0;
+            const anim = setInterval(() => {
+                t += 0.03;
+                if (t >= 1) { t = 1; clearInterval(anim); orbit.enabled = true; }
+                const e = t * t * (3 - 2 * t);
+                camera.position.lerpVectors(fromP, toP, e);
+                orbit.target.lerpVectors(fromT, toT, e);
+                orbit.update();
+            }, 16);
+        }
+
+        // ============================================================
+        // RENDER LOOP
+        // ============================================================
+        const scanning = [];
         const clock = new THREE.Clock();
+        let startCalled = false;
+
         function animate() {
             requestAnimationFrame(animate);
             orbit.update();
             const delta = clock.getDelta();
             const time = clock.getElapsedTime();
 
-            const posAttr = sparks.geometry.attributes.position;
-            for(let i=0; i<sparkCount; i++) {
-                const py = posAttr.getY(i);
-                if(py > -50) {
-                    posAttr.setX(i, posAttr.getX(i) + sparkVel[i].x * delta);
-                    posAttr.setY(i, py + sparkVel[i].y * delta);
-                    posAttr.setZ(i, posAttr.getZ(i) + sparkVel[i].z * delta);
+            const attr = sparks.geometry.attributes.position;
+            for (let i = 0; i < sparkCount; i++) {
+                const py = attr.getY(i);
+                if (py > -50) {
+                    attr.setX(i, attr.getX(i) + sparkVel[i].x * delta);
+                    attr.setY(i, py + sparkVel[i].y * delta);
+                    attr.setZ(i, attr.getZ(i) + sparkVel[i].z * delta);
                     sparkVel[i].y -= 20 * delta;
-                    if(py < 0) posAttr.setY(i, -100);
+                    if (py < 0) attr.setY(i, -100);
                 }
             }
-            posAttr.needsUpdate = true;
+            attr.needsUpdate = true;
 
-            for(let i=scanningRings.length-1; i>=0; i--) {
-                const r = scanningRings[i];
-                r.scale.addScalar(5 * delta);
-                r.material.opacity -= 0.5 * delta;
-                if(r.material.opacity <= 0) {
-                    scene.remove(r);
-                    scanningRings.splice(i, 1);
-                }
+            for (let i = scanning.length - 1; i >= 0; i--) {
+                const r = scanning[i];
+                r.scale.addScalar(6 * delta);
+                r.material.opacity -= 0.6 * delta;
+                if (r.material.opacity <= 0) { scene.remove(r); scanning.splice(i, 1); }
             }
 
-            if (isAlarm) {
-                ledLight.intensity = (Math.sin(time * 20) * 0.5 + 0.5) * 8;
-                camera.position.x += (Math.random()-0.5)*0.1;
-                camera.position.z += (Math.random()-0.5)*0.1;
+            if (beamOn) {
+                beamT += delta * 0.7;
+                if (beamT > 3.2) beamT = 0;
+                const a = new THREE.Vector3(-9, 2.4, -2.5);
+                const b = new THREE.Vector3(0, 1, 0);
+                beamDot.position.lerpVectors(a, b, Math.min(beamT / 3, 1));
             }
+
+            if (scanOn && scanTarget) {
+                scanT += delta;
+                if (scanT > 0.8) { scanOn = false; scanT = 0; scanBeam.visible = false; }
+                scanBeam.material.opacity = Math.max(0, 0.8 - scanT);
+            } else if (!scanOn) {
+                scanBeam.material.opacity = 0;
+            }
+
+            if (PHASE === 1 && flashing) {
+                flashLedMat.color.setHex((Math.sin(time * 20) > 0) ? 0xff2020 : 0x300000);
+            } else if (PHASE === 1) {
+                flashLedMat.color.setHex(0x200000);
+            }
+            const pulse = (Math.sin(time * 2.2) + 1) / 2;
+            if (PHASE === 3) ledMat.color.setHex(0x00aaff);
+            if (PHASE === 4) ledMat.color.setHex(pulse > 0.5 ? 0x4ade80 : 0x22cc22);
+            if (PHASE === 5) ledMat.color.setHex(pulse > 0.5 ? 0xff8800 : 0xaa5500);
+            ledLight.color.copy(ledMat.color);
+            ledLight.intensity = PHASE >= 3 ? 0.6 : 0;
 
             renderer.render(scene, camera);
         }
-        animate();
 
-        // Resize
+        setTimeout(() => { setPhase(1); setProgress(0); if (!startCalled) { startCalled = true; animate(); } }, 300);
+
         window.addEventListener('resize', () => {
             const w = container.clientWidth;
             const h = container.clientHeight;
