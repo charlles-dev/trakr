@@ -5,13 +5,12 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import app.trakr.model.AlertEvent
-import app.trakr.model.EventRecord
+import app.trakr.model.RssiSample
 import app.trakr.model.Tool
-import app.trakr.model.Toolbox
 
 @Database(
-    entities = [Toolbox::class, Tool::class, AlertEvent::class, EventRecord::class],
-    version = 4,
+    entities = [Tool::class, AlertEvent::class, RssiSample::class],
+    version = 7,
     exportSchema = false,
 )
 abstract class TrakrDatabase : RoomDatabase() {
@@ -21,7 +20,7 @@ abstract class TrakrDatabase : RoomDatabase() {
 /**
  * Container de dependências simples.
  *
- * O firmware da maleta continua sendo a fonte da verdade; o Room aqui é o
+ * O firmware do rastreador continua sendo a fonte da verdade; o Room aqui é o
  * cache local usado para visualização offline e histórico.
  */
 object AppContainer {
@@ -29,11 +28,11 @@ object AppContainer {
         private set
 
     fun init(context: Context) {
-        app.trakr.model.ToolboxStore.init(context)
-        database = Room.databaseBuilder(
-            context.applicationContext,
-            TrakrDatabase::class.java,
-            "trakr.db",
-        ).fallbackToDestructiveMigration().build()
+        database =
+            Room.databaseBuilder(
+                context.applicationContext,
+                TrakrDatabase::class.java,
+                "trakr.db",
+            ).fallbackToDestructiveMigration().build()
     }
 }

@@ -14,6 +14,12 @@
 #include <Arduino.h>
 #include <vector>
 
+// Leitura de uma tag: EPC + sinal (RSSI em dBm, valor negativo).
+struct TrakRead {
+  String epc;
+  int8_t rssi;
+};
+
 class TrakYrm100 {
  public:
   // Inicializa o UART e energiza o módulo (pino EN, se definido em pins.h).
@@ -22,6 +28,11 @@ class TrakYrm100 {
   // Executa uma varredura contínua de inventário por maxReadMs.
   // Retorna lista de EPCs (hex, 12 bytes) lidos. 0 = sucesso, 1 = falha.
   uint8_t collectEpc(std::vector<String>& outEpcs, uint32_t maxReadMs);
+
+  // Varredura com potência de sinal: retorna EPC + RSSI (dBm) por tag.
+  // Para EPCs repetidos mantém a leitura de sinal MAIS FORTE. Usado pelo
+  // modo radar (rastreador portátil).
+  uint8_t collectReads(std::vector<TrakRead>& outReads, uint32_t maxReadMs);
 
   // Desliga o rádio para economizar energia no deep sleep:
   //  - pino EN (YRM100_EN_PIN) em LOW, se o módulo possuir pino EN;

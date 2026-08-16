@@ -1,0 +1,7 @@
+root = true
+
+# Estilo ktlint do Trakr.
+# - function-naming: o padrão do Compose usa PascalCase em composables
+#   (@Composable), então a regra é ignorada quando anotada.
+[*.kt]
+ktlint_function_naming_ignore_when_annotated_with = Composable

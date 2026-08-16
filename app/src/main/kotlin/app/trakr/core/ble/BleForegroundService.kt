@@ -8,45 +8,53 @@ import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import app.trakr.R
+import app.trakr.core.notifications.AbsenceWatcher
 
 /**
- * Serviço de primeiro plano que mantém a conexão BLE com a maleta viva.
+ * Serviço de primeiro plano que mantém a conexão BLE com o rastreador viva.
  *
  * A notificação fixa e silenciosa impede o Android de matar o processo em
  * segundo plano, garantindo que o alerta de ferramenta perdida chegue mesmo
  * com o celular bloqueado.
  */
 class BleForegroundService : Service() {
-
     companion object {
         private const val CHANNEL_ID = "trakr_ble_connection"
         private const val NOTIFICATION_ID = 1
     }
+
+    private var absenceWatcher: AbsenceWatcher? = null
 
     override fun onCreate() {
         super.onCreate()
         createChannel()
         startForeground(NOTIFICATION_ID, buildNotification())
         BleManager.start(this)
+        absenceWatcher = AbsenceWatcher(this).also { it.start() }
     }
 
     override fun onDestroy() {
+        absenceWatcher?.stop()
         BleManager.stop()
         super.onDestroy()
     }
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int =
-        START_STICKY
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int = START_STICKY
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     private fun createChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                getString(R.string.ble_channel_name),
-                NotificationManager.IMPORTANCE_LOW,
-            )
+            val channel =
+                NotificationChannel(
+                    CHANNEL_ID,
+                    getString(R.string.ble_channel_name),
+                    NotificationManager.IMPORTANCE_LOW,
+                )
             getSystemService(NotificationManager::class.java)
                 .createNotificationChannel(channel)
         }

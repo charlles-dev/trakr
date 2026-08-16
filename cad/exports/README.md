@@ -4,13 +4,13 @@ Este diretório armazena os **arquivos de referência** exportados dos scripts d
 
 ## Estado atual
 
-> ⚠️ **Pendente de validação física.** O CAD foi gerado parametricamente (`cad/scripts/SmartToolboxUI.py`), mas **nenhuma peça foi exportada nem impressa ainda**. Os arquivos `.3mf`/`.stl` de referência serão adicionados aqui assim que o script for executado no Fusion 360. Antes de produzir uma maleta completa, leia o [checklist de validação](../../docs/cad/validation.md).
+> ⚠️ **Pendente de validação física.** O CAD foi gerado parametricamente (`cad/scripts/SmartToolboxUI.py`), mas **nenhuma peça foi exportada nem impressa ainda**. Os arquivos `.3mf`/`.stl` de referência serão adicionados aqui assim que o script for executado no Fusion 360. Antes de produzir um TRK-Finder completo, leia o [checklist de validação](../../docs/cad/validation.md).
 
 ## Estrutura esperada (quando exportado)
 
 ```
 cad/exports/
-├── trakr_shell_base.stl       # Base da maleta (PETG)
+├── trakr_shell_base.stl       # Carcaça do TRK-Finder (PETG)
 ├── trakr_shell_lid.stl        # Tampa
 ├── trakr_tray_modular.stl     # Bandeja modular (insertos M3)
 ├── trakr_light_pipe.stl       # Guia de luz (filamento transparente)

@@ -7,7 +7,6 @@ import app.trakr.repository.ToolboxRepository
 import kotlinx.coroutines.flow.Flow
 
 class AlertsViewModel : ViewModel() {
-
     private val repository = ToolboxRepository(AppContainer.database.toolboxDao())
 
     val alerts: Flow<List<AlertEvent>> = repository.observeAlerts()

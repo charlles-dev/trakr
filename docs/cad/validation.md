@@ -1,6 +1,7 @@
 # ✅ Checklist de Validação do CAD (Impressão 3D)
 
-Este checklist documenta o **processo de validação física** do projeto. Ele serve para:
+Este checklist documenta o **processo de validação física** do projeto (carcaça
+do TRK-Finder). Ele serve para:
 
 * Registrar os resultados de impressões/testes para a comunidade;
 * Garantir que mudanças no modelo paramétrico não quebrem a manuteção;
@@ -10,13 +11,13 @@ Este checklist documenta o **processo de validação física** do projeto. Ele s
 
 ## Checklist por peça
 
-### 1. Base e Tampa (Trakr Shell)
+### 1. Carcaça (TRK-Finder Shell)
 
 - [ ] Impressa em PETG/ABS (nunca PLA se vai ser deixada no sol).
 - [ ] 4+ paredes (walls), infill 20–25% Gyroid.
-- [ ] Suportes removidos sem danos (dobradiças, USB-C, Sensor Hall).
+- [ ] Suportes removidos sem danos (dobradiças, USB-C, botão).
 - [ ] Dobradiças funcionais após montagem (não emperram).
-- [ ] Tolerância do fecho (clipe) testada com a tampa fechada.
+- [ ] Tolerância do fecho (clipe) testada com a carcaça fechada.
 
 ### 2. Bandeja modular
 
@@ -27,23 +28,24 @@ Este checklist documenta o **processo de validação física** do projeto. Ele s
 ### 3. Light Pipe
 
 - [ ] Pedaço de filamento transparente inserido no orifício de ~5mm, trava na flange.
-- [ ] LED (WS2812B) ilumina até o exterior com a tampa fechada.
+- [ ] LED (WS2812B) ilumina até o exterior com a carcaça fechada.
 
 ### 4. Pés de TPU
 
 - [ ] Pés colados/impressos nos rebaixos inferiores.
-- [ ] Maleta não desliza em bancada inclinada leve.
+- [ ] Rastreador não desliza em bancada inclinada leve.
 
 ### 5. Integração eletrônica
 
 - [ ] Módulos encaixam nos canais de cable management.
-- [ ] USB-C acessível com tampa fechada.
-- [ ] Sensor Hall alinhado com o ímã da tampa (wake-up funciona por magnetismo).
+- [ ] USB-C acessível com a carcaça fechada.
+- [ ] Botão físico acessível e com curso correto (wake-up funciona por pressão).
 
 ## Checklist de campo (uso real)
 
 - [ ] Inventário completo lido em uma única varredura (< 1s).
 - [ ] Falta de ferramenta dispara buzzer + LED + notificação no app.
+- [ ] Modo radar: bipes proporcionais ao sinal e localização da tag em ambiente real.
 - [ ] Bateria 18650: duração de uso registrada (ex: X dias) para o log de consumo.
 
 ## Log de validação

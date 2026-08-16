@@ -106,6 +106,13 @@ String TrakYrm100::hexEpc(const uint8_t* payload, uint8_t len) {
 }
 
 uint8_t TrakYrm100::collectEpc(std::vector<String>& outEpcs, uint32_t maxReadMs) {
+  std::vector<TrakRead> reads;
+  uint8_t result = collectReads(reads, maxReadMs);
+  for (const auto& r : reads) outEpcs.push_back(r.epc);
+  return result;
+}
+
+uint8_t TrakYrm100::collectReads(std::vector<TrakRead>& outReads, uint32_t maxReadMs) {
   sendFrame(CMD_START_INVENTORY, nullptr, 0);
 
   uint8_t data[64];
@@ -117,14 +124,22 @@ uint8_t TrakYrm100::collectEpc(std::vector<String>& outEpcs, uint32_t maxReadMs)
 
     if (cmd == CMD_START_INVENTORY || cmd == CMD_SINGLE_READ) {
       // Payload típico: [PC 2 bytes][EPC 12 bytes][RSSI 1 byte] por tag.
+      // O byte de RSSI (offset + 14) deve ser confirmado no datasheet da
+      // placa — placas mais antigas podem não enviá-lo.
       uint8_t offset = 0;
       while (offset + 14 <= dataLen) {
         String epc = hexEpc(&data[offset + 2], 12);
+        int8_t rssi = (offset + 15 <= dataLen) ? (int8_t)data[offset + 14] : -100;
+
         bool dup = false;
-        for (auto& e : outEpcs) {
-          if (e.equalsIgnoreCase(epc)) { dup = true; break; }
+        for (auto& r : outReads) {
+          if (r.epc.equalsIgnoreCase(epc)) {
+            dup = true;
+            if (rssi > r.rssi) r.rssi = rssi;  // mantém o sinal mais forte
+            break;
+          }
         }
-        if (!dup) outEpcs.push_back(std::move(epc));
+        if (!dup) outReads.push_back(TrakRead{std::move(epc), rssi});
         offset += 14;
       }
     }

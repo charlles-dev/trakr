@@ -110,6 +110,19 @@ bool TrakInventory::removeTool(const String& id) {
   return false;
 }
 
+bool TrakInventory::removeToolByEpc(const String& epc) {
+  for (auto it = tools_.begin(); it != tools_.end(); ++it) {
+    if (it->epc.equalsIgnoreCase(epc)) {
+      Serial.printf("[TRAKR] Tool removida por EPC: nome=%s\n",
+                    it->name.c_str());
+      tools_.erase(it);
+      newly_missing_.clear();
+      return true;
+    }
+  }
+  return false;
+}
+
 String TrakInventory::toJsonString() const {
   String out;
   JsonDocument doc;

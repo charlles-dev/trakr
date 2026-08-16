@@ -1,11 +1,128 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App / navegação -->
     <string name="app_name">Trakr</string>
     <string name="tab_dashboard">Dashboard</string>
     <string name="tab_tools">Ferramentas</string>
     <string name="tab_alerts">Alertas</string>
-    <string name="dashboard_empty">Conecte sua maleta por BLE</string>
-    <string name="notification_tool_missing">Ferramenta retirada: %1$s</string>
-    <string name="ble_channel_name">Conexão com a maleta</string>
-    <string name="ble_connected_message">Trakr conectado à Maleta 01</string>
+    <string name="tab_radar">Radar</string>
+
+    <!-- Componentes -->
+    <string name="connection_live">LIVE</string>
+    <string name="connection_offline">OFFLINE</string>
+    <string name="connection_connected">Rastreador conectado</string>
+    <string name="connection_none">Nenhum rastreador conectado</string>
+    <string name="status_detected">DETECTADO</string>
+    <string name="status_absent">AUSENTE</string>
+    <string name="status_removed">RETIRADA</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_empty">Conecte seu rastreador por BLE</string>
+    <string name="dashboard_empty_hint">Ligue o rastreador e aproxime o celular para sincronizar.</string>
+    <string name="stat_total">TOTAL</string>
+    <string name="stat_detected">DETECTADOS</string>
+    <string name="stat_absent">AUSENTES</string>
+    <string name="tools_section">FERRAMENTAS</string>
+    <string name="action_theme_light">Tema claro</string>
+    <string name="action_theme_dark">Tema escuro</string>
+
+    <!-- Ferramentas -->
+    <string name="action_add_tool">Adicionar ferramenta</string>
+    <string name="tools_empty">Nenhuma ferramenta cadastrada</string>
+    <string name="tools_empty_hint">Use o botão + para cadastrar ou conecte o rastreador para importar o inventário.</string>
+    <string name="search_placeholder">Buscar ferramenta…</string>
+    <string name="search_no_results">Sem resultados</string>
+    <string name="search_no_results_hint">Nenhuma ferramenta encontrada para \"%1$s\".</string>
+    <string name="dialog_title_new_tool">Nova ferramenta</string>
+    <string name="dialog_label_name">Nome</string>
+    <string name="dialog_label_epc">Tag (EPC)</string>
+    <string name="action_add">Adicionar</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_remove_tool">Remover %1$s</string>
+    <string name="msg_required_fields">Nome e tag são obrigatórios</string>
+    <string name="msg_saved_local">Rastreador offline — salvo apenas no app</string>
+    <string name="msg_adding">Adicionando \"%1$s\"…</string>
+    <string name="msg_removed_local">Rastreador offline — removido apenas no app</string>
+    <string name="msg_removing">Removendo \"%1$s\"…</string>
+
+    <!-- Detalhe de ferramenta -->
+    <string name="title_details">Detalhes</string>
+    <string name="action_back">Voltar</string>
+    <string name="detail_last_seen">Último visto</string>
+    <string name="detail_never">Nunca</string>
+    <string name="detail_rssi">RSSI atual</string>
+    <string name="detail_rssi_none">—</string>
+    <string name="detail_status">Status</string>
+    <string name="detail_present">Tag presente</string>
+    <string name="detail_absent">Tag ausente</string>
+    <string name="detail_history_title">Histórico de sinal (RSSI)</string>
+    <string name="detail_history_hint">O histórico aparece conforme o modo radar reporta a tag.</string>
+    <string name="detail_dbm">%1$d dBm</string>
+
+    <!-- Radar -->
+    <string name="radar_no_device">Nenhum TRK-Finder conectado</string>
+    <string name="radar_no_device_hint">Ligue o TRK-Finder e aproxime o celular para emparelhar.</string>
+    <string name="radar_start">INICIAR BUSCA</string>
+    <string name="radar_stop">PARAR</string>
+    <string name="radar_status_idle">Parado — escolha o alvo e inicie a busca</string>
+    <string name="radar_status_waiting">Procurando… aguardando varredura</string>
+    <string name="radar_status_no_signal">Procurando… sem sinal ainda</string>
+    <string name="radar_status_found">Muito perto! Ferramenta encontrada</string>
+    <string name="radar_status_near">Sinal detectado — continue se aproximando</string>
+    <string name="radar_signal_label">SINAL</string>
+    <string name="radar_dbm_unit">dBm</string>
+    <string name="radar_target_label">FERRAMENTA ALVO</string>
+    <string name="radar_no_tools">Sem ferramentas no inventário</string>
+    <string name="radar_choose_tool">Escolher ferramenta</string>
+    <string name="msg_choose_target">Escolha uma ferramenta alvo primeiro</string>
+    <string name="msg_no_device">Nenhum TRK-Finder conectado</string>
+    <string name="msg_target_not_found">Ferramenta alvo não encontrada no rastreador</string>
+    <string name="msg_radar_unsupported">Rastreador não suporta radar</string>
+    <string name="msg_start_refused">O rastreador recusou o início do radar</string>
+
+    <!-- OTA (firmware) -->
+    <string name="ota_action">Atualizar firmware</string>
+    <string name="ota_pick_title">Selecionar firmware (.bin)</string>
+    <string name="ota_warning_title">Atualizar firmware?</string>
+    <string name="ota_warning_text">O rastreador vai reiniciar ao final da atualização. Continue?</string>
+    <string name="ota_progress">Enviando firmware… %1$d%%</string>
+    <string name="ota_done">Firmware atualizado — o rastreador vai reiniciar</string>
+    <string name="ota_error">Falha na atualização: %1$s</string>
+    <string name="ota_no_device">Conecte o TRK-Finder para atualizar</string>
+    <string name="ota_err_read">Não foi possível ler o arquivo</string>
+    <string name="ota_err_too_small">Arquivo pequeno demais para ser firmware</string>
+    <string name="ota_err_begin">O rastreador recusou o início da OTA</string>
+    <string name="ota_err_chunk">Falha ao enviar chunk</string>
+    <string name="ota_err_end">O rastreador recusou o fim da OTA</string>
+    <string name="ota_err_unknown">Erro desconhecido</string>
+    <string name="ota_confirm">Atualizar</string>
+
+    <!-- Alertas -->
+    <string name="alerts_empty">Sem alertas registrados</string>
+    <string name="alerts_empty_hint">Quando uma ferramenta ficar ausente, o alerta aparece aqui.</string>
+
+    <!-- Boot -->
+    <string name="boot_sys_tag">SYS</string>
+    <string name="boot_ble_tag">BLE</string>
+    <string name="boot_tracker_tag">RASTREADOR</string>
+    <string name="boot_line_kernel">v0.1 · iniciando núcleo</string>
+    <string name="boot_line_scan">escaneando dispositivos…</string>
+    <string name="boot_line_sync">aguardando sincronização</string>
+    <string name="boot_prompt">&gt; %1$s</string>
+
+    <!-- Notificações -->
+    <string name="notification_tool_missing">Ferramenta não encontrada: %1$s</string>
+    <string name="notification_channel_alerts">Alertas Trakr</string>
+    <string name="ble_channel_name">Conexão com o rastreador</string>
+    <string name="ble_connected_message">Trakr conectado ao Rastreador 01</string>
+
+    <!-- BLE -->
+    <string name="ble_error_permission">Permissão BLE necessária</string>
+    <string name="ble_error_scan_failed">Falha no scan BLE (código %1$d)</string>
+    <string name="ble_error_connect_permission">Sem permissão de conexão BLE</string>
+    <string name="ble_error_service_not_found">Serviço do Trakr não encontrado</string>
+    <string name="ble_error_write_permission">Sem permissão de escrita BLE</string>
+    <string name="ble_error_notifications">Falha ao habilitar notificações BLE</string>
+    <string name="ble_device_fallback">Trakr Radar %1$s</string>
+    <string name="ble_multiple_devices">%1$d rastreadores</string>
 </resources>

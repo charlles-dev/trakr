@@ -1,7 +1,10 @@
 #pragma once
 
-// ===== Trakr - Mapeamento de Pinos (ESP32-WROOM-32) =====
+// ===== TRK-Finder - Mapeamento de Pinos (ESP32-WROOM-32) =====
 // Referência: docs/hardware/README.md
+//
+// Rastreador Portátil: sem tampa, botão físico para acordar e disparar a
+// varredura (GPIO 33 é RTC, serve para ext0 wake).
 
 // --- Leitor UHF YRM100 (UART2) ---
 #define YRM100_UART_NUM 2
@@ -9,9 +12,11 @@
 #define YRM100_RX_PIN   16 // ESP32 RX2 <- TX do YRM100
 #define YRM100_BAUD     115200
 
-// --- Sensor Hall (A3144) - detecção da tampa ---
-#define HALL_PIN        33 // Suporta wakeup RTC (ext0)
-#define HALL_WAKE_LEVEL LOW // Ímã presente (tampa fechada)
+// --- Botão físico ---
+// Segura o ext0 wake e dispara a varredura. Pull-down interno + wake em HIGH
+// (botão entre o pino e 3.3V).
+#define BUTTON_PIN       33 // Suporta wakeup RTC (ext0)
+#define BUTTON_WAKE_LEVEL HIGH
 
 // --- Feedback ---
 #define BUZZER_PIN      25 // Alarme local

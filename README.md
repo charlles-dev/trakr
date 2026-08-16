@@ -1,4 +1,4 @@
-# 🧰 Trakr: The Autonomous Smart Toolbox
+# 🧰 Trakr — Rastreamento de Ferramentas Offline-First
 
 <div align="center">
   <!-- Insira o caminho para a logo vetorizada aqui -->
@@ -39,25 +39,30 @@
 
 ## 🎯 O que é o Trakr?
 
-O **Trakr** não é apenas uma caixa com Bluetooth; é uma solução completa de IoT focada em **computação na borda (Edge Computing)**. Projetado para suportar as demandas de controle e gestão de ativos em ambientes pesados e desconectados, como canteiros de obras e zonas de manutenção industrial.
+O **Trakr** não é apenas um leitor com Bluetooth; é uma solução completa de IoT focada em **computação na borda (Edge Computing)**. Projetado para suportar as demandas de controle e gestão de ativos em ambientes pesados e desconectados, como canteiros de obras e zonas de manutenção industrial.
 
-Ao contrário de sistemas convencionais dependentes de nuvem, **a maleta Trakr é a própria fonte da verdade (Master)**. O inventário de ferramentas reside na memória interna do microcontrolador e é escaneado instantaneamente via tecnologia **UHF RFID**. O aplicativo móvel atua como um visualizador de alta performance, garantindo operação 100% autônoma e offline.
+Ao contrário de sistemas convencionais dependentes de nuvem, **o rastreador TRK-Finder é a própria fonte da verdade (Master)**. O inventário de ferramentas reside na memória interna do microcontrolador e é escaneado instantaneamente via tecnologia **UHF RFID**. O aplicativo móvel atua como um visualizador de alta performance, garantindo operação 100% autônoma e offline.
+
+O **TRK-Finder** é um rastreador portátil UHF (ESP32 + YRM100) que pode ser deixado *estacionado* no ambiente de trabalho para auditoria contínua das ferramentas, ou usado em *modo radar*: quando uma ferramenta falta, ele varre sua tag e mede a potência do sinal (**RSSI**), guiando o operador por bipes até a posição da peça — tudo gerenciado pelo mesmo app offline-first.
 
 ## ✨ Principais Funcionalidades
 
-* 🧠 **Edge Intelligence (Autonomia Total):** O ESP32 armazena o inventário (`inventory.json` via LittleFS). Se uma ferramenta faltar ao fechar a tampa, a maleta processa a falha e dispara alarmes (Buzzer/LED) imediatamente, sem precisar do celular.
-* 📡 **Varredura UHF RFID em Massa:** Utiliza o módulo YRM100 com antena cerâmica para ler o interior da maleta de uma só vez, captando múltiplas tags flexíveis *anti-metal* simultaneamente.
-* 🔋 **Ultra Low-Power:** Deep Sleep com wake-up via Sensor Hall (despertar apenas por mudança magnética da tampa), alimentado por bateria 18650 carregada via TP4056 (USB-C).
-* 📱 **App Offline-First (Thin Client):** Aplicativo Kotlin com interface *tech-oriented* em *Dark Mode*. Ele se conecta via Bluetooth LE (BLE), espelha o banco de dados da maleta no cache local do celular (Room/SQLite) e emite notificações push locais (ex: *"Ferramenta retirada: Chave Phillips 1/4"*).
+* 🧠 **Edge Intelligence (Autonomia Total):** O ESP32 armazena o inventário (`inventory.json` via LittleFS). Cada varredura (botão físico ou comando do app) é resolvida localmente, sem precisar do celular.
+* 📡 **Varredura UHF RFID:** Utiliza o módulo YRM100 com antena cerâmica para ler todas as tags de uma só vez, captando múltiplas tags flexíveis *anti-metal* simultaneamente.
+* 🎯 **Modo Radar:** varre a tag da ferramenta faltante e mede a potência do sinal (**RSSI**) pelo YRM100, guiando o usuário por bipes até localizar a peça (modo "detector de metais"), com tela de localização no app.
+* 🗄️ **Modo Estação:** deixe o TRK-Finder parado no ambiente de trabalho para varreduras periódicas do inventário (agendamento planejado — Fase R2 do roadmap).
+* 🔋 **Ultra Low-Power:** Deep Sleep com wake-up via **botão físico** (ext0), alimentado por bateria 18650 carregada via TP4056 (USB-C).
+* 📱 **App Offline-First (Thin Client):** Aplicativo Kotlin com interface *tech-oriented* em *Dark Mode*. Ele se conecta via Bluetooth LE (BLE), espelha o banco de dados do rastreador no cache local do celular (Room/SQLite) e emite notificações push locais (ex: *"Ferramenta não encontrada: Chave Phillips 1/4"*).
 * ⚙️ **Design Mecânico Paramétrico:** Gerado via script nativo no Autodesk Fusion 360. A estrutura inclui suportes para insertos térmicos de latão (M3), *cable management* integrado, guias de luz (*Light Pipe*) para o LED de status interno e cutouts para pés em TPU.
 
 ## 🏗️ Arquitetura do Sistema
 
 O fluxo de dados foi desenhado para resiliência e privacidade:
 
-1. **Hardware (Maleta):** Sensor Hall detecta a abertura/fechamento -> ESP32 desperta do *Deep Sleep* -> Módulo YRM100 varre as tags RFID -> ESP32 compara a leitura com seu banco Flash interno (LittleFS).
+1. **Hardware (TRK-Finder):** Botão físico (ou comando via BLE) dispara a varredura -> ESP32 desperta do *Deep Sleep* -> Módulo YRM100 varre as tags RFID -> ESP32 compara a leitura com seu banco Flash interno (LittleFS).
 2. **Conectividade (BLE):** ESP32 transmite o status e o array de IDs via Bluetooth GATT (baixo consumo) e recebe novos cadastros de tags do app.
 3. **Mobile (App):** O app em Kotlin recebe a carga via BLE, cruza com seu cache (Room/SQLite) e apresenta a interface para o usuário, permitindo também cadastrar novas tags, que são enviadas de volta para o ESP32.
+4. **Modo radar:** mesma varredura UHF → resolução local → BLE, com medida de RSSI da tag faltante + bipes de guia até a ferramenta.
 
 > 📌 Um diagrama Mermaid detalhado do fluxo (Hardware -> BLE -> App) está disponível em [`docs/README.md`](./docs/README.md).
 
@@ -66,7 +71,7 @@ O fluxo de dados foi desenhado para resiliência e privacidade:
 | Camada      | Tecnologia                                          |
 | ----------- | --------------------------------------------------- |
 | **Firmware** | C++ (PlatformIO) · ESP32-WROOM-32 · NimBLE-Arduino · ArduinoJson |
-| **RFID**    | Módulo YRM100 (UHF) + Antena cerâmica IPEX 2dBi + Tags Anti-Metal |
+| **RFID**    | Módulo YRM100 (UHF) + Antena cerâmica IPEX 2dBi + Tags Anti-Metal + medição de RSSI (dBm) |
 | **Mobile**  | Kotlin · Jetpack Compose · Room (SQLite) · Foreground Service BLE |
 | **CAD**     | Autodesk Fusion 360 (script paramétrico em Python)  |
 | **Docs**    | Markdown + Mermaid                                  |
@@ -94,7 +99,8 @@ trakr/
 ## 📡 Documentação Técnica
 
 * [Protocolo BLE/GATT](./docs/protocol/gatt.md) — UUIDs, payloads e comandos (interação firmware ↔ app).
-* [Esquemático de Wiring (SVG)](./hardware/schematics/wiring.svg) — diagrama de fiação da maleta.
+* [Catálogo de Melhorias (HW + SW)](./docs/improvements.md) — add-ons opcionais em discussão, com IDs, esforço e impacto.
+* [Esquemático de Wiring (SVG)](./hardware/schematics/wiring.svg) — diagrama de fiação do TRK-Finder.
 * [Datasheets dos componentes](./hardware/datasheets/README.md) — links verificados para cada módulo.
 * [Protocolo de Medição de Consumo](./docs/hardware/power-measurement.md) — como medir a autonomia da bateria.
 * [Checklist de Validação do CAD](./docs/cad/validation.md) — o que falta para validar e imprimir.
@@ -103,7 +109,7 @@ trakr/
 
 Para dar os primeiros passos com o ecossistema Trakr, escolha por onde deseja começar:
 
-1. **Se você quer imprimir a maleta:** Siga o [Guia de CAD e Impressão 3D](./docs/cad/README.md).
+1. **Se você quer imprimir o TRK-Finder:** Siga o [Guia de CAD e Impressão 3D](./docs/cad/README.md).
 2. **Se você quer montar a eletrônica:** Consulte a [Lista de Materiais (BoM), pinagem e esquemáticos](./docs/hardware/README.md).
 3. **Se você quer focar no código:** Veja o [Guia do Firmware ESP32](./docs/firmware/README.md) ou a [Configuração do App Kotlin](./docs/app/README.md).
 
@@ -120,13 +126,13 @@ Para dar os primeiros passos com o ecossistema Trakr, escolha por onde deseja co
 
 O inventário completo está em [`docs/roadmap.md`](./docs/roadmap.md): lá você
 encontra o **histórico de entregas concluídas** (monorepo, BLE end-to-end,
-perfis de maleta, histórico + CSV, deep sleep + protocolo de consumo,
-múltiplas maletas) e as **próximas features sugeridas** em 3 fases —
-sempre 100% offline-first, sem nuvem.
+deep sleep + protocolo de consumo, refatoração radar-only, TRK-Finder como
+único produto), as **próximas features sugeridas** em fases e os **add-ons
+opcionais** — sempre 100% offline-first, sem nuvem.
 
 ## 🤝 Contribuição
 
-O Trakr é construído por e para engenheiros, makers e desenvolvedores de soluções offline. Aceitamos *Pull Requests* para melhorias no firmware, novas telas no app, refatoração de código e otimizações de usabilidade na maleta 3D.
+O Trakr é construído por e para engenheiros, makers e desenvolvedores de soluções offline. Aceitamos *Pull Requests* para melhorias no firmware, novas telas no app, refatoração de código e otimizações de usabilidade na carcaça 3D.
 
 Veja nosso arquivo [CONTRIBUTING.md](./CONTRIBUTING.md) para diretrizes de desenvolvimento.
 

@@ -8,6 +8,7 @@
 #define TRAKR_CHAR_EVENT_UUID      "60c1f002-1b2e-4d0f-9aeb-0fbe3c2a4b71"
 #define TRAKR_CHAR_CONTROL_UUID    "60c1f003-1b2e-4d0f-9aeb-0fbe3c2a4b71"
 #define TRAKR_CHAR_HISTORY_UUID    "60c1f004-1b2e-4d0f-9aeb-0fbe3c2a4b71"
+#define TRAKR_CHAR_OTA_UUID        "60c1f005-1b2e-4d0f-9aeb-0fbe3c2a4b71"
 
-// Nome do device visível no scan BLE.
-#define TRAKR_DEVICE_NAME "TRAKR-MALETA"
+// Nome do device visível no scan BLE. O app filtra pelo prefixo "TRK-".
+#define TRAKR_DEVICE_NAME "TRK-FINDER"

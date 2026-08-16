@@ -32,6 +32,16 @@ class TrakBleCharCallbacks : public NimBLECharacteristicCallbacks {
                NimBLEConnInfo& connInfo) override {
     (void)connInfo;
     if (!outer_) return;
+    // OTA: stream binário bruto (chunks), não é texto.
+    if (characteristic->getUUID() ==
+        NimBLEUUID(std::string(TRAKR_CHAR_OTA_UUID))) {
+      if (outer_->getOtaWriteCallback()) {
+        const std::string value = characteristic->getValue();
+        outer_->getOtaWriteCallback()(
+            reinterpret_cast<const uint8_t*>(value.data()), value.size());
+      }
+      return;
+    }
     String value = characteristic->getValue().c_str();
     if (outer_->getControlCallback()) outer_->getControlCallback()(value);
   }
@@ -80,6 +90,12 @@ void TrakBle::init(const char* deviceName) {
       TRAKR_CHAR_CONTROL_UUID,
       NIMBLE_PROPERTY::WRITE);
   controlChar->setCallbacks(new TrakBleCharCallbacks(this));
+
+  // OTA: gravação de chunks binários (o app controla begin/end via Control).
+  otaChar_ = service->createCharacteristic(
+      TRAKR_CHAR_OTA_UUID,
+      NIMBLE_PROPERTY::WRITE);
+  otaChar_->setCallbacks(new TrakBleCharCallbacks(this));
 
   // v2.5: os serviços iniciam quando o servidor é iniciado.
 

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- App / navigation -->
+    <string name="app_name">Trakr</string>
+    <string name="tab_dashboard">Dashboard</string>
+    <string name="tab_tools">Tools</string>
+    <string name="tab_alerts">Alerts</string>
+    <string name="tab_radar">Radar</string>
+
+    <!-- Components -->
+    <string name="connection_live">LIVE</string>
+    <string name="connection_offline">OFFLINE</string>
+    <string name="connection_connected">Tracker connected</string>
+    <string name="connection_none">No tracker connected</string>
+    <string name="status_detected">DETECTED</string>
+    <string name="status_absent">MISSING</string>
+    <string name="status_removed">TAKEN</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_empty">Connect your tracker over BLE</string>
+    <string name="dashboard_empty_hint">Turn on the tracker and bring your phone close to sync.</string>
+    <string name="stat_total">TOTAL</string>
+    <string name="stat_detected">DETECTED</string>
+    <string name="stat_absent">MISSING</string>
+    <string name="tools_section">TOOLS</string>
+    <string name="action_theme_light">Light theme</string>
+    <string name="action_theme_dark">Dark theme</string>
+
+    <!-- Tools -->
+    <string name="action_add_tool">Add tool</string>
+    <string name="tools_empty">No tools registered</string>
+    <string name="tools_empty_hint">Use the + button to register or connect the tracker to import the inventory.</string>
+    <string name="search_placeholder">Search tool…</string>
+    <string name="search_no_results">No results</string>
+    <string name="search_no_results_hint">No tools found for \"%1$s\".</string>
+    <string name="dialog_title_new_tool">New tool</string>
+    <string name="dialog_label_name">Name</string>
+    <string name="dialog_label_epc">Tag (EPC)</string>
+    <string name="action_add">Add</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_remove_tool">Remove %1$s</string>
+    <string name="msg_required_fields">Name and tag are required</string>
+    <string name="msg_saved_local">Tracker offline — saved on the app only</string>
+    <string name="msg_adding">Adding \"%1$s\"…</string>
+    <string name="msg_removed_local">Tracker offline — removed from the app only</string>
+    <string name="msg_removing">Removing \"%1$s\"…</string>
+
+    <!-- Tool detail -->
+    <string name="title_details">Details</string>
+    <string name="action_back">Back</string>
+    <string name="detail_last_seen">Last seen</string>
+    <string name="detail_never">Never</string>
+    <string name="detail_rssi">Current RSSI</string>
+    <string name="detail_rssi_none">—</string>
+    <string name="detail_status">Status</string>
+    <string name="detail_present">Tag present</string>
+    <string name="detail_absent">Tag missing</string>
+    <string name="detail_history_title">Signal history (RSSI)</string>
+    <string name="detail_history_hint">History appears as the radar mode reports the tag.</string>
+    <string name="detail_dbm">%1$d dBm</string>
+
+    <!-- Radar -->
+    <string name="radar_no_device">No TRK-Finder connected</string>
+    <string name="radar_no_device_hint">Turn on the TRK-Finder and bring your phone close to pair.</string>
+    <string name="radar_start">START SEARCH</string>
+    <string name="radar_stop">STOP</string>
+    <string name="radar_status_idle">Idle — pick a target and start the search</string>
+    <string name="radar_status_waiting">Searching… waiting for scan</string>
+    <string name="radar_status_no_signal">Searching… no signal yet</string>
+    <string name="radar_status_found">Very close! Tool found</string>
+    <string name="radar_status_near">Signal detected — keep getting closer</string>
+    <string name="radar_signal_label">SIGNAL</string>
+    <string name="radar_dbm_unit">dBm</string>
+    <string name="radar_target_label">TARGET TOOL</string>
+    <string name="radar_no_tools">No tools in inventory</string>
+    <string name="radar_choose_tool">Choose tool</string>
+    <string name="msg_choose_target">Choose a target tool first</string>
+    <string name="msg_no_device">No TRK-Finder connected</string>
+    <string name="msg_target_not_found">Target tool not found on the tracker</string>
+    <string name="msg_radar_unsupported">Tracker does not support radar</string>
+    <string name="msg_start_refused">Tracker refused to start radar</string>
+
+    <!-- OTA (firmware) -->
+    <string name="ota_action">Update firmware</string>
+    <string name="ota_pick_title">Select firmware (.bin)</string>
+    <string name="ota_warning_title">Update firmware?</string>
+    <string name="ota_warning_text">The tracker will restart when the update finishes. Continue?</string>
+    <string name="ota_progress">Uploading firmware… %1$d%%</string>
+    <string name="ota_done">Firmware updated — the tracker will restart</string>
+    <string name="ota_error">Update failed: %1$s</string>
+    <string name="ota_no_device">Connect the TRK-Finder to update</string>
+    <string name="ota_err_read">Could not read the file</string>
+    <string name="ota_err_too_small">File too small to be firmware</string>
+    <string name="ota_err_begin">The tracker refused to start the update</string>
+    <string name="ota_err_chunk">Failed to send chunk</string>
+    <string name="ota_err_end">The tracker refused to finish the update</string>
+    <string name="ota_err_unknown">Unknown error</string>
+    <string name="ota_confirm">Update</string>
+
+    <!-- Alerts -->
+    <string name="alerts_empty">No alerts recorded</string>
+    <string name="alerts_empty_hint">When a tool goes missing, the alert shows up here.</string>
+
+    <!-- Boot -->
+    <string name="boot_sys_tag">SYS</string>
+    <string name="boot_ble_tag">BLE</string>
+    <string name="boot_tracker_tag">TRACKER</string>
+    <string name="boot_line_kernel">v0.1 · starting core</string>
+    <string name="boot_line_scan">scanning devices…</string>
+    <string name="boot_line_sync">waiting for sync</string>
+    <string name="boot_prompt">&gt; %1$s</string>
+
+    <!-- Notifications -->
+    <string name="notification_tool_missing">Tool not found: %1$s</string>
+    <string name="notification_channel_alerts">Trakr alerts</string>
+    <string name="ble_channel_name">Tracker connection</string>
+    <string name="ble_connected_message">Trakr connected to Tracker 01</string>
+
+    <!-- BLE -->
+    <string name="ble_error_permission">BLE permission required</string>
+    <string name="ble_error_scan_failed">BLE scan failed (code %1$d)</string>
+    <string name="ble_error_connect_permission">No BLE connect permission</string>
+    <string name="ble_error_service_not_found">Trakr service not found</string>
+    <string name="ble_error_write_permission">No BLE write permission</string>
+    <string name="ble_error_notifications">Failed to enable BLE notifications</string>
+    <string name="ble_device_fallback">Trakr Radar %1$s</string>
+    <string name="ble_multiple_devices">%1$d trackers</string>
+</resources>

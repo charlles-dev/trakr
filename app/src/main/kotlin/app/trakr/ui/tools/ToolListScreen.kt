@@ -1,27 +1,24 @@
 package app.trakr.ui.tools
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -30,6 +27,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,11 +36,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import app.trakr.R
 import app.trakr.model.Tool
+import app.trakr.ui.components.CardActionButton
+import app.trakr.ui.components.EmptyState
+import app.trakr.ui.components.StatusBadge
+import app.trakr.ui.components.ToolCard
+import app.trakr.ui.motion.pressScale
+import app.trakr.ui.theme.AlertRed
+import app.trakr.ui.theme.NeonGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +60,17 @@ fun ToolListScreen(
     val message by viewModel.message.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var showAddDialog by remember { mutableStateOf(false) }
+    var query by remember { mutableStateOf("") }
+    var selectedTool by remember { mutableStateOf<Tool?>(null) }
+
+    selectedTool?.let { tool ->
+        ToolDetailScreen(
+            tool = tool,
+            onBack = { selectedTool = null },
+            modifier = Modifier.fillMaxSize(),
+        )
+        return
+    }
 
     LaunchedEffect(message) {
         message?.let {
@@ -62,37 +79,114 @@ fun ToolListScreen(
         }
     }
 
+    val filtered =
+        remember(tools, query) {
+            if (query.isBlank()) {
+                tools
+            } else {
+                tools.filter {
+                    it.name.contains(query.trim(), ignoreCase = true) ||
+                        it.epc.contains(query.trim(), ignoreCase = true)
+                }
+            }
+        }
+
     Scaffold(
         modifier = modifier,
-        topBar = { TopAppBar(title = { Text("Ferramentas") }) },
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.tab_tools)) },
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                    ),
+            )
+        },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Filled.Add, contentDescription = "Adicionar ferramenta")
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                modifier = Modifier.pressScale(pressedScale = 0.90f, spring = false),
+            ) {
+                Icon(
+                    Icons.Filled.Add,
+                    contentDescription = stringResource(R.string.action_add_tool),
+                )
             }
         },
     ) { padding ->
-        if (tools.isEmpty()) {
-            Box(
-                modifier = Modifier
+        Box(
+            modifier =
+                Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "Nenhuma ferramenta sincronizada",
-                    style = MaterialTheme.typography.bodyLarge,
+        ) {
+            if (tools.isEmpty()) {
+                EmptyState(
+                    icon = Icons.Filled.Build,
+                    title = stringResource(R.string.tools_empty),
+                    hint = stringResource(R.string.tools_empty_hint),
+                    modifier = Modifier.align(Alignment.Center),
                 )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-            ) {
-                items(tools, key = { it.id }) { tool ->
-                    ToolListItem(tool = tool, onRemove = { viewModel.removeTool(tool) })
-                    HorizontalDivider()
+            } else {
+                Column(Modifier.fillMaxSize()) {
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                        placeholder = { Text(stringResource(R.string.search_placeholder)) },
+                        leadingIcon = {
+                            Icon(Icons.Filled.Search, contentDescription = null)
+                        },
+                        singleLine = true,
+                    )
+                    if (filtered.isEmpty()) {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .padding(top = 48.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            EmptyState(
+                                icon = Icons.Filled.Search,
+                                title = stringResource(R.string.search_no_results),
+                                hint = stringResource(R.string.search_no_results_hint, query.trim()),
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            items(filtered, key = { it.id }) { tool ->
+                                ToolCard(
+                                    tool = tool,
+                                    onClick = { selectedTool = tool },
+                                    trailing = {
+                                        StatusBadge(
+                                            text =
+                                                if (tool.present) {
+                                                    stringResource(R.string.status_detected)
+                                                } else {
+                                                    stringResource(R.string.status_absent)
+                                                },
+                                            color = if (tool.present) NeonGreen else AlertRed,
+                                        )
+                                        CardActionButton(
+                                            onClick = { viewModel.removeTool(tool) },
+                                            contentDescription = stringResource(R.string.action_remove_tool, tool.name),
+                                        )
+                                    },
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -119,61 +213,33 @@ private fun AddToolDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nova ferramenta") },
+        title = { Text(stringResource(R.string.dialog_title_new_tool)) },
         text = {
             Column {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Nome") },
+                    label = { Text(stringResource(R.string.dialog_label_name)) },
                     singleLine = true,
                 )
                 Spacer(Modifier.size(8.dp))
                 OutlinedTextField(
                     value = epc,
                     onValueChange = { epc = it },
-                    label = { Text("Tag (EPC)") },
+                    label = { Text(stringResource(R.string.dialog_label_epc)) },
                     singleLine = true,
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(name, epc) }) { Text("Adicionar") }
+            TextButton(onClick = { onConfirm(name, epc) }) {
+                Text(stringResource(R.string.action_add))
+            }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.action_cancel))
+            }
         },
     )
-}
-
-@Composable
-private fun ToolListItem(tool: Tool, onRemove: () -> Unit) {
-    val indicator = if (tool.present) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-    val label = if (tool.present) "Na maleta" else "Ausente"
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(12.dp)
-                .clip(CircleShape)
-                .background(indicator),
-        )
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(text = tool.name, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        IconButton(onClick = onRemove) {
-            Icon(Icons.Filled.Delete, contentDescription = "Remover ${tool.name}")
-        }
-    }
 }

@@ -1,7 +1,10 @@
 Guia de Firmware (ESP32 + LittleFS)
 ===================================
 
-O firmware do Trakr é o cérebro autônomo da maleta. Ele foi escrito em C++ e é recomendado utilizar o **PlatformIO** (extensão do VS Code) para compilação.
+O firmware do Trakr é o cérebro autônomo do **TRK-Finder** (rastreador
+portátil). Ele foi escrito em C++ e é recomendado utilizar o **PlatformIO**
+(extensão do VS Code) para compilação.
+
 Ambiente de Desenvolvimento
 ---------------------------
 
@@ -30,6 +33,15 @@ desligue a `#define` se a sua placa YRM100 não tiver pino de habilitação.
 O protocolo GATT (UUIDs, características e comandos) é definido em
 `firmware/include/ble_profile.h` e descrito em [`docs/protocol/gatt.md`](../protocol/gatt.md).
 
+Ambientes
+---------
+
+O produto é único (TRK-Finder); os ambientes variam apenas pelo modo de leitura:
+
+* `esp32radar` — build padrão com o YRM100 real;
+* `esp32radar-sim` — mesmo código com `-DTRAKR_SIM`: gera leituras simuladas
+  para testar o app sem o módulo UHF.
+
 Gravando o Banco de Dados Local (LittleFS)
 ------------------------------------------
 
@@ -51,4 +63,25 @@ Com o FileSystem gravado, basta clicar em **Upload** no PlatformIO para compilar
 
 ### Lógica de Deep Sleep
 
-Para economizar bateria, o loop principal (`loop()`) raramente é executado por muito tempo. O código prepara o pino do Sensor Hall como `ext0 wake up` e entra em `esp_deep_sleep_start()`. Ele só acorda com mudanças magnéticas (tampa abrindo/fechando).
+Para economizar bateria, o loop principal (`loop()`) raramente é executado por muito tempo. O código prepara o **botão físico** (GPIO 33) como `ext0 wake up` e entra em `esp_deep_sleep_start()`. Ele só acorda com a pressão do botão.
+
+### Modo radar (RASTREIA)
+
+O núcleo do produto:
+
+* **Botão físico** no GPIO 33 (pull-down interno) serve como wake `ext0`; o
+  dispositivo acorda em `LEITURA` (varredura imediata) quando acordou pelo
+  botão, senão entra em `ESCUTA` (espera ativa ~30 s → dorme).
+* **Estado `RASTREIA` (modo radar):** disparado por
+  `{"cmd":"start_radar","id":"<id>"}` (ou por tag) no GATT Control. A cada
+  ciclo (~400 ms) o `TrakYrm100::collectReads()` mede o EPC + **RSSI (dBm)**
+  da tag alvo e o firmware publica `{"type":"radar_report",...}` via Event
+  notify — sem persistir no histórico. O buzzer bipa com intervalo
+  proporcional à potência (1000 ms sem sinal → 100 ms com sinal forte) e o
+  LED muda de cor (azul procurando → ciano sinal → verde perto).
+* `TrakYrm100::collectEpc()` delega para `collectReads()` — o esquema de
+  parsing é o mesmo, o RSSI é extraído do byte após o EPC quando presente no
+  payload.
+
+Detalhes do protocolo: [`docs/protocol/gatt.md`](../protocol/gatt.md).
+Roadmap e próximos passos: [`docs/roadmap.md`](../roadmap.md).

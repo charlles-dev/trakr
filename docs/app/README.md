@@ -2,6 +2,7 @@ Guia de Configuração: App Android (Kotlin)
 ==========================================
 
 Este aplicativo foi desenvolvido nativamente para Android utilizando **Kotlin** e **Jetpack Compose** para a interface (UI). O uso de código nativo garante a máxima estabilidade da conexão Bluetooth LE (BLE) em segundo plano (background).
+
 Pré-requisitos
 --------------
 
@@ -27,14 +28,31 @@ O projeto utiliza bibliotecas modernas do ecossistema Android:
 Permissões Necessárias (AndroidManifest.xml)
 --------------------------------------------
 
-Para que o app consiga parear com a maleta e manter o serviço rodando, as seguintes permissões são exigidas e devem ser aceitas pelo usuário no primeiro uso:
+Para que o app consiga parear com o TRK-Finder e manter o serviço rodando, as seguintes permissões são exigidas e devem ser aceitas pelo usuário no primeiro uso:
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- Necessário em Androids antigos para BLE -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
 O Segredo da Estabilidade: Foreground Service
 ---------------------------------------------
 
-Ao contrário de frameworks híbridos, aqui utilizamos um **Serviço de Primeiro Plano** (`Foreground Service`). O Android exibirá uma notificação silenciosa e fixa ("Trakr conectado à Maleta 01"), o que impede o sistema operacional de "matar" a conexão BLE para economizar bateria. Isso garante que o alerta de ferramenta perdida chegue mesmo se seu celular estiver bloqueado no bolso a tarde inteira.
+Ao contrário de frameworks híbridos, aqui utilizamos um **Serviço de Primeiro Plano** (`Foreground Service`). O Android exibirá uma notificação silenciosa e fixa ("Trakr conectado ao TRK-Finder"), o que impede o sistema operacional de "matar" a conexão BLE para economizar bateria. Isso garante que o alerta de ferramenta não encontrada chegue mesmo se seu celular estiver bloqueado no bolso a tarde inteira.
+
+Conexão com o TRK-Finder
+------------------------
+
+O app escaneia por dispositivos com nome iniciado em **`TRK-`** (firmware
+publica `TRK-FINDER`) e conecta-se a todos os rastreadores encontrados na
+mesma sessão:
+
+* **Aba Radar:** lista as ferramentas cadastradas, permite escolher a
+  **ferramenta alvo** e iniciar/parar o modo radar no rastreador. Enquanto
+  procura, o firmware publica relatórios `radar_report` (via Event notify)
+  com o **RSSI em dBm**; a tela mostra a intensidade em tempo real (barra de
+  proximidade) e o estado da busca.
+* O radar também faz a varredura de inventário normal (botão físico ou
+  comando `rescan`), então as telas de Dashboard/Ferramentas funcionam
+  igualmente com ele.

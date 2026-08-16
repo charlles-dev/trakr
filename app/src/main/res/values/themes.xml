@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Trakr" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.Trakr" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#0B1210</item>
+    </style>
+
+    <!-- Splash pré-API 31: janela estática com a marca. -->
+    <style name="Theme.Trakr.Splash" parent="Theme.Trakr">
+        <item name="android:windowBackground">@drawable/splash_background</item>
+    </style>
 </resources>

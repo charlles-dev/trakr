@@ -6,8 +6,8 @@
 //
 // Campos de cada evento:
 //   ts    -> millis() no momento em que o evento surgiu (relativo ao boot)
-//   type  -> tool_missing | tool_back | lid_open | lid_closed | boot
-//   tool_id / name -> opcionais (tool_id vazio para eventos de maleta)
+//   type  -> boot (radar_report e cmd_reply são efêmeros, não persistidos)
+//   tool_id / name -> opcionais (vazios para eventos de sistema)
 
 #include <Arduino.h>
 #include <FS.h>

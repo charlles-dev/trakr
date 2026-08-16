@@ -41,6 +41,10 @@ class TrakInventory {
   // Remove ferramenta pelo id. Retorna true se encontrou.
   bool removeTool(const String& id);
 
+  // Remove ferramenta pelo EPC (usado no sync entre unidades, onde os ids
+  // locais podem divergir). Retorna true se encontrou.
+  bool removeToolByEpc(const String& epc);
+
   // Serializa o inventário no mesmo formato do inventory.json.
   String toJsonString() const;
 

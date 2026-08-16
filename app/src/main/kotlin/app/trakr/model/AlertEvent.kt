@@ -4,7 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-/** Evento de alerta (ex: ferramenta retirada da maleta). */
+/** Evento de alerta (ex: ferramenta não encontrada). */
 @Entity(tableName = "alerts")
 data class AlertEvent(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,

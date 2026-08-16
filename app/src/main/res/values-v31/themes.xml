@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Splash nativa do Android 12+ (API 31+).
+         Depois do splash, o Android troca para o tema da atividade
+         (Theme.Trakr) automaticamente — por isso o parent aqui. -->
+    <style name="Theme.Trakr.Splash" parent="Theme.Trakr">
+        <item name="android:windowSplashScreenBackground">#0B1210</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="android:windowSplashScreenAnimationDuration">400</item>
+    </style>
+</resources>

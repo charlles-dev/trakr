@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  app:
+    name: App (Android)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('app/gradle/*.toml') }}
+          restore-keys: gradle-${{ runner.os }}
+
+      - name: ktlint check
+        run: ./gradlew ktlintCheck
+
+      - name: Unit tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Build APK
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: trakr-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+
+  firmware:
+    name: Firmware (ESP32)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: firmware
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            .pio
+          key: pio-${{ runner.os }}-${{ hashFiles('firmware/platformio.ini') }}
+          restore-keys: pio-${{ runner.os }}
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Build esp32radar
+        run: pio run -e esp32radar
+
+      - name: Build esp32radar-sim
+        run: pio run -e esp32radar-sim

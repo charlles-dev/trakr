@@ -25,7 +25,7 @@ Procurando onde começar? Issues marcadas como `good first issue` são ideais. A
    ```
 4. Para testar sem o leitor YRM100, use o ambiente alternativo:
    ```shell
-   pio run -e esp32dev-sim
+   pio run -e esp32radar-sim
    ```
 5. Documentado em [docs/firmware/README.md](./docs/firmware/README.md).
 
@@ -57,7 +57,7 @@ Exemplos:
 
 ### Testes
 
-- App: ainda não há testes automatizados (`app/src/test` vazio); validação via `./gradlew assembleDebug` + testes manuais com celular físico (emulador não suporta BLE nativo). Pull requests com testes para lógica nova são bem-vindos.
+- App: testes unitários em `app/src/test` (Parser); validação via `./gradlew assembleDebug` + testes manuais com celular físico (emulador não suporta BLE nativo). Pull requests com testes para lógica nova são bem-vindos.
 - Firmware: estrutura de teste (`pio test`) ainda a ser implementada; validações manuais via `-DTRAKR_SIM` são aceitas como evidência.
 
 ## Reportando bugs
