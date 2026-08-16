@@ -30,7 +30,9 @@ jobs:
           restore-keys: gradle-${{ runner.os }}
 
       - name: ktlint check
-        run: ./gradlew ktlintCheck
+        run: |
+          chmod +x gradlew
+          ./gradlew ktlintCheck
 
       - name: Unit tests
         run: ./gradlew testDebugUnitTest
@@ -74,3 +76,9 @@ jobs:
 
       - name: Build esp32radar-sim
         run: pio run -e esp32radar-sim
+
+      - name: Build esp32s3radar
+        run: pio run -e esp32s3radar
+
+      - name: Build esp32s3radar-sim
+        run: pio run -e esp32s3radar-sim
