@@ -15,6 +15,9 @@ class FakeBleGateway : BleGateway {
     override val devices = MutableStateFlow<List<BleDeviceInfo>>(emptyList())
     override val status = MutableStateFlow<BleStatus>(BleStatus.Idle)
     override val radarReport = MutableStateFlow<RadarReport?>(null)
+    override val liveReport = MutableStateFlow<app.trakr.model.LiveReport?>(null)
+    override val multiReport =
+        MutableStateFlow<app.trakr.model.MultiRadarReport?>(null)
     override val lastReply = MutableStateFlow<InventoryParser.CmdReply?>(null)
 
     val addToolCalls = mutableListOf<Pair<String, String>>()

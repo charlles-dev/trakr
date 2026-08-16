@@ -14,6 +14,7 @@ import app.trakr.data.InventoryParser
 import app.trakr.data.InventoryParser.TrackerConfig
 import app.trakr.repository.ToolRepository
 import app.trakr.ui.UiMessage
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,12 +23,12 @@ import kotlinx.coroutines.launch
 
 class ConfigViewModel(
     private val ble: BleGateway,
+    private val repository: ToolRepository,
 ) : ViewModel() {
     val devices: StateFlow<List<BleDeviceInfo>> = ble.devices
     val bleStatus: StateFlow<app.trakr.core.ble.BleStatus> = ble.status
-    val tools = ToolRepository(AppContainer.database.toolDao()).observeTools()
+    val tools: Flow<List<app.trakr.model.Tool>> = repository.observeTools()
 
-    /** Configurações atuais do TRK-Finder, ou null antes do primeiro get. */
     private val _config = MutableStateFlow<TrackerConfig?>(null)
     val config: StateFlow<TrackerConfig?> = _config.asStateFlow()
 
@@ -93,7 +94,6 @@ class ConfigViewModel(
     }
 
     fun setPin(pin: String) {
-        // pin vazio = limpar PIN
         ble.setConfig(mapOf("pin" to pin)) {
             _message.value = UiMessage(R.string.msg_no_device)
         }
@@ -125,29 +125,31 @@ class ConfigViewModel(
     private val _addons = MutableStateFlow<List<String>>(emptyList())
     val addons: StateFlow<List<String>> = _addons.asStateFlow()
 
-    val allToolSettings = ToolRepository(AppContainer.database.toolDao()).observeAllToolSettings()
-    val trackerMutes = ToolRepository(AppContainer.database.toolDao()).observeTrackerMutes()
+    val allToolSettings = repository.observeAllToolSettings()
+    val trackerMutes = repository.observeTrackerMutes()
 
     fun setToolMuted(
         toolId: String,
         muted: Boolean,
     ) {
         viewModelScope.launch {
-            val repo = ToolRepository(AppContainer.database.toolDao())
-            val existing = repo.observeToolSetting(toolId)
-            // precisa pegar valor atual via first
-            var current: app.trakr.model.ToolAlertSetting? = null
-            try {
-                current = daoGetToolSetting(toolId)
-            } catch (_: Exception) {
-            }
-            val newSetting = (current ?: app.trakr.model.ToolAlertSetting(toolId = toolId)).copy(muted = muted)
-            repo.upsertToolSetting(newSetting)
+            val current =
+                try {
+                    repository.let {
+                        AppContainer.database.toolDao().getAllToolSettings()
+                            .find { s -> s.toolId == toolId }
+                    }
+                } catch (_: Exception) {
+                    null
+                } ?: repository.let { null }
+            // Fallback: cria novo se nao existe
+            val newSetting =
+                app.trakr.model.ToolAlertSetting(
+                    toolId = toolId,
+                    muted = muted,
+                )
+            repository.upsertToolSetting(newSetting)
         }
-    }
-
-    private suspend fun daoGetToolSetting(toolId: String): app.trakr.model.ToolAlertSetting? {
-        return AppContainer.database.toolDao().getAllToolSettings().find { it.toolId == toolId }
     }
 
     fun setTrackerMuted(
@@ -155,8 +157,9 @@ class ConfigViewModel(
         muted: Boolean,
     ) {
         viewModelScope.launch {
-            val repo = ToolRepository(AppContainer.database.toolDao())
-            repo.setTrackerMute(app.trakr.model.TrackerMute(address = address, muted = muted))
+            repository.setTrackerMute(
+                app.trakr.model.TrackerMute(address = address, muted = muted),
+            )
         }
     }
 
@@ -164,18 +167,18 @@ class ConfigViewModel(
     val backupJson: StateFlow<String?> = _backupJson.asStateFlow()
 
     fun loadSensors() {
-        (ble as? app.trakr.core.ble.BleManager)?.let {
-            it.getSensors { _message.value = UiMessage(R.string.msg_no_device) }
-            it.getAddons { _message.value = UiMessage(R.string.msg_no_device) }
-        } ?: run {
-            ble.getConfig { _message.value = UiMessage(R.string.msg_no_device) }
+        ble.getSensors {
+            _message.value = UiMessage(R.string.msg_no_device)
+        }
+        ble.getAddons {
+            _message.value = UiMessage(R.string.msg_no_device)
         }
     }
 
     fun exportBackup() {
         viewModelScope.launch {
             try {
-                val json = ToolRepository(AppContainer.database.toolDao()).exportBackupJson()
+                val json = repository.exportBackupJson()
                 _backupJson.value = json
                 _message.value = UiMessage(R.string.msg_backup_exported)
             } catch (e: Exception) {
@@ -187,9 +190,13 @@ class ConfigViewModel(
     fun importBackup(json: String) {
         viewModelScope.launch {
             try {
-                val repo = ToolRepository(AppContainer.database.toolDao())
-                val ok = repo.importBackupJson(json)
-                _message.value = if (ok) UiMessage(R.string.msg_backup_imported) else UiMessage(R.string.msg_backup_failed)
+                val ok = repository.importBackupJson(json)
+                _message.value =
+                    if (ok) {
+                        UiMessage(R.string.msg_backup_imported)
+                    } else {
+                        UiMessage(R.string.msg_backup_failed)
+                    }
                 if (ok) loadConfig()
             } catch (e: Exception) {
                 _message.value = UiMessage(R.string.msg_backup_failed)
@@ -202,8 +209,6 @@ class ConfigViewModel(
     }
 
     init {
-        // Carrega a config assim que um rastreador conectar (e só uma vez:
-        // o usuário recarrega manualmente pelo botão se quiser).
         viewModelScope.launch {
             ble.devices.collect { devices ->
                 if (devices.isNotEmpty() && _config.value == null) loadConfig()
@@ -214,19 +219,24 @@ class ConfigViewModel(
                 when (reply?.cmd) {
                     "get_config", "set_config" -> {
                         if (reply.status == "ok") {
-                            val config = reply.let(InventoryParser::trackerConfig)
-                            if (config != null) {
-                                _config.value = config
+                            val cfg = reply.let(InventoryParser::trackerConfig)
+                            if (cfg != null) {
+                                _config.value = cfg
                             }
-                            // Recarrega para pegar has_pin/authed novos
                             if (reply.cmd == "set_config") {
                                 loadConfig()
                             }
                         } else {
                             when (reply.reason) {
-                                "auth_required" -> _message.value = UiMessage(R.string.msg_auth_required)
-                                "auth_failed" -> _message.value = UiMessage(R.string.msg_auth_failed)
-                                else -> _message.value = UiMessage(R.string.msg_config_failed)
+                                "auth_required" ->
+                                    _message.value =
+                                        UiMessage(R.string.msg_auth_required)
+                                "auth_failed" ->
+                                    _message.value =
+                                        UiMessage(R.string.msg_auth_failed)
+                                else ->
+                                    _message.value =
+                                        UiMessage(R.string.msg_config_failed)
                             }
                         }
                     }
@@ -276,7 +286,10 @@ class ConfigViewModel(
     companion object {
         val Factory: ViewModelProvider.Factory =
             viewModelFactory {
-                initializer { ConfigViewModel(BleManager) }
+                initializer {
+                    val dao = AppContainer.database.toolDao()
+                    ConfigViewModel(BleManager, ToolRepository(dao))
+                }
             }
     }
 }

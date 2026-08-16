@@ -4,7 +4,9 @@ import app.trakr.R
 import app.trakr.core.ble.BleDeviceInfo
 import app.trakr.data.InventoryParser.CmdReply
 import app.trakr.data.InventoryParser.TrackerConfig
+import app.trakr.repository.ToolRepository
 import app.trakr.testutil.FakeBleGateway
+import app.trakr.testutil.FakeToolDao
 import app.trakr.testutil.MainDispatcherRule
 import app.trakr.ui.UiMessage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,8 +24,10 @@ class ConfigViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val ble = FakeBleGateway()
+    private val dao = FakeToolDao()
+    private val repository = ToolRepository(dao)
 
-    private fun vm() = ConfigViewModel(ble)
+    private fun vm() = ConfigViewModel(ble, repository)
 
     private fun replyWithPayload(
         cmd: String,
