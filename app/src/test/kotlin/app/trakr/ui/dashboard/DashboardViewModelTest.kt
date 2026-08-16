@@ -3,9 +3,9 @@ package app.trakr.ui.dashboard
 import app.trakr.core.ble.BleDeviceInfo
 import app.trakr.core.ble.BleStatus
 import app.trakr.model.Tool
-import app.trakr.repository.ToolboxRepository
+import app.trakr.repository.ToolRepository
 import app.trakr.testutil.FakeBleGateway
-import app.trakr.testutil.FakeToolboxDao
+import app.trakr.testutil.FakeToolDao
 import app.trakr.testutil.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -21,9 +21,9 @@ class DashboardViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val dao = FakeToolboxDao()
+    private val dao = FakeToolDao()
     private val ble = FakeBleGateway()
-    private val repository = ToolboxRepository(dao)
+    private val repository = ToolRepository(dao)
 
     @Test
     fun tools_streamFromDao() =

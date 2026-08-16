@@ -19,7 +19,7 @@ import app.trakr.data.AppContainer
 import app.trakr.data.InventoryParser
 import app.trakr.data.InventoryParser.CmdReply
 import app.trakr.model.RadarReport
-import app.trakr.repository.ToolboxRepository
+import app.trakr.repository.ToolRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -47,18 +47,18 @@ sealed interface BleStatus {
     data class Error(val message: String) : BleStatus
 }
 
-/** Informação de um rastreador TRK-Finder conectado (sessão BLE). */
+/** InformaÃ§Ã£o de um rastreador TRK-Finder conectado (sessÃ£o BLE). */
 data class BleDeviceInfo(
     val address: String,
     val name: String,
 )
 
 /**
- * Motor BLE do rastreador portátil:
+ * Motor BLE do rastreador portÃ¡til:
  * - Escaneia em janelas e conecta-se a TODOS os rastreadores TRK-Finder
- *   encontrados (cada um com a sua própria sessão GATT);
- * - Roda um escaner periódico para (re)conectar rastreadores que apareçam/sumam;
- * - Roteia eventos (radar_report/cmd_reply) e inventário de cada sessão.
+ *   encontrados (cada um com a sua prÃ³pria sessÃ£o GATT);
+ * - Roda um escaner periÃ³dico para (re)conectar rastreadores que apareÃ§am/sumam;
+ * - Roteia eventos (radar_report/cmd_reply) e inventÃ¡rio de cada sessÃ£o.
  */
 object BleManager : BleGateway {
     private const val TAG = "BleManager"
@@ -75,18 +75,18 @@ object BleManager : BleGateway {
 
     private val _radarReport = MutableStateFlow<RadarReport?>(null)
 
-    /** Último relatório do modo radar (rastreador portátil), ou null. */
+    /** Ãšltimo relatÃ³rio do modo radar (rastreador portÃ¡til), ou null. */
     override val radarReport: StateFlow<RadarReport?> = _radarReport.asStateFlow()
 
     private val _lastReply = MutableStateFlow<CmdReply?>(null)
 
-    /** Último ACK de comando recebido do firmware, ou null. */
+    /** Ãšltimo ACK de comando recebido do firmware, ou null. */
     override val lastReply: StateFlow<CmdReply?> = _lastReply.asStateFlow()
 
     val connectedCount: Int get() = sessions.size
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val repository = ToolboxRepository(AppContainer.database.toolboxDao())
+    private val repository = ToolRepository(AppContainer.database.toolDao())
 
     private var context: Context? = null
     private val sessions = mutableMapOf<String, BleSession>()
@@ -98,7 +98,7 @@ object BleManager : BleGateway {
 
     // ---------------- Utilidades ----------------
 
-    /** Resolve um recurso de string com o contexto do app (se disponível). */
+    /** Resolve um recurso de string com o contexto do app (se disponÃ­vel). */
     private fun str(
         resId: Int,
         vararg args: Any,
@@ -146,7 +146,7 @@ object BleManager : BleGateway {
         _status.value = BleStatus.Idle
     }
 
-    /** Pede um novo ciclo de escaneamento (usado também no onDestroy do app). */
+    /** Pede um novo ciclo de escaneamento (usado tambÃ©m no onDestroy do app). */
     override fun rescan() {
         if (running) startScanWindow()
     }
@@ -251,7 +251,7 @@ object BleManager : BleGateway {
         }
     }
 
-    // ---------------- Sessão (1 por rastreador) ----------------
+    // ---------------- SessÃ£o (1 por rastreador) ----------------
 
     private class BleSession(val device: BluetoothDevice) {
         var gatt: BluetoothGatt? = null
@@ -277,7 +277,7 @@ object BleManager : BleGateway {
             gatt = null
         }
 
-        /** Remove a sessão do mapa e re-arma o scan (reconexão automática). */
+        /** Remove a sessÃ£o do mapa e re-arma o scan (reconexÃ£o automÃ¡tica). */
         fun drop() {
             disconnect()
             BleManager.sessions.remove(device.address)
@@ -339,7 +339,7 @@ object BleManager : BleGateway {
                 gatt.requestMtu(REQUESTED_MTU)
 
                 // Pede a varredura inicial: o firmware responde com o
-                // inventário completo (notify) e entra em sincronização.
+                // inventÃ¡rio completo (notify) e entra em sincronizaÃ§Ã£o.
                 service.getCharacteristic(BleProfile.CONTROL_UUID)?.let { control ->
                     try {
                         writeCharacteristic(gatt, control, """{"cmd":"rescan"}""")
@@ -354,7 +354,7 @@ object BleManager : BleGateway {
                 mtu: Int,
                 status: Int,
             ) {
-                // MTU negociada — não é necessário agir.
+                // MTU negociada â€” nÃ£o Ã© necessÃ¡rio agir.
             }
 
             @Deprecated("Compatibilidade com Android < 13")
@@ -500,7 +500,7 @@ object BleManager : BleGateway {
         sendControl("""{"cmd":"stop_radar"}""", onUnavailable)
     }
 
-    /** Pede as configurações do rastreador: {"cmd":"get_config"} */
+    /** Pede as configuraÃ§Ãµes do rastreador: {"cmd":"get_config"} */
     override fun getConfig(onUnavailable: () -> Unit) {
         sendControl("""{"cmd":"get_config"}""", onUnavailable)
     }
@@ -518,7 +518,7 @@ object BleManager : BleGateway {
 
     // ---------------- OTA (firmware) ----------------
 
-    /** Abre a sessão OTA no rastreador: {"cmd":"ota_begin","size":N} */
+    /** Abre a sessÃ£o OTA no rastreador: {"cmd":"ota_begin","size":N} */
     fun beginOta(size: Long) {
         sendControl("""{"cmd":"ota_begin","size":$size}""") { /* resposta via cmd_reply */ }
     }
@@ -528,12 +528,12 @@ object BleManager : BleGateway {
         sendControl("""{"cmd":"ota_end"}""") { /* resposta via cmd_reply */ }
     }
 
-    /** Descarta a sessão OTA em andamento (erro/cancelamento). */
+    /** Descarta a sessÃ£o OTA em andamento (erro/cancelamento). */
     fun abortOta() {
         sendControl("""{"cmd":"ota_abort"}""") { /* resposta via cmd_reply */ }
     }
 
-    /** Escreve um chunk binário na característica OTA. */
+    /** Escreve um chunk binÃ¡rio na caracterÃ­stica OTA. */
     fun sendOtaChunk(chunk: ByteArray): Boolean {
         val g = controlGatt() ?: return false
         val ota =
@@ -548,7 +548,7 @@ object BleManager : BleGateway {
         }
     }
 
-    // ---------------- Persistência ----------------
+    // ---------------- PersistÃªncia ----------------
 
     private fun onInventory(json: String) {
         val tools = InventoryParser.parseInventory(json)
@@ -556,7 +556,7 @@ object BleManager : BleGateway {
             try {
                 repository.saveInventory(tools)
             } catch (e: Exception) {
-                Log.w(TAG, "Falha ao salvar inventário local", e)
+                Log.w(TAG, "Falha ao salvar inventÃ¡rio local", e)
             }
         }
     }
@@ -565,7 +565,7 @@ object BleManager : BleGateway {
         val report = InventoryParser.parseRadarReport(json)
         if (report != null) {
             _radarReport.value = report
-            // Espelha o estado da tag no inventário local (último visto).
+            // Espelha o estado da tag no inventÃ¡rio local (Ãºltimo visto).
             if (report.tag.isNotBlank()) {
                 val now = System.currentTimeMillis()
                 scope.launch {
@@ -578,7 +578,7 @@ object BleManager : BleGateway {
                         )
                         repository.recordRssi(report.tag, report.rssi)
                     } catch (e: Exception) {
-                        Log.w(TAG, "Falha ao espelhar radar_report no inventário", e)
+                        Log.w(TAG, "Falha ao espelhar radar_report no inventÃ¡rio", e)
                     }
                 }
             }

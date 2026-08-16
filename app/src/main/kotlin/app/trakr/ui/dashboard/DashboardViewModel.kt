@@ -11,7 +11,7 @@ import app.trakr.core.ble.BleManager
 import app.trakr.core.ble.BleStatus
 import app.trakr.data.AppContainer
 import app.trakr.model.Tool
-import app.trakr.repository.ToolboxRepository
+import app.trakr.repository.ToolRepository
 import app.trakr.ui.UiMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class DashboardViewModel(
-    private val repository: ToolboxRepository,
+    private val repository: ToolRepository,
     private val ble: BleGateway,
 ) : ViewModel() {
     /** Ferramentas ordenadas com as presentes primeiro (e depois por nome). */
@@ -61,7 +61,7 @@ class DashboardViewModel(
             viewModelFactory {
                 initializer {
                     DashboardViewModel(
-                        ToolboxRepository(AppContainer.database.toolboxDao()),
+                        ToolRepository(AppContainer.database.toolDao()),
                         BleManager,
                     )
                 }

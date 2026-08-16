@@ -9,7 +9,7 @@ import app.trakr.R
 import app.trakr.data.AppContainer
 import app.trakr.model.AlertEvent
 import app.trakr.model.Tool
-import app.trakr.repository.ToolboxRepository
+import app.trakr.repository.ToolRepository
 import app.trakr.ui.UiMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,11 +18,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class AlertsViewModel(
-    private val repository: ToolboxRepository,
+    private val repository: ToolRepository,
 ) : ViewModel() {
     val alerts: Flow<List<AlertEvent>> = repository.observeAlerts()
 
-    /** Inventário atual (para o alerta abrir a ferramenta correspondente). */
+    /** InventÃ¡rio atual (para o alerta abrir a ferramenta correspondente). */
     val tools: Flow<List<Tool>> = repository.observeTools()
 
     private val _message = MutableStateFlow<UiMessage?>(null)
@@ -58,7 +58,7 @@ class AlertsViewModel(
         val Factory: ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
-                    AlertsViewModel(ToolboxRepository(AppContainer.database.toolboxDao()))
+                    AlertsViewModel(ToolRepository(AppContainer.database.toolDao()))
                 }
             }
     }

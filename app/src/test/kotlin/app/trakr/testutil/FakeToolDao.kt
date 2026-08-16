@@ -1,6 +1,6 @@
 package app.trakr.testutil
 
-import app.trakr.data.ToolboxDao
+import app.trakr.data.ToolDao
 import app.trakr.model.AlertEvent
 import app.trakr.model.RssiSample
 import app.trakr.model.Tool
@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
-/** Implementação em memória da [ToolboxDao] para testes JVM puros. */
-class FakeToolboxDao : ToolboxDao {
+/** ImplementaÃ§Ã£o em memÃ³ria da [ToolDao] para testes JVM puros. */
+class FakeToolDao : ToolDao {
     private val tools = MutableStateFlow<List<Tool>>(emptyList())
     private val alerts = MutableStateFlow<List<AlertEvent>>(emptyList())
     private val rssiSamples = MutableStateFlow<List<RssiSample>>(emptyList())

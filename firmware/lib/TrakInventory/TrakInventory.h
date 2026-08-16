@@ -23,11 +23,6 @@ class TrakInventory {
   size_t size() const { return tools_.size(); }
   const std::vector<TrakTool>& tools() const { return tools_; }
 
-  // Perfil de inventário ativo (id da maleta). Padrão: "main".
-  // O arquivo em LittleFS é escolhido pelo chamador (inventory_<id>.json).
-  const String& profileId() const { return profile_id_; }
-  void setProfileId(const String& id) { profile_id_ = id; }
-
   // Ferramentas que estavam presentes e sumiram na última varredura.
   const std::vector<const TrakTool*>& newlyMissing() const { return newly_missing_; }
 
@@ -53,5 +48,4 @@ class TrakInventory {
  private:
   std::vector<TrakTool> tools_;
   std::vector<const TrakTool*> newly_missing_;
-  String profile_id_ = "main";
 };

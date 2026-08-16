@@ -7,7 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.trakr.data.AppContainer
 import app.trakr.model.RssiSample
-import app.trakr.repository.ToolboxRepository
+import app.trakr.repository.ToolRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 
 class ToolDetailViewModel(
-    private val repository: ToolboxRepository,
+    private val repository: ToolRepository,
 ) : ViewModel() {
     private val epc = MutableStateFlow<String?>(null)
 
@@ -39,7 +39,7 @@ class ToolDetailViewModel(
         val Factory: ViewModelProvider.Factory =
             viewModelFactory {
                 initializer {
-                    ToolDetailViewModel(ToolboxRepository(AppContainer.database.toolboxDao()))
+                    ToolDetailViewModel(ToolRepository(AppContainer.database.toolDao()))
                 }
             }
     }

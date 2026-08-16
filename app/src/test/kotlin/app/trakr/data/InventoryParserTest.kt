@@ -13,8 +13,6 @@ class InventoryParserTest {
         val json =
             """
             {
-              "id": "obra-a",
-              "toolbox": "Obra A",
               "tools": [
                 {"id": "01", "name": "Parafusadeira", "tag": "E28011606000020400000001", "present": true},
                 {"id": "02", "name": "Furadeira", "tag": "E28011606000020400000002", "present": false}

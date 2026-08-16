@@ -5,7 +5,7 @@ import android.util.Log
 import app.trakr.data.AppContainer
 import app.trakr.model.AlertEvent
 import app.trakr.model.Tool
-import app.trakr.repository.ToolboxRepository
+import app.trakr.repository.ToolRepository
 import app.trakr.ui.settings.SettingsPrefs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,12 +18,12 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 
 /**
- * Vigia o inventário local e dispara a notificação de ausência: quando o
- * rastreador viu a tag ao menos uma vez ([Tool.lastSeenAt]) e deixa de vê-la
+ * Vigia o inventÃ¡rio local e dispara a notificaÃ§Ã£o de ausÃªncia: quando o
+ * rastreador viu a tag ao menos uma vez ([Tool.lastSeenAt]) e deixa de vÃª-la
  * por [ABSENCE_MS], o app emite push local + registra um [AlertEvent].
  *
  * Roda dentro do [app.trakr.core.ble.BleForegroundService] para funcionar com
- * o celular bloqueado. O dedupe é por ferramenta: só dispara de novo depois
+ * o celular bloqueado. O dedupe Ã© por ferramenta: sÃ³ dispara de novo depois
  * que a tag voltar a ser vista (present = true).
  */
 class AbsenceWatcher(private val context: Context) {
@@ -33,11 +33,11 @@ class AbsenceWatcher(private val context: Context) {
         /** Tempo sem ver a tag para considerar "ausente" (modo radar). */
         const val ABSENCE_MS = 60_000L
 
-        /** Ticker de reavaliação caso o Flow do Room não emita (ex: radar parado). */
+        /** Ticker de reavaliaÃ§Ã£o caso o Flow do Room nÃ£o emita (ex: radar parado). */
         private const val TICK_MS = 30_000L
 
         /**
-         * Regra pura de ausência: atualiza [alerted] e devolve as tags que
+         * Regra pura de ausÃªncia: atualiza [alerted] e devolve as tags que
          * devem disparar alerta agora. Tags presentes resetam o dedupe.
          */
         internal fun evaluateAbsent(
@@ -62,7 +62,7 @@ class AbsenceWatcher(private val context: Context) {
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-    private val repository = ToolboxRepository(AppContainer.database.toolboxDao())
+    private val repository = ToolRepository(AppContainer.database.toolDao())
     private val notifier = NotificationService(context)
     private val alerted = mutableSetOf<String>()
     private var job: Job? = null
@@ -90,7 +90,7 @@ class AbsenceWatcher(private val context: Context) {
     }
 
     private suspend fun check(tools: List<Tool>) {
-        // Alertas desativados na Config: limpa o dedupe para que a reativação
+        // Alertas desativados na Config: limpa o dedupe para que a reativaÃ§Ã£o
         // notifique imediatamente as ferramentas que continuam ausentes.
         if (!SettingsPrefs.absenceAlertsEnabled(context)) {
             alerted.clear()
@@ -104,10 +104,10 @@ class AbsenceWatcher(private val context: Context) {
                     AlertEvent(toolId = tool.id, toolName = tool.name),
                 )
             } catch (e: Exception) {
-                // Não deixa uma falha de notificação matar o watcher (collectLatest):
-                // libera o dedupe para tentar de novo no próximo ciclo.
+                // NÃ£o deixa uma falha de notificaÃ§Ã£o matar o watcher (collectLatest):
+                // libera o dedupe para tentar de novo no prÃ³ximo ciclo.
                 alerted.remove(tool.id)
-                Log.w(TAG, "Falha ao registrar alerta de ausência", e)
+                Log.w(TAG, "Falha ao registrar alerta de ausÃªncia", e)
             }
         }
     }

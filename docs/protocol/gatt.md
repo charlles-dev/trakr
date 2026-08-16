@@ -42,16 +42,13 @@ Este documento é a **fonte da verdade** do protocolo de comunicação entre o *
 
 ```json
 {
-  "toolbox": "main",
-  "id": "main",
   "tools": [
     { "id": "01", "name": "Chave de Fenda Cross", "tag": "E28011606000020400000001", "present": true }
   ]
 }
 ```
 
-> O arquivo no LittleFS é `inventory.json`. Os campos `id`/`toolbox` são
-> mantidos por compatibilidade de formato e **ignorados** pelo app (produto único).
+> O arquivo no LittleFS é `inventory.json`.
 
 ### Historico (read — History)
 

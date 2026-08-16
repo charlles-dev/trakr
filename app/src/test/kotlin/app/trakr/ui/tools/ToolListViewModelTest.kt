@@ -3,9 +3,9 @@ package app.trakr.ui.tools
 import app.trakr.R
 import app.trakr.data.InventoryParser.CmdReply
 import app.trakr.model.Tool
-import app.trakr.repository.ToolboxRepository
+import app.trakr.repository.ToolRepository
 import app.trakr.testutil.FakeBleGateway
-import app.trakr.testutil.FakeToolboxDao
+import app.trakr.testutil.FakeToolDao
 import app.trakr.testutil.MainDispatcherRule
 import app.trakr.ui.UiMessage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,9 +22,9 @@ class ToolListViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val dao = FakeToolboxDao()
+    private val dao = FakeToolDao()
     private val ble = FakeBleGateway()
-    private val repository = ToolboxRepository(dao)
+    private val repository = ToolRepository(dao)
 
     private fun vm() = ToolListViewModel(repository, ble)
 

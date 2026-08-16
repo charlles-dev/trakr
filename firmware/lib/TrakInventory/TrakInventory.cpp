@@ -33,8 +33,6 @@ bool TrakInventory::load(fs::FS& fs, const char* path) {
 
 bool TrakInventory::save(fs::FS& fs, const char* path) const {
   JsonDocument doc;
-  doc["toolbox"] = profile_id_;
-  doc["id"] = profile_id_;
   JsonArray arr = doc["tools"].to<JsonArray>();
   for (const auto& t : tools_) {
     JsonObject o = arr.add<JsonObject>();
@@ -88,7 +86,7 @@ bool TrakInventory::addTool(const String& name, const String& epc) {
   tool.id = String(next);
   tool.name = name;
   tool.epc = epc;
-  tool.present = true;  // presumido dentro da maleta até a próxima varredura
+  tool.present = true;  // presumido presente até a próxima varredura
   Serial.printf("[TRAKR] Tool adicionada: id=%s nome=%s tag=%s\n",
                 tool.id.c_str(), tool.name.c_str(), tool.epc.c_str());
 
@@ -126,8 +124,6 @@ bool TrakInventory::removeToolByEpc(const String& epc) {
 String TrakInventory::toJsonString() const {
   String out;
   JsonDocument doc;
-  doc["toolbox"] = profile_id_;
-  doc["id"] = profile_id_;
   JsonArray arr = doc["tools"].to<JsonArray>();
   for (const auto& t : tools_) {
     JsonObject o = arr.add<JsonObject>();

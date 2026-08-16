@@ -1,17 +1,17 @@
 package app.trakr.repository
 
-import app.trakr.data.ToolboxDao
+import app.trakr.data.ToolDao
 import app.trakr.model.AlertEvent
 import app.trakr.model.RssiSample
 import app.trakr.model.Tool
 import kotlinx.coroutines.flow.Flow
 
-class ToolboxRepository(private val dao: ToolboxDao) {
+class ToolRepository(private val dao: ToolDao) {
     fun observeTools(): Flow<List<Tool>> = dao.observeTools()
 
     fun observeAlerts(): Flow<List<AlertEvent>> = dao.observeAlerts()
 
-    /** Substitui o inventário local pelo recebido do rastreador (fonte da verdade). */
+    /** Substitui o inventÃ¡rio local pelo recebido do rastreador (fonte da verdade). */
     suspend fun saveInventory(tools: List<Tool>) {
         dao.upsertTools(tools)
     }
@@ -20,7 +20,7 @@ class ToolboxRepository(private val dao: ToolboxDao) {
 
     suspend fun removeToolLocal(id: String) = dao.deleteTool(id)
 
-    /** Atualiza o estado da tag conforme o último radar_report. */
+    /** Atualiza o estado da tag conforme o Ãºltimo radar_report. */
     suspend fun updateToolState(
         epc: String,
         present: Boolean,
@@ -34,7 +34,7 @@ class ToolboxRepository(private val dao: ToolboxDao) {
 
     suspend fun clearAlerts() = dao.clearAlerts()
 
-    /** Registra uma amostra de RSSI do modo radar para o histórico da tag. */
+    /** Registra uma amostra de RSSI do modo radar para o histÃ³rico da tag. */
     suspend fun recordRssi(
         epc: String,
         rssi: Int,

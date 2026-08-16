@@ -5,9 +5,9 @@ import app.trakr.core.ble.BleDeviceInfo
 import app.trakr.data.InventoryParser
 import app.trakr.model.RadarReport
 import app.trakr.model.Tool
-import app.trakr.repository.ToolboxRepository
+import app.trakr.repository.ToolRepository
 import app.trakr.testutil.FakeBleGateway
-import app.trakr.testutil.FakeToolboxDao
+import app.trakr.testutil.FakeToolDao
 import app.trakr.testutil.MainDispatcherRule
 import app.trakr.ui.UiMessage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,9 +24,9 @@ class RadarViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val dao = FakeToolboxDao()
+    private val dao = FakeToolDao()
     private val ble = FakeBleGateway()
-    private val repository = ToolboxRepository(dao)
+    private val repository = ToolRepository(dao)
 
     private val tool = Tool(id = "t1", name = "Chave", epc = "E2801160")
 

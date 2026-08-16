@@ -14,14 +14,14 @@ import app.trakr.model.Tool
     exportSchema = false,
 )
 abstract class TrakrDatabase : RoomDatabase() {
-    abstract fun toolboxDao(): ToolboxDao
+    abstract fun toolDao(): ToolDao
 }
 
 /**
- * Container de dependências simples.
+ * Container de dependÃªncias simples.
  *
- * O firmware do rastreador continua sendo a fonte da verdade; o Room aqui é o
- * cache local usado para visualização offline e histórico.
+ * O firmware do rastreador continua sendo a fonte da verdade; o Room aqui Ã© o
+ * cache local usado para visualizaÃ§Ã£o offline e histÃ³rico.
  */
 object AppContainer {
     lateinit var database: TrakrDatabase

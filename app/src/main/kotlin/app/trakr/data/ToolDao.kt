@@ -10,7 +10,7 @@ import app.trakr.model.Tool
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface ToolboxDao {
+interface ToolDao {
     @Query("SELECT * FROM tools ORDER BY name")
     fun observeTools(): Flow<List<Tool>>
 
@@ -23,7 +23,7 @@ interface ToolboxDao {
     @Query("DELETE FROM tools WHERE id = :id")
     suspend fun deleteTool(id: String)
 
-    /** Atualiza o estado da tag conforme o último radar_report do rastreador. */
+    /** Atualiza o estado da tag conforme o Ãºltimo radar_report do rastreador. */
     @Query(
         "UPDATE tools SET present = :present, rssi = :rssi, lastSeenAt = :lastSeenAt " +
             "WHERE epc = :epc",

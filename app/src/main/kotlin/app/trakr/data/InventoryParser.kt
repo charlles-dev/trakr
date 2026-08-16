@@ -10,7 +10,7 @@ import org.json.JSONObject
 object InventoryParser {
     /**
      * Converte o inventário do rastreador (mesmo formato do inventory.json)
-     * em entidades Room. O id do toolbox é ignorado: só o radar existe.
+     * em entidades Room.
      */
     fun parseInventory(json: String): List<Tool> {
         return try {

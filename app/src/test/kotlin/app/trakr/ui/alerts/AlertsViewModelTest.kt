@@ -2,8 +2,8 @@ package app.trakr.ui.alerts
 
 import app.trakr.R
 import app.trakr.model.AlertEvent
-import app.trakr.repository.ToolboxRepository
-import app.trakr.testutil.FakeToolboxDao
+import app.trakr.repository.ToolRepository
+import app.trakr.testutil.FakeToolDao
 import app.trakr.testutil.MainDispatcherRule
 import app.trakr.ui.UiMessage
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -20,8 +20,8 @@ class AlertsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val dao = FakeToolboxDao()
-    private val repository = ToolboxRepository(dao)
+    private val dao = FakeToolDao()
+    private val repository = ToolRepository(dao)
 
     @Test
     fun alerts_streamFromDao() =

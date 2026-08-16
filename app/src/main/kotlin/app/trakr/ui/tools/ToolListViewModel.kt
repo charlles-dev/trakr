@@ -10,7 +10,7 @@ import app.trakr.core.ble.BleGateway
 import app.trakr.core.ble.BleManager
 import app.trakr.data.AppContainer
 import app.trakr.model.Tool
-import app.trakr.repository.ToolboxRepository
+import app.trakr.repository.ToolRepository
 import app.trakr.ui.UiMessage
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 class ToolListViewModel(
-    private val repository: ToolboxRepository,
+    private val repository: ToolRepository,
     private val ble: BleGateway,
 ) : ViewModel() {
     /** Ferramentas ordenadas com as presentes primeiro (e depois por nome). */
@@ -32,7 +32,7 @@ class ToolListViewModel(
             list.sortedWith(compareByDescending<Tool> { it.present }.thenBy { it.name })
         }
 
-    /** Mensagem de status para o usuário (Snackbar). */
+    /** Mensagem de status para o usuÃ¡rio (Snackbar). */
     private val _message = MutableStateFlow<UiMessage?>(null)
     val message: StateFlow<UiMessage?> = _message.asStateFlow()
 
@@ -126,7 +126,7 @@ class ToolListViewModel(
             viewModelFactory {
                 initializer {
                     ToolListViewModel(
-                        ToolboxRepository(AppContainer.database.toolboxDao()),
+                        ToolRepository(AppContainer.database.toolDao()),
                         BleManager,
                     )
                 }

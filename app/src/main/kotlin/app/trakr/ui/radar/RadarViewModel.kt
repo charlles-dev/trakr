@@ -12,7 +12,7 @@ import app.trakr.core.ble.BleManager
 import app.trakr.data.AppContainer
 import app.trakr.model.RadarReport
 import app.trakr.model.Tool
-import app.trakr.repository.ToolboxRepository
+import app.trakr.repository.ToolRepository
 import app.trakr.ui.UiMessage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,12 +25,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class RadarViewModel(
-    private val repository: ToolboxRepository,
+    private val repository: ToolRepository,
     private val ble: BleGateway,
 ) : ViewModel() {
     val devices: StateFlow<List<BleDeviceInfo>> = ble.devices
 
-    /** Relatório mais recente do modo radar. */
+    /** RelatÃ³rio mais recente do modo radar. */
     val radarReport: StateFlow<RadarReport?> = ble.radarReport
 
     /** Ferramentas cadastradas (fonte para escolher o alvo). */
@@ -80,7 +80,7 @@ class RadarViewModel(
 
     fun stop() {
         _running.value = false
-        ble.stopRadar { /* silencioso: o radar pode já ter parado */ }
+        ble.stopRadar { /* silencioso: o radar pode jÃ¡ ter parado */ }
     }
 
     init {
@@ -111,7 +111,7 @@ class RadarViewModel(
             viewModelFactory {
                 initializer {
                     RadarViewModel(
-                        ToolboxRepository(AppContainer.database.toolboxDao()),
+                        ToolRepository(AppContainer.database.toolDao()),
                         BleManager,
                     )
                 }

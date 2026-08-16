@@ -1,6 +1,4 @@
 {
-  "toolbox": "main",
-  "id": "main",
   "tools": [
     { "id": "01", "name": "Chave de Fenda Cross", "tag": "E28011606000020400000001", "present": true },
     { "id": "02", "name": "Chave de Fenda Fenda", "tag": "E28011606000020400000002", "present": true },

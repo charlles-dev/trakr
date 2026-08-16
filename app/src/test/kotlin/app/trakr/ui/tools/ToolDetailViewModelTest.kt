@@ -1,8 +1,8 @@
 package app.trakr.ui.tools
 
 import app.trakr.model.RssiSample
-import app.trakr.repository.ToolboxRepository
-import app.trakr.testutil.FakeToolboxDao
+import app.trakr.repository.ToolRepository
+import app.trakr.testutil.FakeToolDao
 import app.trakr.testutil.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -18,8 +18,8 @@ class ToolDetailViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val dao = FakeToolboxDao()
-    private val repository = ToolboxRepository(dao)
+    private val dao = FakeToolDao()
+    private val repository = ToolRepository(dao)
 
     @Test
     fun setEpc_nullEmitsEmptyList() =
