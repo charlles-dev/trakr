@@ -1,36 +1,38 @@
 {
-  "name": "Trakr Fleet Firmware",
-  "version": "1.0.0",
-  "home_assistant_domain": "trakr",
-  "funding_url": "https://github.com/sponsors/trakr",
-  "new_install_prompt_erasable": true,
+  "name": "TRK-Finder",
+  "version": "custom",
+  "new_install_prompt_erase": true,
+  "funding_url": "https://github.com/charlles-dev/trakr",
   "builds": [
     {
       "chipFamily": "ESP32",
+      "improv": false,
       "parts": [
         {
-          "path": "dummy.bin",
-          "offset": 0
+          "path": "https://github.com/charlles-dev/trakr/releases/download/custom-build/trakr-node.bin",
+          "offset": 65536
         }
       ]
     },
     {
       "chipFamily": "ESP32-S3",
+      "improv": false,
       "parts": [
         {
-          "path": "dummy.bin",
-          "offset": 0
+          "path": "https://github.com/charlles-dev/trakr/releases/download/custom-build/trakr-node-s3.bin",
+          "offset": 65536
         }
       ]
     },
     {
-      "chipFamily": "ESP8266",
+      "chipFamily": "ESP32",
       "parts": [
         {
-          "path": "dummy.bin",
-          "offset": 0
+          "path": "https://github.com/charlles-dev/trakr/releases/download/custom-build/trakr-node-sim.bin",
+          "offset": 65536
         }
-      ]
+      ],
+      "custom": { "sim": true }
     }
   ]
 }

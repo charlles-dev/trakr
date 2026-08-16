@@ -6,6 +6,7 @@
     <string name="tab_tools">Tools</string>
     <string name="tab_alerts">Alerts</string>
     <string name="tab_radar">Radar</string>
+    <string name="tab_stats">Stats</string>
     <string name="tab_config">Settings</string>
     <string name="action_open_config">Settings</string>
 
@@ -169,4 +170,34 @@
     <string name="settings_minutes">%1$d min</string>
     <string name="action_reload">Reload</string>
     <string name="msg_config_failed">Failed to update tracker settings</string>
+    <string name="msg_auth_required">PIN required — authenticate first</string>
+    <string name="msg_auth_failed">Incorrect PIN</string>
+    <string name="msg_auth_ok">PIN authenticated — session for 5 min</string>
+    <string name="action_auth">Authenticate</string>
+    <string name="settings_pin">Access PIN</string>
+    <string name="settings_pin_hint">Protects add/remove tools. Leave empty to clear.</string>
+    <string name="settings_pin_set">PIN set</string>
+    <string name="settings_pin_not_set">No PIN — open tracker</string>
+    <string name="settings_pin_auth">Enter current PIN</string>
+    <string name="settings_pin_new">New PIN</string>
+    <string name="settings_pin_confirm">Repeat new PIN</string>
+    <string name="settings_pin_save">Save PIN</string>
+    <string name="settings_pin_clear">Remove PIN</string>
+    <string name="settings_pin_mismatch">PINs do not match</string>
+    <string name="settings_pin_too_short">PIN must be 4 to 32 characters</string>
+    <string name="settings_connection">BLE connection</string>
+    <string name="settings_connection_hint">Connection status to TRK-Finder</string>
+    <string name="settings_connected">Connected</string>
+    <string name="settings_disconnected">Disconnected</string>
+    <string name="settings_authed">Authenticated</string>
+    <string name="settings_not_authed">Not authenticated</string>
+    <string name="action_rescan">Scan now</string>
+    <string name="settings_rescan_hint">Forces immediate YRM100 read without physical button</string>
+    <string name="settings_backup">Backup &amp; restore</string>
+    <string name="settings_backup_hint">Exports everything as single JSON (tools, alerts, configs)</string>
+    <string name="action_export_backup">Export backup</string>
+    <string name="action_import_backup">Import backup</string>
+    <string name="msg_backup_exported">Backup exported — share the JSON</string>
+    <string name="msg_backup_imported">Backup imported successfully</string>
+    <string name="msg_backup_failed">Backup/restore failed</string>
 </resources>

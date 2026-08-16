@@ -40,7 +40,9 @@ import app.trakr.ui.dashboard.DashboardScreen
 import app.trakr.ui.motion.TrakrEase
 import app.trakr.ui.radar.RadarScreen
 import app.trakr.ui.settings.ConfigScreen
+import app.trakr.ui.stats.StatsScreen
 import app.trakr.ui.tools.ToolListScreen
+import androidx.compose.material.icons.filled.BarChart
 
 private enum class Section(
     val labelRes: Int,
@@ -50,6 +52,7 @@ private enum class Section(
     Tools(R.string.tab_tools, Icons.Filled.Build),
     Alerts(R.string.tab_alerts, Icons.Filled.Notifications),
     Radar(R.string.tab_radar, Icons.Filled.Radar),
+    Stats(R.string.tab_stats, Icons.Filled.BarChart),
 
     // Não aparece na barra inferior: aberto pelo botão de engrenagem
     // do Dashboard e fechado pelo botão de voltar.
@@ -172,6 +175,10 @@ fun TrakrApp(
                         RadarScreen(
                             Modifier.padding(padding),
                             pendingTargetId = radarTargetId,
+                        )
+                    Section.Stats ->
+                        StatsScreen(
+                            modifier = Modifier.padding(padding),
                         )
                     Section.Config ->
                         ConfigScreen(

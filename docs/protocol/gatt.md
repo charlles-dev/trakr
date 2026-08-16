@@ -54,11 +54,11 @@ Este documento é a **fonte da verdade** do protocolo de comunicação entre o *
 
 ```json
 [
-  { "ts": 123456, "type": "boot", "tool_id": "", "name": "" }
+  { "ts": 1723780800000, "type": "boot", "tool_id": "", "name": "" }
 ]
 ```
 
-* `ts`: `millis()` relativo ao boot — usado só para ordenar; o app marca a data de chegada local (*created_at*).
+* `ts`: timestamp do evento em milissegundos. Se o relógio foi sincronizado via `set_clock`, é o epoch UTC absoluto (`uint64_t`); caso contrário, é o `millis()` relativo ao boot.
 * Tipos: `boot`. Os relatórios efêmeros (`radar_report`, `cmd_reply`) **não** são persistidos no histórico.
 
 ### Relatório do modo radar (notify)
@@ -82,8 +82,14 @@ localização.
 | Comando | Payload | Efeito no firmware |
 | --- | --- | --- |
 | Varrer novamente | `{"cmd":"rescan"}` | Executa `LEITURA` (sweep UHF + publish). |
-| Adicionar ferramenta | `{"cmd":"add_tool","name":"...","tag":"E2..."}` | Adiciona ao inventário e salva em LittleFS; re-notifica inventário. |
-| Remover ferramenta | `{"cmd":"remove_tool","id":"01"}` (ou `{"cmd":"remove_tool","epc":"E2..."}`) | Remove do inventário e salva em LittleFS; re-notifica inventário. |
+| Ler configuração | `{"cmd":"get_config"}` | Retorna `listen_ms/radar_ms/beep/has_pin/authed` via `cmd_reply`. |
+| Alterar configuração | `{"cmd":"set_config","listen_ms":30000,"radar_ms":120000,"beep":true}` | Campos parciais; `pin` define troca de PIN (requer auth se PIN já existe). |
+| Autenticar PIN | `{"cmd":"auth","pin":"1234"}` | Verifica SHA-256; abre sessão de 5 min para `add_tool`/`remove_tool`. |
+| Ler histórico | `{"cmd":"get_history"}` ou `{"cmd":"get_history","month":"202508"}` | Retorna `history` (array) do mês solicitado ou recente (200) se sem mês. |
+| Listar arquivos de histórico | `{"cmd":"list_archives"}` | Retorna `archives` com `{month,count,path}` por mês arquivado. |
+| Adicionar ferramenta | `{"cmd":"add_tool","name":"...","tag":"E2..."}` | Adiciona ao inventário e salva em LittleFS; re-notifica inventário. **Requer auth se PIN ativo**. |
+| Remover ferramenta | `{"cmd":"remove_tool","id":"01"}` (ou `{"cmd":"remove_tool","epc":"E2..."}`) | Remove do inventário e salva em LittleFS; re-notifica inventário. **Requer auth se PIN ativo**. |
+| **Sincronizar relógio** | `{"cmd":"set_clock","epoch_ms":1723780800000}` | Calcula o delta temporal em relação ao `millis()`, persiste em `config.json` e atualiza o gerador de timestamps de eventos. |
 | **Iniciar radar** | `{"cmd":"start_radar","id":"01"}` (ou `{"cmd":"start_radar","tag":"E2..."}`) | Entra no estado `RASTREIA`: varre por ciclos, notifica `radar_report` e bipa proporcional ao RSSI da tag da ferramenta. |
 | **Parar radar** | `{"cmd":"stop_radar"}` | Sai do modo radar e volta para a sincronização BLE. |
 | **Iniciar OTA** | `{"cmd":"ota_begin","size":123456}` | Prepara a partição OTA (`esp_ota_begin`); aceita o stream de chunks seguinte. |
@@ -102,7 +108,8 @@ localização.
 
 * `status`: `"ok"` ou `"error"`.
 * `reason` (só em erro): `invalid_json`, `unknown_cmd`, `missing_fields`,
-  `duplicate_epc`, `tool_not_found`, `save_failed`.
+  `invalid_value`, `duplicate_epc`, `tool_not_found`, `invalid_epoch`,
+  `auth_required`, `auth_failed`, `save_failed`.
 
 > **Ressalva:** os comandos `add_tool`/`remove_tool` são processados pelo firmware: adicionam/removem no `inventory.json` (LittleFS) e re-notificam o inventário completo. Enquanto desconectada, o app grava localmente (fallback offline, o TRK-Finder segue como fonte da verdade).
 

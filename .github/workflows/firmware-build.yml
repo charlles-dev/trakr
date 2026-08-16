@@ -1,0 +1,69 @@
+name: Firmware Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      antenna:
+        description: Antena (interna, dip2, patch3, panel45, circ6, panel8 ou sim)
+        type: choice
+        options:
+          - interna
+          - dip2
+          - patch3
+          - panel45
+          - circ6
+          - panel8
+          - sim
+        default: interna
+      hw_addons:
+        description: Addons de hardware separados por espaço (oled, btn2, batt, batt18650, vib, bme280, imu)
+        type: string
+        default: ""
+      sw_addons:
+        description: Addons de software separados por espaço
+        type: string
+        default: ""
+      mcu:
+        description: MCU (esp32 ou esp32-s3)
+        type: choice
+        options:
+          - esp32
+          - esp32-s3
+        default: esp32
+
+jobs:
+  build:
+    name: Compila firmware customizado
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: firmware
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instala PlatformIO
+        run: pip install platformio
+
+      - name: Gera platformio.ini customizado
+        run: python scripts/custom_build.py --antenna "${{ inputs.antenna }}" --mcu "${{ inputs.mcu }}" --hw "${{ inputs.hw_addons }}" --sw "${{ inputs.sw_addons }}"
+
+      - name: Compila
+        run: pio run
+
+      - name: Publica binário na release custom-build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create custom-build --title "Builds customizados" --prerelease --generate-notes || true
+          BIN=$(ls .pio/build/*/firmware.bin | head -n1)
+          if [ "${{ inputs.mcu }}" = "esp32-s3" ]; then
+            NAME="trakr-node-s3.bin"
+          elif [ "${{ inputs.antenna }}" = "sim" ]; then
+            NAME="trakr-node-sim.bin"
+          else
+            NAME="trakr-node.bin"
+          fi
+          echo "Upload $BIN as $NAME"
+          gh release upload custom-build "$BIN:$NAME" --clobber
+          # Atualiza manifest.json com data de build
+          echo "{\"name\":\"TRK-Finder\",\"version\":\"custom-${{ github.run_number }}\",\"new_install_prompt_erase\":true}" > manifest-info.json

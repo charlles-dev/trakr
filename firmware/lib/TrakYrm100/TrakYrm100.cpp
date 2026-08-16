@@ -148,3 +148,32 @@ uint8_t TrakYrm100::collectReads(std::vector<TrakRead>& outReads, uint32_t maxRe
   sendFrame(CMD_STOP_INVENTORY, nullptr, 0);
   return 0;
 }
+
+bool TrakYrm100::setTxPower(uint8_t dbm) {
+  if (dbm > 33) dbm = 33;
+  // Família M100: payload [power*100?][?]. Tentativa com 2 bytes little-endian power
+  // Ex: 26 dBm => 2600 = 0x0A28 -> [0x28, 0x0A]. Algumas versões usam 1 byte direto.
+  // Enviamos ambas tentativas e aceitamos qualquer ACK.
+  uint8_t payload2[2];
+  payload2[0] = (uint8_t)(dbm * 100 & 0xFF);
+  payload2[1] = (uint8_t)((dbm * 100 >> 8) & 0xFF);
+  sendFrame(CMD_SET_TX_POWER, payload2, 2);
+  uint8_t cmd = 0;
+  uint8_t data[16];
+  uint8_t len = 0;
+  if (awaitFrame(cmd, data, len, 500)) {
+    last_tx_dbm_ = dbm;
+    Serial.printf("[TRAKR] TX power set %u dBm (2-byte) ack cmd 0x%02X\n", dbm, cmd);
+    return true;
+  }
+  // Fallback 1 byte
+  uint8_t payload1[1] = {dbm};
+  sendFrame(CMD_SET_TX_POWER, payload1, 1);
+  if (awaitFrame(cmd, data, len, 500)) {
+    last_tx_dbm_ = dbm;
+    Serial.printf("[TRAKR] TX power set %u dBm (1-byte) ack\n", dbm);
+    return true;
+  }
+  Serial.printf("[TRAKR] TX power set %u dBm falhou (sem ACK)\n", dbm);
+  return false;
+}

@@ -31,6 +31,19 @@ class FakeBleGateway : BleGateway {
     var stopRadarUnavailable: (() -> Unit)? = null
     var getConfigUnavailable: (() -> Unit)? = null
     var setConfigUnavailable: (() -> Unit)? = null
+    var authUnavailable: (() -> Unit)? = null
+    var getHistoryUnavailable: (() -> Unit)? = null
+    var listArchivesUnavailable: (() -> Unit)? = null
+
+    var authCalls = mutableListOf<String>()
+    var getHistoryCalls = mutableListOf<String?>()
+    var listArchivesCalls = 0
+    var getSensorsCalls = 0
+    var getAddonsCalls = 0
+    var startLiveCalls = 0
+    var stopLiveCalls = 0
+    var startMultiCalls = mutableListOf<List<String>>()
+    var setTxPowerCalls = mutableListOf<Int>()
 
     override fun addTool(
         name: String,
@@ -79,5 +92,50 @@ class FakeBleGateway : BleGateway {
     ) {
         setConfigCalls += fields
         setConfigUnavailable = onUnavailable
+    }
+
+    override fun auth(
+        pin: String,
+        onUnavailable: () -> Unit,
+    ) {
+        authCalls += pin
+        authUnavailable = onUnavailable
+    }
+
+    override fun getHistory(
+        month: String?,
+        onUnavailable: () -> Unit,
+    ) {
+        getHistoryCalls += month
+        getHistoryUnavailable = onUnavailable
+    }
+
+    override fun listArchives(onUnavailable: () -> Unit) {
+        listArchivesCalls++
+        listArchivesUnavailable = onUnavailable
+    }
+
+    override fun getSensors(onUnavailable: () -> Unit) {
+        getSensorsCalls++
+    }
+
+    override fun getAddons(onUnavailable: () -> Unit) {
+        getAddonsCalls++
+    }
+
+    override fun startLive(intervalMs: Int, onUnavailable: () -> Unit) {
+        startLiveCalls++
+    }
+
+    override fun stopLive(onUnavailable: () -> Unit) {
+        stopLiveCalls++
+    }
+
+    override fun startMultiRadar(tags: List<String>, onUnavailable: () -> Unit) {
+        startMultiCalls += tags
+    }
+
+    override fun setTxPower(dbm: Int, onUnavailable: () -> Unit) {
+        setTxPowerCalls += dbm
     }
 }

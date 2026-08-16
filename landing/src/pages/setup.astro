@@ -1,12 +1,12 @@
 ---
-// Trakr Fleet Hardware Setup Wizard
+// Assistente de configuração do hardware Trakr
 ---
-<html lang="en" class="scroll-smooth">
+<html lang="pt-BR" class="scroll-smooth">
 <head>
     <meta charset="utf-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Trakr | Hardware Setup</title>
+    <title>Trakr | Configuração do hardware</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,8 +23,8 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#FF6B50',
-                        dark: '#050505',
+                        primary: '#20B898',
+                        dark: '#0B1210',
                         panel: '#111111'
                     },
                     fontFamily: {
@@ -49,16 +49,16 @@
         }
 
         body {
-            background-color: #050505;
+            background-color: #0B1210;
             color: #e0e0e0;
             overflow-x: hidden;
             font-family: 'Satoshi', 'Inter', sans-serif;
         }
 
         ::selection {
-            background-color: #FF6B50;
+            background-color: #20B898;
             color: white;
-            text-shadow: 0 0 8px rgba(255, 107, 80, 0.8);
+            text-shadow: 0 0 8px rgba(32, 184, 152, 0.8);
         }
 
         /* Basic Animations */
@@ -77,9 +77,9 @@
 
         /* Radio Card Selection */
         .radio-card input:checked + div {
-            border-color: #FF6B50 !important;
-            background: rgba(255, 107, 80, 0.05);
-            box-shadow: inset 0 0 30px rgba(255, 107, 80, 0.1);
+            border-color: #20B898 !important;
+            background: rgba(32, 184, 152, 0.05);
+            box-shadow: inset 0 0 30px rgba(32, 184, 152, 0.1);
         }
         .radio-card input:checked + div .check-icon {
             opacity: 1;
@@ -88,12 +88,12 @@
 
         /* Toggle Selection */
         .toggle-switch input:checked + div {
-            border-color: #FF6B50;
-            background: rgba(255, 107, 80, 0.05);
+            border-color: #20B898;
+            background: rgba(32, 184, 152, 0.05);
         }
         .toggle-switch input:checked + div .toggle-bg {
-            background-color: #FF6B50;
-            border-color: #FF6B50;
+            background-color: #20B898;
+            border-color: #20B898;
         }
         .toggle-switch input:checked + div .toggle-circle {
             transform: translateX(1.5rem);
@@ -101,8 +101,8 @@
         
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #050505; }
-        ::-webkit-scrollbar-thumb { background: #FF6B50; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: #0B1210; }
+        ::-webkit-scrollbar-thumb { background: #20B898; border-radius: 10px; }
 
         /* Typography */
         .var-weight { font-weight: 800; letter-spacing: -0.05em; }
@@ -111,9 +111,9 @@
 <body class="antialiased min-h-screen flex flex-col relative">
 
     <!-- Background Engine -->
-    <div class="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-[#050505]">
+    <div class="fixed inset-0 z-[-1] pointer-events-none overflow-hidden bg-[#0B1210]">
         <!-- Gradient blobs -->
-        <div class="absolute top-[-10vw] left-[-10vw] w-[60vw] h-[60vw] bg-[#FF6B50] rounded-full blur-[120px] opacity-20"></div>
+        <div class="absolute top-[-10vw] left-[-10vw] w-[60vw] h-[60vw] bg-[#20B898] rounded-full blur-[120px] opacity-20"></div>
         <div class="absolute bottom-[-10vw] right-[-10vw] w-[60vw] h-[60vw] bg-[#4a5568] rounded-full blur-[120px] opacity-20"></div>
         
         <!-- Blueprint grid -->
@@ -127,14 +127,14 @@
     <nav class="fixed top-0 left-0 right-0 z-[100] px-6 py-6 flex items-center justify-between border-b border-white/10 bg-[#111]/80 backdrop-blur-md">
         <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
             <a href="/" class="flex items-center group">
-                <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-black font-black text-xl transition-transform duration-500 group-hover:rotate-12">T.</div>
+                <img src="/logo.svg" alt="Trakr" class="w-10 h-10 transition-transform duration-500 group-hover:rotate-12">
                 <span class="ml-3 text-lg font-bold tracking-tighter">TRAKR</span>
             </a>
             <div class="font-mono text-[10px] text-[#888] tracking-[0.3em] hidden md:block uppercase font-bold border border-[#333] px-4 py-2 rounded-full bg-[#111]">
-                System_Installer // V1.0
+                Instalador_do_Sistema // V1.0
             </div>
             <a href="/" class="text-sm font-bold text-[#888] hover:text-white transition-colors">
-                CANCEL
+                CANCELAR
             </a>
         </div>
     </nav>
@@ -144,275 +144,302 @@
         
         <!-- Header -->
         <div class="mb-16">
-            <h1 class="text-5xl md:text-7xl font-bold mb-4 var-weight text-white">Hardware <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B50] to-orange-400">Setup</span></h1>
+            <h1 class="text-5xl md:text-7xl font-bold mb-4 var-weight text-white">Configuração <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#20B898] to-orange-400">do hardware</span></h1>
             <p class="text-[#888] font-mono text-sm max-w-2xl leading-relaxed">
-                Configure your Trakr Node specifications. The system will compile a custom firmware payload matching your hardware layout.
+                Configure as especificações do seu nó Trakr. O sistema vai compilar um firmware personalizado conforme o seu hardware.
             </p>
         </div>
 
         <!-- Progress Bar -->
         <div class="mb-12">
             <div class="flex justify-between mb-4">
-                <span class="font-mono text-[10px] font-bold tracking-[0.2em] text-[#FF6B50]" id="step-indicator">STEP 1 OF 4</span>
-                <span class="font-mono text-[10px] font-bold tracking-[0.2em] text-[#888]" id="step-title-indicator">CORE MICROCONTROLLER</span>
+                <span class="font-mono text-[10px] font-bold tracking-[0.2em] text-[#20B898]" id="step-indicator">ETAPA 1 DE 5</span>
+                <span class="font-mono text-[10px] font-bold tracking-[0.2em] text-[#888]" id="step-title-indicator">MICROCONTROLADOR</span>
             </div>
             <div class="w-full h-1 bg-[#222] rounded-full overflow-hidden relative">
-                <div id="progress-bar" class="absolute top-0 left-0 h-full bg-[#FF6B50] w-1/4 transition-all duration-700 shadow-[0_0_15px_#FF6B50]"></div>
+                <div id="progress-bar" class="absolute top-0 left-0 h-full bg-[#20B898] w-1/5 transition-all duration-700 shadow-[0_0_15px_#20B898]"></div>
             </div>
         </div>
 
         <!-- WIZARD FORM -->
         <form id="setup-form" class="flex-1 flex flex-col relative min-h-[400px]">
             
-            <!-- STEP 1: Microcontroller -->
+            <!-- STEP 1: Antenna -->
             <div class="step-content active" id="step-1">
                 <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-white tracking-tight">
-                    <iconify-icon icon="lucide:cpu" class="text-[#FF6B50]"></iconify-icon> Core Microcontroller
+                    <iconify-icon icon="lucide:radio-tower" class="text-[#20B898]"></iconify-icon> Antena
                 </h2>
-                
+                <p class="text-[#888] text-sm mb-8 -mt-4">Escolha qual antena UHF vai equipar o seu nó. O leitor base é o YRM100 em todos os casos.</p>
+
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <label class="radio-card cursor-pointer group flex flex-col h-full w-full relative">
-                        <input type="radio" name="mcu" value="esp32" class="hidden" checked>
+                        <input type="radio" name="antenna" value="interna" class="hidden" checked>
                         <div class="bg-[#080808] border border-[#222] rounded-3xl p-8 flex flex-col h-full w-full transition-all duration-300 group-hover:border-[#444] group-hover:-translate-y-1 overflow-hidden relative">
-                            <iconify-icon icon="lucide:check-circle-2" class="check-icon absolute top-6 right-6 text-[#FF6B50] text-2xl opacity-0 transform scale-50 transition-all duration-300 z-10"></iconify-icon>
-                            <div class="w-14 h-14 bg-[#111] border border-[#333] rounded-xl mb-6 flex items-center justify-center transition-colors group-hover:border-[#FF6B50]/50 shrink-0 relative z-10">
-                                <iconify-icon icon="lucide:microchip" class="text-3xl text-white"></iconify-icon>
+                            <iconify-icon icon="lucide:check-circle-2" class="check-icon absolute top-6 right-6 text-[#20B898] text-2xl opacity-0 transform scale-50 transition-all duration-300 z-10"></iconify-icon>
+                            <div class="w-14 h-14 bg-[#111] border border-[#333] rounded-xl mb-6 flex items-center justify-center transition-colors group-hover:border-[#20B898]/50 shrink-0 relative z-10">
+                                <iconify-icon icon="lucide:radio" class="text-3xl text-white"></iconify-icon>
                             </div>
-                            <h3 class="font-bold text-2xl mb-2 text-white relative z-10">ESP32</h3>
-                            <p class="text-[10px] text-[#FF6B50] font-mono tracking-widest uppercase mb-4 font-bold relative z-10">Standard Edition</p>
-                            <p class="text-sm text-[#888] leading-relaxed flex-1 relative z-10">Dual-core processing, integrated Wi-Fi & Bluetooth Classic/BLE. Best for general use.</p>
+                            <h3 class="font-bold text-2xl mb-2 text-white relative z-10">Antena integrada</h3>
+                            <p class="text-[10px] text-[#20B898] font-mono tracking-widest uppercase mb-4 font-bold relative z-10">PADRÃO — NATIVA</p>
+                            <p class="text-sm text-[#888] leading-relaxed flex-1 relative z-10">PCB UHF integrada ao módulo YRM100. Melhor equilíbrio entre consumo e alcance para uso diário.</p>
+                            <div class="mt-6 pt-4 border-t border-[#333] flex justify-between font-mono text-[10px] text-[#666] uppercase font-bold relative z-10">
+                                <span>ALCANCE: ~1.5m</span>
+                                <span>0 dBi</span>
+                            </div>
                         </div>
                     </label>
 
                     <label class="radio-card cursor-pointer group flex flex-col h-full w-full relative">
-                        <input type="radio" name="mcu" value="esp32-s3" class="hidden">
+                        <input type="radio" name="antenna" value="dip2" class="hidden">
                         <div class="bg-[#080808] border border-[#222] rounded-3xl p-8 flex flex-col h-full w-full transition-all duration-300 group-hover:border-[#444] group-hover:-translate-y-1 overflow-hidden relative">
-                            <iconify-icon icon="lucide:check-circle-2" class="check-icon absolute top-6 right-6 text-[#FF6B50] text-2xl opacity-0 transform scale-50 transition-all duration-300 z-10"></iconify-icon>
-                            <div class="w-14 h-14 bg-[#111] border border-[#333] rounded-xl mb-6 flex items-center justify-center transition-colors group-hover:border-[#FF6B50]/50 shrink-0 relative z-10">
-                                <iconify-icon icon="lucide:zap" class="text-3xl text-white"></iconify-icon>
+                            <iconify-icon icon="lucide:check-circle-2" class="check-icon absolute top-6 right-6 text-[#20B898] text-2xl opacity-0 transform scale-50 transition-all duration-300 z-10"></iconify-icon>
+                            <div class="w-14 h-14 bg-[#111] border border-[#333] rounded-xl mb-6 flex items-center justify-center transition-colors group-hover:border-[#20B898]/50 shrink-0 relative z-10">
+                                <iconify-icon icon="lucide:antenna" class="text-3xl text-white"></iconify-icon>
                             </div>
-                            <h3 class="font-bold text-2xl mb-2 text-white relative z-10">ESP32-S3</h3>
-                            <p class="text-[10px] text-[#FF6B50] font-mono tracking-widest uppercase mb-4 font-bold relative z-10">Performance / AI</p>
-                            <p class="text-sm text-[#888] leading-relaxed flex-1 relative z-10">Vector instructions for neural networks, massive Flash/PSRAM. Best for local ML inference.</p>
+                            <h3 class="font-bold text-2xl mb-2 text-white relative z-10">Dipolo flexível</h3>
+                            <p class="text-[10px] text-[#20B898] font-mono tracking-widest uppercase mb-4 font-bold relative z-10">2 DBI — U.FL</p>
+                            <p class="text-sm text-[#888] leading-relaxed flex-1 relative z-10">UHF RFID 865–928 MHz, 50Ω, polarização linear. Leve e fácil de posicionar na carcaça.</p>
+                            <div class="mt-6 pt-4 border-t border-[#333] flex justify-between font-mono text-[10px] text-[#666] uppercase font-bold relative z-10">
+                                <span>ALCANCE: ~1.5–2m</span>
+                                <span>U.FL/IPEX</span>
+                            </div>
                         </div>
                     </label>
 
                     <label class="radio-card cursor-pointer group flex flex-col h-full w-full relative">
-                        <input type="radio" name="mcu" value="esp8266" class="hidden">
+                        <input type="radio" name="antenna" value="patch3" class="hidden">
                         <div class="bg-[#080808] border border-[#222] rounded-3xl p-8 flex flex-col h-full w-full transition-all duration-300 group-hover:border-[#444] group-hover:-translate-y-1 overflow-hidden relative">
-                            <iconify-icon icon="lucide:check-circle-2" class="check-icon absolute top-6 right-6 text-[#FF6B50] text-2xl opacity-0 transform scale-50 transition-all duration-300 z-10"></iconify-icon>
-                            <div class="w-14 h-14 bg-[#111] border border-[#333] rounded-xl mb-6 flex items-center justify-center transition-colors group-hover:border-[#FF6B50]/50 shrink-0 relative z-10">
-                                <iconify-icon icon="lucide:battery-medium" class="text-3xl text-white"></iconify-icon>
+                            <iconify-icon icon="lucide:check-circle-2" class="check-icon absolute top-6 right-6 text-[#20B898] text-2xl opacity-0 transform scale-50 transition-all duration-300 z-10"></iconify-icon>
+                            <div class="w-14 h-14 bg-[#111] border border-[#333] rounded-xl mb-6 flex items-center justify-center transition-colors group-hover:border-[#20B898]/50 shrink-0 relative z-10">
+                                <iconify-icon icon="lucide:square-dashed-bottom" class="text-3xl text-white"></iconify-icon>
                             </div>
-                            <h3 class="font-bold text-2xl mb-2 text-white relative z-10">ESP8266</h3>
-                            <p class="text-[10px] text-[#FF6B50] font-mono tracking-widest uppercase mb-4 font-bold relative z-10">Lite Edition</p>
-                            <p class="text-sm text-[#888] leading-relaxed flex-1 relative z-10">Single-core, Wi-Fi only. Low power consumption. Best for basic telemetry nodes.</p>
+                            <h3 class="font-bold text-2xl mb-2 text-white relative z-10">Patch cerâmica</h3>
+                            <p class="text-[10px] text-[#20B898] font-mono tracking-widest uppercase mb-4 font-bold relative z-10">3 DBI — U.FL</p>
+                            <p class="text-sm text-[#888] leading-relaxed flex-1 relative z-10">UHF RFID 865–928 MHz, 50Ω, polarização linear. Compacta — cabe dentro da carcaça.</p>
+                            <div class="mt-6 pt-4 border-t border-[#333] flex justify-between font-mono text-[10px] text-[#666] uppercase font-bold relative z-10">
+                                <span>ALCANCE: ~2–3m</span>
+                                <span>U.FL/IPEX</span>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="radio-card cursor-pointer group flex flex-col h-full w-full relative">
+                        <input type="radio" name="antenna" value="panel45" class="hidden">
+                        <div class="bg-[#080808] border border-[#222] rounded-3xl p-8 flex flex-col h-full w-full transition-all duration-300 group-hover:border-[#444] group-hover:-translate-y-1 overflow-hidden relative">
+                            <iconify-icon icon="lucide:check-circle-2" class="check-icon absolute top-6 right-6 text-[#20B898] text-2xl opacity-0 transform scale-50 transition-all duration-300 z-10"></iconify-icon>
+                            <div class="w-14 h-14 bg-[#111] border border-[#333] rounded-xl mb-6 flex items-center justify-center transition-colors group-hover:border-[#20B898]/50 shrink-0 relative z-10">
+                                <iconify-icon icon="lucide:satellite-dish" class="text-3xl text-white"></iconify-icon>
+                            </div>
+                            <h3 class="font-bold text-2xl mb-2 text-white relative z-10">Painel 4.5 dBi</h3>
+                            <p class="text-[10px] text-[#20B898] font-mono tracking-widest uppercase mb-4 font-bold relative z-10">4.5 DBI — SMA</p>
+                            <p class="text-sm text-[#888] leading-relaxed flex-1 relative z-10">UHF RFID 865–928 MHz, 50Ω, polarização linear. Boa escolha para o modo estação fixo.</p>
+                            <div class="mt-6 pt-4 border-t border-[#333] flex justify-between font-mono text-[10px] text-[#666] uppercase font-bold relative z-10">
+                                <span>ALCANCE: ~4–5m</span>
+                                <span>SMA + PIGTAIL U.FL</span>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="radio-card cursor-pointer group flex flex-col h-full w-full relative">
+                        <input type="radio" name="antenna" value="circ6" class="hidden">
+                        <div class="bg-[#080808] border border-[#222] rounded-3xl p-8 flex flex-col h-full w-full transition-all duration-300 group-hover:border-[#444] group-hover:-translate-y-1 overflow-hidden relative">
+                            <iconify-icon icon="lucide:check-circle-2" class="check-icon absolute top-6 right-6 text-[#20B898] text-2xl opacity-0 transform scale-50 transition-all duration-300 z-10"></iconify-icon>
+                            <div class="w-14 h-14 bg-[#111] border border-[#333] rounded-xl mb-6 flex items-center justify-center transition-colors group-hover:border-[#20B898]/50 shrink-0 relative z-10">
+                                <iconify-icon icon="lucide:orbit" class="text-3xl text-white"></iconify-icon>
+                            </div>
+                            <h3 class="font-bold text-2xl mb-2 text-white relative z-10">Patch circular 6 dBi</h3>
+                            <p class="text-[10px] text-[#20B898] font-mono tracking-widest uppercase mb-4 font-bold relative z-10">6 DBI — SMA</p>
+                            <p class="text-sm text-[#888] leading-relaxed flex-1 relative z-10">UHF RFID 865–928 MHz, 50Ω, polarização circular — lê tags em qualquer orientação.</p>
+                            <div class="mt-6 pt-4 border-t border-[#333] flex justify-between font-mono text-[10px] text-[#666] uppercase font-bold relative z-10">
+                                <span>ALCANCE: ~6–8m</span>
+                                <span>SMA + PIGTAIL U.FL</span>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="radio-card cursor-pointer group flex flex-col h-full w-full relative">
+                        <input type="radio" name="antenna" value="panel8" class="hidden">
+                        <div class="bg-[#080808] border border-[#222] rounded-3xl p-8 flex flex-col h-full w-full transition-all duration-300 group-hover:border-[#444] group-hover:-translate-y-1 overflow-hidden relative">
+                            <iconify-icon icon="lucide:check-circle-2" class="check-icon absolute top-6 right-6 text-[#20B898] text-2xl opacity-0 transform scale-50 transition-all duration-300 z-10"></iconify-icon>
+                            <div class="w-14 h-14 bg-[#111] border border-[#333] rounded-xl mb-6 flex items-center justify-center transition-colors group-hover:border-[#20B898]/50 shrink-0 relative z-10">
+                                <iconify-icon icon="lucide:radio-tower" class="text-3xl text-white"></iconify-icon>
+                            </div>
+                            <h3 class="font-bold text-2xl mb-2 text-white relative z-10">Painel 8 dBi</h3>
+                            <p class="text-[10px] text-[#20B898] font-mono tracking-widest uppercase mb-4 font-bold relative z-10">8 DBI — SMA</p>
+                            <p class="text-sm text-[#888] leading-relaxed flex-1 relative z-10">UHF RFID 865–928 MHz, feixe estreito. Alcance máximo, ideal para uso fixo (estação).</p>
+                            <div class="mt-6 pt-4 border-t border-[#333] flex justify-between font-mono text-[10px] text-[#666] uppercase font-bold relative z-10">
+                                <span>ALCANCE: ~8–10m</span>
+                                <span>SMA + PIGTAIL U.FL</span>
+                            </div>
                         </div>
                     </label>
                 </div>
+
+                <p class="mt-6 text-[10px] font-mono text-[#666] leading-relaxed border border-[#222] bg-[#080808] rounded-xl p-4">
+                    COMPATIBILIDADE: todas as antenas são UHF RFID na banda 865–928 MHz (ETSI/FCC), impedância 50Ω e conectam no conector U.FL/IPEX do YRM100 — as variantes SMA acompanham pigtail U.FL→SMA. Alcances estimados com TX 26 dBm em campo aberto.
+                </p>
             </div>
 
-            <!-- STEP 2: RFID Module -->
+            <!-- STEP 2: Hardware Add-ons -->
             <div class="step-content" id="step-2">
                 <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-white tracking-tight">
-                    <iconify-icon icon="lucide:scan-line" class="text-[#FF6B50]"></iconify-icon> Tracking Module (RFID)
+                    <iconify-icon icon="lucide:blocks" class="text-[#20B898]"></iconify-icon> Addons de hardware
+                    <span id="hw-count" class="ml-auto text-xs font-mono text-[#20B898] bg-[#20B898]/10 border border-[#20B898]/20 px-3 py-1 rounded-full">3 selecionados</span>
                 </h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <label class="radio-card cursor-pointer group flex flex-col h-full w-full relative">
-                        <input type="radio" name="rfid" value="uhf-yrm100" class="hidden" checked>
-                        <div class="bg-[#080808] border border-[#222] rounded-3xl p-8 flex flex-col h-full w-full transition-all duration-300 group-hover:border-[#444] group-hover:-translate-y-1 overflow-hidden relative">
-                            <iconify-icon icon="lucide:check-circle-2" class="check-icon absolute top-6 right-6 text-[#FF6B50] text-2xl opacity-0 transform scale-50 transition-all duration-300 z-10"></iconify-icon>
-                            <h3 class="font-bold text-2xl mb-2 text-white relative z-10">YRM100 UHF</h3>
-                            <p class="text-[10px] text-[#FF6B50] font-mono tracking-widest uppercase mb-4 font-bold relative z-10">860-960 MHz (Standard)</p>
-                            <p class="text-sm text-[#888] leading-relaxed flex-1 relative z-10">Industrial grade tracking. Best balance between power consumption and distance.</p>
-                            <div class="mt-6 pt-4 border-t border-[#333] flex justify-between font-mono text-[10px] text-[#666] uppercase font-bold relative z-10">
-                                <span>RANGE: ~1.5m</span>
-                                <span>UART</span>
-                            </div>
-                        </div>
-                    </label>
+                <p class="text-[#888] text-sm mb-8 -mt-4">Selecione os módulos que você vai instalar. O produto base (LED, buzzer, radar, registro, deep sleep, OTA, relógio) já vem incluso; os addons abaixo são opcionais e entram no build como flags <span class="font-mono text-[#20B898]">TRAKR_HAS_*</span> quando implementados.</p>
 
-                    <label class="radio-card cursor-pointer group flex flex-col h-full w-full relative">
-                        <input type="radio" name="rfid" value="uhf-m6e" class="hidden">
-                        <div class="bg-[#080808] border border-[#222] rounded-3xl p-8 flex flex-col h-full w-full transition-all duration-300 group-hover:border-[#444] group-hover:-translate-y-1 overflow-hidden relative">
-                            <iconify-icon icon="lucide:check-circle-2" class="check-icon absolute top-6 right-6 text-[#FF6B50] text-2xl opacity-0 transform scale-50 transition-all duration-300 z-10"></iconify-icon>
-                            <h3 class="font-bold text-2xl mb-2 text-white relative z-10">M6E Nano UHF</h3>
-                            <p class="text-[10px] text-[#FF6B50] font-mono tracking-widest uppercase mb-4 font-bold relative z-10">860-960 MHz (Compact)</p>
-                            <p class="text-sm text-[#888] leading-relaxed flex-1 relative z-10">Compact module with high read rate. Can read up to 150 tags per second.</p>
-                            <div class="mt-6 pt-4 border-t border-[#333] flex justify-between font-mono text-[10px] text-[#666] uppercase font-bold relative z-10">
-                                <span>RANGE: ~3.0m</span>
-                                <span>SERIAL</span>
-                            </div>
-                        </div>
-                    </label>
-
-                    <label class="radio-card cursor-pointer group flex flex-col h-full w-full relative">
-                        <input type="radio" name="rfid" value="uhf-impinj" class="hidden">
-                        <div class="bg-[#080808] border border-[#222] rounded-3xl p-8 flex flex-col h-full w-full transition-all duration-300 group-hover:border-[#444] group-hover:-translate-y-1 overflow-hidden relative">
-                            <iconify-icon icon="lucide:check-circle-2" class="check-icon absolute top-6 right-6 text-[#FF6B50] text-2xl opacity-0 transform scale-50 transition-all duration-300 z-10"></iconify-icon>
-                            <h3 class="font-bold text-2xl mb-2 text-white relative z-10">Impinj R2000</h3>
-                            <p class="text-[10px] text-[#FF6B50] font-mono tracking-widest uppercase mb-4 font-bold relative z-10">860-960 MHz (Long Range)</p>
-                            <p class="text-sm text-[#888] leading-relaxed flex-1 relative z-10">High-performance warehouse grade. Requires active cooling and high power source.</p>
-                            <div class="mt-6 pt-4 border-t border-[#333] flex justify-between font-mono text-[10px] text-[#666] uppercase font-bold relative z-10">
-                                <span>RANGE: ~10m+</span>
-                                <span>UART/SPI</span>
-                            </div>
-                        </div>
-                    </label>
-                </div>
+                <div id="hw-addons-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
 
-            <!-- STEP 3: Peripherals -->
+            <!-- STEP 3: Software Add-ons -->
             <div class="step-content" id="step-3">
                 <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-white tracking-tight">
-                    <iconify-icon icon="lucide:blocks" class="text-[#FF6B50]"></iconify-icon> Peripheral Add-ons
+                    <iconify-icon icon="lucide:code-2" class="text-[#20B898]"></iconify-icon> Addons de software
+                    <span id="sw-count" class="ml-auto text-xs font-mono text-[#20B898] bg-[#20B898]/10 border border-[#20B898]/20 px-3 py-1 rounded-full">4 selecionados</span>
                 </h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- LED -->
-                    <label class="toggle-switch cursor-pointer group flex items-center justify-between w-full relative">
-                        <input type="checkbox" name="peripherals" value="led" class="hidden" checked>
-                        <div class="bg-[#080808] border border-[#222] rounded-2xl p-6 flex items-center justify-between w-full transition-all duration-300 group-hover:border-[#444] relative overflow-hidden">
-                            <div class="flex items-center gap-5 relative z-10">
-                                <div class="w-12 h-12 bg-[#111] border border-[#333] rounded-xl flex items-center justify-center">
-                                    <iconify-icon icon="lucide:lightbulb" class="text-[#888] text-xl group-hover:text-[#FF6B50] transition-colors"></iconify-icon>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg text-white">Addressable LED</h3>
-                                    <p class="text-[10px] text-[#888] font-mono uppercase tracking-widest">WS2812B (Visual Status)</p>
-                                </div>
-                            </div>
-                            <div class="toggle-bg w-12 h-6 bg-[#222] rounded-full relative transition-colors border border-[#333] z-10">
-                                <div class="toggle-circle w-5 h-5 bg-white rounded-full absolute top-[1px] left-[1px] transition-transform shadow"></div>
-                            </div>
-                        </div>
-                    </label>
 
-                    <!-- Buzzer -->
-                    <label class="toggle-switch cursor-pointer group flex items-center justify-between w-full relative">
-                        <input type="checkbox" name="peripherals" value="buzzer" class="hidden" checked>
-                        <div class="bg-[#080808] border border-[#222] rounded-2xl p-6 flex items-center justify-between w-full transition-all duration-300 group-hover:border-[#444] relative overflow-hidden">
-                            <div class="flex items-center gap-5 relative z-10">
-                                <div class="w-12 h-12 bg-[#111] border border-[#333] rounded-xl flex items-center justify-center">
-                                    <iconify-icon icon="lucide:volume-2" class="text-[#888] text-xl group-hover:text-[#FF6B50] transition-colors"></iconify-icon>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg text-white">Active Buzzer</h3>
-                                    <p class="text-[10px] text-[#888] font-mono uppercase tracking-widest">Audio Alerts & Alarms</p>
-                                </div>
-                            </div>
-                            <div class="toggle-bg w-12 h-6 bg-[#222] rounded-full relative transition-colors border border-[#333] z-10">
-                                <div class="toggle-circle w-5 h-5 bg-white rounded-full absolute top-[1px] left-[1px] transition-transform shadow"></div>
-                            </div>
-                        </div>
-                    </label>
+                <p class="text-[#888] text-sm mb-8 -mt-4">Features do firmware e do app. Alguns dependem de hardware do passo anterior — avisamos se faltar o módulo.</p>
 
-                    <!-- OLED -->
-                    <label class="toggle-switch cursor-pointer group flex items-center justify-between w-full relative">
-                        <input type="checkbox" name="peripherals" value="oled" class="hidden">
-                        <div class="bg-[#080808] border border-[#222] rounded-2xl p-6 flex items-center justify-between w-full transition-all duration-300 group-hover:border-[#444] relative overflow-hidden">
-                            <div class="flex items-center gap-5 relative z-10">
-                                <div class="w-12 h-12 bg-[#111] border border-[#333] rounded-xl flex items-center justify-center">
-                                    <iconify-icon icon="lucide:monitor" class="text-[#888] text-xl group-hover:text-[#FF6B50] transition-colors"></iconify-icon>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg text-white">LCD Display</h3>
-                                    <p class="text-[10px] text-[#888] font-mono uppercase tracking-widest">HD44780 (Telemetry)</p>
-                                </div>
-                            </div>
-                            <div class="toggle-bg w-12 h-6 bg-[#222] rounded-full relative transition-colors border border-[#333] z-10">
-                                <div class="toggle-circle w-5 h-5 bg-white rounded-full absolute top-[1px] left-[1px] transition-transform shadow"></div>
-                            </div>
-                        </div>
-                    </label>
-
-                    <!-- Hall Sensor -->
-                    <label class="toggle-switch cursor-pointer group flex items-center justify-between w-full relative">
-                        <input type="checkbox" name="peripherals" value="hall" class="hidden">
-                        <div class="bg-[#080808] border border-[#222] rounded-2xl p-6 flex items-center justify-between w-full transition-all duration-300 group-hover:border-[#444] relative overflow-hidden">
-                            <div class="flex items-center gap-5 relative z-10">
-                                <div class="w-12 h-12 bg-[#111] border border-[#333] rounded-xl flex items-center justify-center">
-                                    <iconify-icon icon="lucide:magnet" class="text-[#888] text-xl group-hover:text-[#FF6B50] transition-colors"></iconify-icon>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg text-white">Hall Effect Sensor</h3>
-                                    <p class="text-[10px] text-[#888] font-mono uppercase tracking-widest">Tamper Detection</p>
-                                </div>
-                            </div>
-                            <div class="toggle-bg w-12 h-6 bg-[#222] rounded-full relative transition-colors border border-[#333] z-10">
-                                <div class="toggle-circle w-5 h-5 bg-white rounded-full absolute top-[1px] left-[1px] transition-transform shadow"></div>
-                            </div>
-                        </div>
-                    </label>
-                </div>
+                <div id="sw-addons-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
             </div>
 
             <!-- STEP 4: Installation -->
             <div class="step-content" id="step-4">
                 <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-white tracking-tight">
-                    <iconify-icon icon="lucide:terminal" class="text-[#FF6B50]"></iconify-icon> Firmware Payload
+                    <iconify-icon icon="lucide:terminal" class="text-[#20B898]"></iconify-icon> Firmware
                 </h2>
                 
                 <div class="bg-[#080808] border border-[#222] rounded-3xl p-8 mb-8 relative overflow-hidden">
                     <div class="flex items-center justify-between mb-6 relative z-10">
-                        <h3 class="font-mono text-xs font-bold tracking-[0.2em] uppercase text-[#666]">Build Summary</h3>
-                        <span class="px-3 py-1 bg-green-500/10 text-green-500 font-mono text-[10px] font-bold rounded border border-green-500/30 uppercase tracking-widest">Ready</span>
+                        <h3 class="font-mono text-xs font-bold tracking-[0.2em] uppercase text-[#666]">Resumo do build</h3>
+                        <span class="px-3 py-1 bg-[#20B898]/10 text-[#20B898] font-mono text-[10px] font-bold rounded border border-[#20B898]/30 uppercase tracking-widest">Pronto</span>
                     </div>
                     
-                    <div class="font-mono text-xs md:text-sm bg-[#050505] p-6 rounded-xl border border-[#222] text-[#888] mb-8 relative overflow-hidden z-10">
-                        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#FF6B50]/5 to-transparent pointer-events-none"></div>
+                    <div class="font-mono text-xs md:text-sm bg-[#0B1210] p-6 rounded-xl border border-[#222] text-[#888] mb-8 relative overflow-hidden z-10">
+                        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#20B898]/5 to-transparent pointer-events-none"></div>
                         <div class="relative z-10 space-y-2">
-                            <div>> TARGET: <span id="sum-mcu" class="text-[#FF6B50] font-bold">ESP32</span></div>
-                            <div>> RFID_MODULE: <span id="sum-rfid" class="text-[#FF6B50] font-bold">MFRC522</span></div>
-                            <div>> PERIPHERALS: <span id="sum-periph" class="text-[#FF6B50] font-bold">LED, BUZZER</span></div>
-                            <div>> COMPILER: xtensa-esp32-elf-gcc</div>
-                            <div class="text-white mt-4">> STATUS: COMPILED_SUCCESSFULLY (1.2MB)</div>
+                            <div>> TARGET: ESP32 <span class="text-[#666]">(fixo — firmware atual)</span></div>
+                            <div>> BASE: LED · BUZZER · RADAR · REGISTRO · DEEP_SLEEP · OTA · RELÓGIO <span class="text-[#666]">(fixo — nativo)</span></div>
+                            <div>> ANTENNA: <span id="sum-antenna" class="text-[#20B898] font-bold">INTERNA</span></div>
+                            <div>> HW_ADDONS: <span id="sum-periph" class="text-[#20B898] font-bold">NONE</span></div>
+                            <div>> SW_ADDONS: <span id="sum-sw" class="text-[#20B898] font-bold">NONE</span></div>
+                            <div>> BUILD_FLAGS: <span id="sum-flags" class="text-[#20B898] font-bold">-DNONE</span></div>
+                            <div id="sum-warnings" class="text-[#EAB308] mt-2 hidden"></div>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
                         
                         <!-- Manual Download -->
-                        <button type="button" id="btn-download-bin" class="flex flex-col items-center justify-center gap-4 p-8 rounded-2xl border border-[#333] bg-[#0a0a0a] hover:bg-[#111] transition-all hover:border-[#FF6B50]/50 group relative overflow-hidden h-full">
+                        <button type="button" id="btn-download-bin" class="flex flex-col items-center justify-center gap-4 p-8 rounded-2xl border border-[#333] bg-[#0a0a0a] hover:bg-[#111] transition-all hover:border-[#20B898]/50 group relative overflow-hidden h-full">
                             <iconify-icon icon="lucide:download-cloud" class="text-4xl text-[#666] group-hover:text-white transition-colors relative z-10"></iconify-icon>
                             <div class="text-center relative z-10">
-                                <h4 class="font-bold text-white text-lg">Download .bin</h4>
-                                <p class="text-[10px] text-[#888] font-mono mt-2 tracking-widest uppercase">Manual flash via esptool.py</p>
+                                <h4 class="font-bold text-white text-lg">Baixar .bin</h4>
+                                <p class="text-[10px] text-[#888] font-mono mt-2 tracking-widest uppercase">Gravação manual via esptool.py</p>
                             </div>
                         </button>
 
                         <!-- Web Serial Flash -->
-                        <div class="flex flex-col items-center justify-center gap-4 p-8 rounded-2xl border border-[#FF6B50] bg-[#FF6B50]/5 hover:bg-[#FF6B50]/10 transition-all group relative overflow-hidden h-full">
-                            <iconify-icon icon="lucide:usb" class="text-4xl text-[#FF6B50] relative z-10"></iconify-icon>
+                        <div class="flex flex-col items-center justify-center gap-4 p-8 rounded-2xl border border-[#20B898] bg-[#20B898]/5 hover:bg-[#20B898]/10 transition-all group relative overflow-hidden h-full">
+                            <iconify-icon icon="lucide:usb" class="text-4xl text-[#20B898] relative z-10"></iconify-icon>
                             <div class="text-center z-10 w-full flex flex-col items-center">
-                                <h4 class="font-bold text-[#FF6B50] text-lg">Web Serial Install</h4>
-                                <p class="text-[10px] text-[#888] font-mono mt-2 mb-6 tracking-widest uppercase">Flash directly via USB cable</p>
+                                <h4 class="font-bold text-[#20B898] text-lg">Instalação via Web Serial</h4>
+                                <p class="text-[10px] text-[#888] font-mono mt-2 mb-6 tracking-widest uppercase">Grave direto via cabo USB</p>
                                 
                                 <esp-web-install-button manifest="/firmware/manifest.json">
-                                    <button slot="activate" id="btn-web-serial" class="bg-[#FF6B50] hover:bg-white text-black px-8 py-3 rounded-lg font-mono text-[10px] font-bold uppercase tracking-[0.2em] transition-colors shadow-[0_0_15px_rgba(255,107,80,0.4)]">
-                                        Connect USB
+                                    <button slot="activate" id="btn-web-serial" class="bg-[#20B898] hover:bg-white text-black px-8 py-3 rounded-lg font-mono text-[10px] font-bold uppercase tracking-[0.2em] transition-colors shadow-[0_0_15px_rgba(32,184,152,0.4)]">
+                                        Conectar USB
                                     </button>
                                     <span slot="unsupported" class="text-red-400 font-mono text-[10px] text-center block uppercase tracking-widest">
-                                        Browser not supported.<br>Use Chrome/Edge desktop.
+                                        Navegador não suportado.<br>Use Chrome/Edge no desktop.
                                     </span>
                                     <span slot="not-allowed" class="text-red-400 font-mono text-[10px] text-center block uppercase tracking-widest">
-                                        HTTPS required for Web Serial.
+                                        HTTPS é necessário para Web Serial.
                                     </span>
                                 </esp-web-install-button>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Config JSON Download -->
+                    <button type="button" id="btn-download-config" class="mt-6 w-full flex items-center justify-between gap-4 p-6 rounded-2xl border border-dashed border-[#333] bg-[#0a0a0a] hover:bg-[#111] hover:border-[#20B898]/50 transition-all group relative overflow-hidden">
+                        <div class="flex items-center gap-5 relative z-10 text-left">
+                            <div class="w-12 h-12 bg-[#111] border border-[#333] rounded-xl flex items-center justify-center shrink-0">
+                                <iconify-icon icon="lucide:file-json" class="text-2xl text-[#20B898] group-hover:scale-110 transition-transform"></iconify-icon>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white">Baixar trakr-config.json</h4>
+                                <p class="text-[10px] text-[#888] font-mono mt-1 tracking-widest uppercase">Configuração completa do build — flags, addons e módulos</p>
+                            </div>
+                        </div>
+                        <iconify-icon icon="lucide:download" class="text-2xl text-[#666] group-hover:text-[#20B898] transition-colors relative z-10"></iconify-icon>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 5: App Android -->
+            <div class="step-content" id="step-5">
+                <h2 class="text-3xl font-bold mb-8 flex items-center gap-3 text-white tracking-tight">
+                    <iconify-icon icon="lucide:smartphone" class="text-[#20B898]"></iconify-icon> App Android
+                </h2>
+
+                <div class="bg-[#080808] border border-[#222] rounded-3xl p-8 mb-8 relative overflow-hidden">
+                    <div class="flex items-center justify-between mb-6 relative z-10">
+                        <h3 class="font-mono text-xs font-bold tracking-[0.2em] uppercase text-[#666]">Instale o app Trakr</h3>
+                        <span class="px-3 py-1 bg-[#20B898]/10 text-[#20B898] font-mono text-[10px] font-bold rounded border border-[#20B898]/30 uppercase tracking-widest">GRATUITO</span>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row items-center gap-8 relative z-10 mb-8">
+                        <div class="w-24 h-24 shrink-0 rounded-2xl bg-[#0B1210] border border-[#333] flex items-center justify-center">
+                            <iconify-icon icon="lucide:smartphone" class="text-5xl text-[#20B898]"></iconify-icon>
+                        </div>
+                        <div class="flex-1 text-center md:text-left">
+                            <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                                <span class="text-white font-bold text-xl">trakr.apk</span>
+                                <span id="apk-version" class="text-xs font-mono text-[#20B898] bg-[#0d2b23] border border-[#20B898]/20 px-2 py-0.5 rounded">v0.0.0</span>
+                            </div>
+                            <p class="text-[#888] text-sm">O app Trakr conecta no seu nó via Bluetooth, mostra o inventário e mantém tudo offline. O APK é gerado automaticamente a cada release do GitHub.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10 mb-8">
+                        <div class="bg-[#111] border border-[#222] rounded-xl p-5">
+                            <iconify-icon icon="lucide:download" class="text-[#20B898] text-xl mb-3"></iconify-icon>
+                            <div class="text-white font-bold mb-1">1. Baixe o APK</div>
+                            <p class="text-[#888] text-sm">Toque no botão e aguarde o download do arquivo.</p>
+                        </div>
+                        <div class="bg-[#111] border border-[#222] rounded-xl p-5">
+                            <iconify-icon icon="lucide:shield-alert" class="text-[#20B898] text-xl mb-3"></iconify-icon>
+                            <div class="text-white font-bold mb-1">2. Permita a instalação</div>
+                            <p class="text-[#888] text-sm">No Android, autorize "fontes desconhecidas" ao abrir o arquivo.</p>
+                        </div>
+                        <div class="bg-[#111] border border-[#222] rounded-xl p-5">
+                            <iconify-icon icon="lucide:bluetooth" class="text-[#20B898] text-xl mb-3"></iconify-icon>
+                            <div class="text-white font-bold mb-1">3. Pareie via Bluetooth</div>
+                            <p class="text-[#888] text-sm">Abra o app e conecte no seu nó Trakr.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3 relative z-10">
+                        <a id="apk-download" href="https://github.com/charlles-dev/trakr/releases/latest/download/trakr.apk" target="_blank" class="flex items-center gap-2 bg-[#20B898] hover:bg-white text-black px-8 py-4 rounded-xl font-mono text-[10px] font-bold uppercase tracking-[0.2em] transition-colors shadow-[0_0_15px_rgba(32,184,152,0.4)]">
+                            <iconify-icon icon="lucide:download"></iconify-icon> Baixar APK
+                        </a>
+                        <a href="https://github.com/charlles-dev/trakr/releases" target="_blank" class="px-8 py-4 border border-[#333] text-white font-mono text-[10px] font-bold uppercase tracking-[0.2em] rounded-xl transition-all hover:border-[#20B898]">
+                            Ver releases
+                        </a>
+                        <span id="apk-size" class="text-xs font-mono text-[#888]">—</span>
                     </div>
                 </div>
             </div>
 
             <!-- Navigation Buttons -->
             <div class="mt-8 pt-8 border-t border-[#222] flex justify-between">
-                <button type="button" id="btn-prev" class="px-8 py-4 border border-[#333] text-[#888] font-mono text-[10px] font-bold tracking-[0.2em] hover:text-white hover:border-[#FF6B50] bg-[#111] rounded-xl transition-all hidden">
-                    &lt; PREVIOUS
+                <button type="button" id="btn-prev" class="px-8 py-4 border border-[#333] text-[#888] font-mono text-[10px] font-bold tracking-[0.2em] hover:text-white hover:border-[#20B898] bg-[#111] rounded-xl transition-all hidden">
+                    &lt; ANTERIOR
                 </button>
-                <button type="button" id="btn-next" class="px-8 py-4 font-mono text-[10px] font-bold ml-auto rounded-xl transition-all tracking-[0.2em] bg-[#FF6B50] hover:bg-white text-black shadow-[0_0_15px_rgba(255,107,80,0.4)]">
-                    NEXT STEP &gt;
+                <button type="button" id="btn-next" class="px-8 py-4 font-mono text-[10px] font-bold ml-auto rounded-xl transition-all tracking-[0.2em] bg-[#20B898] hover:bg-white text-black shadow-[0_0_15px_rgba(32,184,152,0.4)]">
+                    PRÓXIMA ETAPA &gt;
                 </button>
             </div>
             
@@ -424,42 +451,55 @@
     <!-- Modal: Download .bin -->
     <div id="modal-download" class="fixed inset-0 z-[1000] flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity duration-500">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-md" id="bg-modal-download"></div>
-        <div class="bg-[#0a0a0a] border border-[#222] rounded-[2rem] p-10 max-w-lg w-full relative z-10 shadow-[0_0_50px_rgba(255,107,80,0.15)] transform scale-95 transition-transform duration-500" id="content-modal-download">
-            <div class="w-16 h-16 bg-[#FF6B50]/10 rounded-2xl flex items-center justify-center mb-6 border border-[#FF6B50]/30 mx-auto">
-                <iconify-icon icon="lucide:check-circle" class="text-3xl text-[#FF6B50]"></iconify-icon>
+        <div class="bg-[#0a0a0a] border border-[#222] rounded-[2rem] p-10 max-w-lg w-full relative z-10 shadow-[0_0_50px_rgba(32,184,152,0.15)] transform scale-95 transition-transform duration-500" id="content-modal-download">
+            <div class="w-16 h-16 bg-[#20B898]/10 rounded-2xl flex items-center justify-center mb-6 border border-[#20B898]/30 mx-auto">
+                <iconify-icon icon="lucide:check-circle" class="text-3xl text-[#20B898]"></iconify-icon>
             </div>
-            <h2 class="text-2xl font-bold text-center text-white mb-2">Payload Compiled!</h2>
+            <h2 class="text-2xl font-bold text-center text-white mb-2">Firmware compilado!</h2>
             <p class="text-sm text-[#888] text-center mb-8 leading-relaxed">
-                Your custom <span class="text-white font-mono">trakr-node.bin</span> has been downloaded. You can now flash it to your microcontroller using esptool.
+                Seu <span class="text-white font-mono">trakr-node.bin</span> é gerado pelo workflow <span class="text-white font-mono">Firmware Build</span> no GitHub Actions a partir do seu <span class="text-white font-mono">trakr-config.json</span>. O último build fica disponível abaixo.
             </p>
+
+            <div class="flex flex-col gap-3 mb-6">
+                <a id="bin-download-link" href="https://github.com/charlles-dev/trakr/releases/download/custom-build/trakr-node.bin" target="_blank" class="block text-center w-full py-4 bg-[#20B898] hover:bg-white text-black font-mono text-[10px] uppercase font-bold tracking-[0.2em] rounded-xl transition-colors">
+                    <iconify-icon icon="lucide:download" class="inline mr-1"></iconify-icon> Baixar trakr-node.bin
+                </a>
+                <div id="bin-status" class="text-center font-mono text-[10px] text-[#888]">Verificando último build...</div>
+                <a href="https://github.com/charlles-dev/trakr/actions/workflows/firmware-build.yml" target="_blank" class="block text-center font-mono text-[10px] text-[#20B898] hover:underline">Disparar novo build (Actions → Firmware Build)</a>
+            </div>
             
             <div class="bg-[#111] border border-[#333] rounded-xl p-4 font-mono text-[10px] text-[#888] mb-6 relative group cursor-hover">
-                <div class="absolute inset-0 bg-[#FF6B50]/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div class="mb-2 text-[#666]"># Example flashing command:</div>
-                <div class="text-[#FF6B50] leading-relaxed">esptool.py -p /dev/ttyUSB0 -b 460800 --before default_reset --after hard_reset --chip esp32 write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x10000 trakr-node.bin</div>
+                <div class="absolute inset-0 bg-[#20B898]/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="mb-2 text-[#666]"># Exemplo de comando de gravação:</div>
+                <div class="text-[#20B898] leading-relaxed">esptool.py -p /dev/ttyUSB0 -b 460800 --before default_reset --after hard_reset --chip esp32 write_flash --flash_mode dio --flash_size detect --flash_freq 40m 0x10000 trakr-node.bin</div>
+            </div>
+
+            <div class="bg-[#111] border border-[#333] rounded-xl p-4 font-mono text-[10px] text-[#888] mb-6">
+                <div class="mb-2 text-[#666]"># Manifesto do build (trakr-config.json):</div>
+                <pre id="modal-manifest" class="text-[#20B898] leading-relaxed whitespace-pre-wrap overflow-x-auto max-h-40"></pre>
             </div>
 
             <!-- Next Steps -->
-            <div class="mb-8 border-l-2 border-[#FF6B50] pl-4">
-                <h4 class="font-mono text-[10px] uppercase font-bold text-white tracking-widest mb-3">Next Steps:</h4>
+            <div class="mb-8 border-l-2 border-[#20B898] pl-4">
+                <h4 class="font-mono text-[10px] uppercase font-bold text-white tracking-widest mb-3">Próximos passos:</h4>
                 <ul class="space-y-3 font-mono text-[10px] text-[#888]">
                     <li class="flex items-start gap-3">
-                        <span class="text-[#FF6B50] font-bold">01</span>
-                        <span>Open Terminal and run the esptool command above.</span>
+                        <span class="text-[#20B898] font-bold">01</span>
+                        <span>Abra o terminal e rode o comando do esptool acima.</span>
                     </li>
                     <li class="flex items-start gap-3">
-                        <span class="text-[#FF6B50] font-bold">02</span>
-                        <span>Press the EN/RST button on your board after flashing.</span>
+                        <span class="text-[#20B898] font-bold">02</span>
+                        <span>Pressione o botão EN/RST da placa depois da gravação.</span>
                     </li>
                     <li class="flex items-start gap-3">
-                        <span class="text-[#FF6B50] font-bold">03</span>
-                        <span>Wait for the LED to blink, indicating BLE pairing mode.</span>
+                        <span class="text-[#20B898] font-bold">03</span>
+                        <span>Aguarde o LED piscar, indicando o modo de pareamento BLE.</span>
                     </li>
                 </ul>
             </div>
 
             <button type="button" class="close-modal w-full py-4 bg-[#222] hover:bg-[#333] text-white font-mono text-[10px] uppercase font-bold tracking-[0.2em] rounded-xl transition-colors cursor-hover">
-                Close & Return
+                Fechar e voltar
             </button>
         </div>
     </div>
@@ -467,26 +507,26 @@
     <!-- Modal: Web Serial Install -->
     <div id="modal-serial" class="fixed inset-0 z-[1000] flex items-center justify-center p-6 opacity-0 pointer-events-none transition-opacity duration-500">
         <div class="absolute inset-0 bg-black/90 backdrop-blur-lg" id="bg-modal-serial"></div>
-        <div class="bg-[#0a0a0a] border border-[#FF6B50]/30 rounded-[2rem] p-12 max-w-xl w-full relative z-10 shadow-[0_0_100px_rgba(255,107,80,0.1)] transform scale-95 transition-transform duration-500 overflow-hidden" id="content-modal-serial">
+        <div class="bg-[#0a0a0a] border border-[#20B898]/30 rounded-[2rem] p-12 max-w-xl w-full relative z-10 shadow-[0_0_100px_rgba(32,184,152,0.1)] transform scale-95 transition-transform duration-500 overflow-hidden" id="content-modal-serial">
             
             <!-- Matrix / Cyberpunk Background effect -->
-            <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, #FF6B50 2px, #FF6B50 4px); background-size: 100% 4px; animation: scanline 10s linear infinite;"></div>
+            <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, #20B898 2px, #20B898 4px); background-size: 100% 4px; animation: scanline 10s linear infinite;"></div>
 
             <!-- State 1: Loading -->
             <div id="serial-state-loading" class="relative z-10 flex flex-col items-center">
                 <div class="relative w-24 h-24 mb-8">
-                    <svg class="animate-spin w-full h-full text-[#FF6B50]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg class="animate-spin w-full h-full text-[#20B898]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                     <iconify-icon icon="lucide:zap" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-2xl text-white"></iconify-icon>
                 </div>
                 
-                <h2 class="text-2xl font-bold text-white mb-2 uppercase tracking-widest text-center animate-pulse">Flashing Firmware</h2>
-                <div class="font-mono text-[10px] text-[#FF6B50] mb-8 text-center" id="serial-log">Establishing connection to /dev/ttyUSB...</div>
+                <h2 class="text-2xl font-bold text-white mb-2 uppercase tracking-widest text-center animate-pulse">Gravando firmware</h2>
+                <div class="font-mono text-[10px] text-[#20B898] mb-8 text-center" id="serial-log">Estabelecendo conexão com /dev/ttyUSB...</div>
                 
                 <div class="w-full h-1 bg-[#222] rounded-full overflow-hidden relative mb-2">
-                    <div id="serial-progress" class="absolute top-0 left-0 h-full bg-[#FF6B50] w-[5%] transition-all duration-300 shadow-[0_0_10px_#FF6B50]"></div>
+                    <div id="serial-progress" class="absolute top-0 left-0 h-full bg-[#20B898] w-[5%] transition-all duration-300 shadow-[0_0_10px_#20B898]"></div>
                 </div>
                 <div class="w-full flex justify-between font-mono text-[10px] text-[#666]">
                     <span>0x0000</span>
@@ -497,43 +537,43 @@
 
             <!-- State 2: Success -->
             <div id="serial-state-success" class="relative z-10 hidden flex-col items-center">
-                <div class="w-20 h-20 bg-green-500/10 rounded-2xl flex items-center justify-center mb-6 border border-green-500/30">
-                    <iconify-icon icon="lucide:check-circle" class="text-4xl text-green-500"></iconify-icon>
+                <div class="w-20 h-20 bg-[#20B898]/10 rounded-2xl flex items-center justify-center mb-6 border border-[#20B898]/30">
+                    <iconify-icon icon="lucide:check-circle" class="text-4xl text-[#20B898]"></iconify-icon>
                 </div>
-                <h2 class="text-3xl font-bold text-white mb-2">System Online</h2>
+                <h2 class="text-3xl font-bold text-white mb-2">Sistema online</h2>
                 <p class="text-sm text-[#888] text-center mb-6">
-                    Your Trakr Node has been flashed successfully. The device is now rebooting and will initialize its hardware sequence.
+                    Seu nó Trakr foi gravado com sucesso. O dispositivo está reiniciando e vai iniciar a sequência de hardware.
                 </p>
                 
                 <div class="w-full bg-[#111] border border-[#222] rounded-xl p-5 mb-6 flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <span class="font-mono text-xs text-white">Node Identity:</span>
+                        <div class="w-2 h-2 rounded-full bg-[#20B898] animate-pulse"></div>
+                        <span class="font-mono text-xs text-white">Identidade do nó:</span>
                     </div>
-                    <span class="font-mono text-xs text-[#FF6B50] font-bold">TRK-A8F29</span>
+                    <span class="font-mono text-xs text-[#20B898] font-bold">TRK-A8F29</span>
                 </div>
 
                 <!-- Next Steps -->
-                <div class="w-full mb-8 border-l-2 border-green-500 pl-4">
-                    <h4 class="font-mono text-[10px] uppercase font-bold text-white tracking-widest mb-3">Next Steps:</h4>
+                <div class="w-full mb-8 border-l-2 border-[#20B898] pl-4">
+                    <h4 class="font-mono text-[10px] uppercase font-bold text-white tracking-widest mb-3">Próximos passos:</h4>
                     <ul class="space-y-3 font-mono text-[10px] text-[#888]">
                         <li class="flex items-start gap-3">
-                            <span class="text-green-500 font-bold">01</span>
-                            <span>Keep the device powered via USB or Battery.</span>
+                            <span class="text-[#20B898] font-bold">01</span>
+                            <span>Mantenha o dispositivo ligado via USB ou bateria.</span>
                         </li>
                         <li class="flex items-start gap-3">
-                            <span class="text-green-500 font-bold">02</span>
-                            <span>Open the Trakr App on your phone and enable Bluetooth.</span>
+                            <span class="text-[#20B898] font-bold">02</span>
+                            <span>Abra o app Trakr no celular e ative o Bluetooth.</span>
                         </li>
                         <li class="flex items-start gap-3">
-                            <span class="text-green-500 font-bold">03</span>
-                            <span>Search for "TRK-A8F29" to pair and bridge the node.</span>
+                            <span class="text-[#20B898] font-bold">03</span>
+                            <span>Procure por "TRK-A8F29" para parear e conectar o nó.</span>
                         </li>
                     </ul>
                 </div>
 
-                <a href="/" class="block text-center w-full py-4 bg-[#FF6B50] hover:bg-white text-black font-mono text-[10px] uppercase font-bold tracking-[0.2em] rounded-xl transition-colors cursor-hover shadow-[0_0_15px_rgba(255,107,80,0.4)]">
-                    Finish & Return Home
+                <a href="/" class="block text-center w-full py-4 bg-[#20B898] hover:bg-white text-black font-mono text-[10px] uppercase font-bold tracking-[0.2em] rounded-xl transition-colors cursor-hover shadow-[0_0_15px_rgba(32,184,152,0.4)]">
+                    Concluir e voltar
                 </a>
             </div>
             
@@ -542,14 +582,15 @@
 
     <!-- Wizard Controller Script -->
     <script is:inline>
-        const steps = 4;
+        const steps = 5;
         let currentStep = 1;
 
         const stepTitles = [
-            "CORE MICROCONTROLLER",
-            "TRACKING MODULE (RFID)",
-            "PERIPHERAL ADD-ONS",
-            "FIRMWARE PAYLOAD"
+            "ANTENA",
+            "ADDONS DE HARDWARE",
+            "ADDONS DE SOFTWARE",
+            "FIRMWARE",
+            "APP ANDROID"
         ];
 
         const btnNext = document.getElementById('btn-next');
@@ -558,25 +599,194 @@
         const stepIndicator = document.getElementById('step-indicator');
         const stepTitle = document.getElementById('step-title-indicator');
 
+        const BADGES = {
+            NATIVO: 'text-[#20B898] bg-[#20B898]/10 border-[#20B898]/20',
+            ROADMAP: 'text-[#EAB308] bg-[#EAB308]/10 border-[#EAB308]/20',
+            EXPERIMENTAL: 'text-[#E879F9] bg-[#E879F9]/10 border-[#E879F9]/20'
+        };
+
+        const HW_ADDONS = [
+            { v: 'oled', name: 'OLED SSD1306 0.96"', badge: 'ROADMAP', icon: 'lucide:monitor', desc: 'Status sem app (contagem, bateria, RSSI)', flag: 'TRAKR_HAS_OLED', group: 'HMI e feedback' },
+            { v: 'btn2', name: 'Botão físico secundário', badge: 'ROADMAP', icon: 'lucide:circle-dot', desc: 'Alternar modo radar sem o app', flag: 'TRAKR_HAS_BTN2', group: 'HMI e feedback' },
+            { v: 'batt', name: 'Monitor de bateria (INA219)', badge: 'ROADMAP', icon: 'lucide:battery-charging', desc: '% de carga no app e no dispositivo', flag: 'TRAKR_HAS_INA219', group: 'Energia e bateria' },
+            { v: 'batt18650', name: 'Bateria 18650 troca rápida', badge: 'ROADMAP', icon: 'lucide:battery', desc: 'Suporte com trava, sem solda', flag: 'TRAKR_HAS_18650', group: 'Energia e bateria' },
+            { v: 'vib', name: 'Motor vibrador', badge: 'ROADMAP', icon: 'lucide:vibrate', desc: 'Alerta silencioso (rastreador na mão)', flag: 'TRAKR_HAS_VIBRATOR', group: 'Segurança' },
+            { v: 'bme280', name: 'BME280', badge: 'ROADMAP', icon: 'lucide:thermometer', desc: 'Temp/umidade/pressão + alerta de exposição', flag: 'TRAKR_HAS_BME280', group: 'Sensores e contexto' },
+            { v: 'imu', name: 'IMU (MPU6050)', badge: 'ROADMAP', icon: 'lucide:move-3d', desc: 'Wake por gesto/movimento', flag: 'TRAKR_HAS_MPU6050', group: 'Sensores e contexto' },
+            { v: 'snapfit', name: 'Encaixe snap-fit', badge: 'ROADMAP', icon: 'lucide:package', desc: 'Carcaça sem ferramenta', flag: null, group: 'Mecânica e carcaça' },
+            { v: 'ip54', name: 'Vedações IP54', badge: 'ROADMAP', icon: 'lucide:shield', desc: 'Proteção contra poeira e respingo', flag: null, group: 'Mecânica e carcaça' },
+            { v: 'bumpers', name: 'Bumpers TPU', badge: 'ROADMAP', icon: 'lucide:footprints', desc: 'Antiderrapante e estabilidade', flag: null, group: 'Mecânica e carcaça' },
+            { v: 'screws', name: 'Parafusos captivos', badge: 'ROADMAP', icon: 'lucide:screwdriver', desc: 'Fixos na carcaça para não se perderem', flag: null, group: 'Mecânica e carcaça' },
+            { v: 'qr', name: 'QR de montagem', badge: 'ROADMAP', icon: 'lucide:qr-code', desc: 'Aponta para a documentação de montagem', flag: null, group: 'Mecânica e carcaça' }
+        ];
+
+        const SW_ADDONS = [
+            { v: 'txpow', name: 'Potência TX configurável', badge: 'ROADMAP', icon: 'lucide:radio-tower', desc: 'dBm por cenário (prédio x canteiro)', flag: null, group: 'RF e alcance' },
+            { v: 'live', name: 'Varredura ao vivo', badge: 'ROADMAP', icon: 'lucide:activity', desc: 'Streaming EPC + RSSI via GATT', flag: null, group: 'RF e alcance' },
+            { v: 'rssical', name: 'Calibração de RSSI', badge: 'ROADMAP', icon: 'lucide:sliders-horizontal', desc: 'Offset dBm por ambiente (campo, galpão)', flag: null, group: 'RF e alcance' },
+            { v: 'direction', name: 'Direção por passo', badge: 'ROADMAP', icon: 'lucide:move-right', desc: '"+3 dBm no último passo → continue"', flag: null, group: 'Localização e navegação' },
+            { v: 'findme', name: 'Achar meu dispositivo', badge: 'ROADMAP', icon: 'lucide:crosshair', desc: 'RSSI do celular guia até o rastreador', flag: null, group: 'Localização e navegação' },
+            { v: 'nfc_pair', name: 'Pareamento por aproximação', badge: 'ROADMAP', icon: 'lucide:contact-round', desc: 'Tag NFC passiva no rastreador — o celular lê', flag: null, group: 'Segurança e acesso' },
+            { v: 'exposure', name: 'Alerta de exposição', badge: 'ROADMAP', icon: 'lucide:flame', desc: 'Calor/umidade das ferramentas', flag: null, dep: 'bme280', group: 'Sensores e contexto' },
+            { v: 'gesture', name: 'Wake por movimento', badge: 'ROADMAP', icon: 'lucide:hand', desc: 'Pegar o rastreador já dispara a varredura', flag: null, dep: 'imu', group: 'Sensores e contexto' },
+            { v: 'sounds', name: 'Padrões sonoros por evento', badge: 'ROADMAP', icon: 'lucide:music', desc: 'Som/vibração por tipo de alerta', flag: null, group: 'HMI e feedback' },
+            { v: 'diag', name: 'Inspeção de add-ons', badge: 'ROADMAP', icon: 'lucide:stethoscope', desc: 'Diagnóstico dos módulos detectados', flag: null, group: 'App e UX' },
+            { v: 'rssith', name: 'Limiares de RSSI', badge: 'ROADMAP', icon: 'lucide:gauge', desc: 'Ajuste fino do alerta por tag', flag: null, group: 'App e UX' },
+            { v: 'alerts', name: 'Alertas configuráveis', badge: 'ROADMAP', icon: 'lucide:bell', desc: 'Silenciar por rastreador', flag: null, group: 'App e UX' },
+            { v: 'stats', name: 'Estatísticas locais', badge: 'ROADMAP', icon: 'lucide:bar-chart-3', desc: 'Ferramentas mais esquecidas, frequência', flag: null, group: 'App e UX' },
+            { v: 'backup', name: 'Backup/restore local', badge: 'ROADMAP', icon: 'lucide:archive', desc: 'Export/import JSON único', flag: null, group: 'App e UX' }
+        ];
+
+        function addonCard(a, inputName) {
+            const badge = BADGES[a.badge] || BADGES.ROADMAP;
+            const checked = a.def ? ' checked' : '';
+            return `<label class="toggle-switch cursor-pointer group flex items-center justify-between w-full relative">
+                        <input type="checkbox" name="${inputName}" value="${a.v}" class="hidden"${checked}>
+                        <div class="bg-[#080808] border border-[#222] rounded-2xl p-6 flex items-center justify-between w-full transition-all duration-300 group-hover:border-[#444] relative overflow-hidden">
+                            <div class="flex items-center gap-5 relative z-10">
+                                <div class="w-12 h-12 bg-[#111] border border-[#333] rounded-xl flex items-center justify-center">
+                                    <iconify-icon icon="${a.icon}" class="text-[#888] text-xl group-hover:text-[#20B898] transition-colors"></iconify-icon>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-lg text-white">${a.name} <span class="ml-2 text-[8px] font-mono ${badge} border px-1.5 py-0.5 rounded align-middle">${a.badge}</span></h3>
+                                    <p class="text-[10px] text-[#888] font-mono uppercase tracking-widest">${a.desc}</p>
+                                </div>
+                            </div>
+                            <div class="toggle-bg w-12 h-6 bg-[#222] rounded-full relative transition-colors border border-[#333] z-10">
+                                <div class="toggle-circle w-5 h-5 bg-white rounded-full absolute top-[1px] left-[1px] transition-transform shadow"></div>
+                            </div>
+                        </div>
+                    </label>`;
+        }
+
+        function renderAddons(containerId, list, inputName) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            let html = '';
+            let lastGroup = '';
+            list.forEach(a => {
+                if (a.group !== lastGroup) {
+                    html += `<div class="col-span-1 md:col-span-2 mt-6 mb-1">
+                                <div class="text-[10px] font-mono uppercase tracking-widest text-[#666] border-b border-[#222] pb-2">${a.group}</div>
+                            </div>`;
+                    lastGroup = a.group;
+                }
+                html += addonCard(a, inputName);
+            });
+            container.innerHTML = html;
+        }
+        renderAddons('hw-addons-grid', HW_ADDONS, 'peripherals');
+        renderAddons('sw-addons-grid', SW_ADDONS, 'swaddons');
+
         function updateSummary() {
             if (currentStep !== 4) return;
             
-            // Get values
-            const mcu = document.querySelector('input[name="mcu"]:checked')?.value.toUpperCase() || 'ESP32';
-            const rfid = document.querySelector('input[name="rfid"]:checked')?.value.toUpperCase() || 'MFRC522';
+            const antenna = document.querySelector('input[name="antenna"]:checked')?.value || 'interna';
+            const antennaLabel = {
+                interna: 'INTEGRADA (0 dBi)',
+                dip2: 'DIPOLO 2 dBi',
+                patch3: 'PATCH 3 dBi',
+                panel45: 'PAINEL 4.5 dBi',
+                circ6: 'CIRCULAR 6 dBi',
+                panel8: 'PAINEL 8 dBi'
+            }[antenna];
             
-            const periphCheckboxes = document.querySelectorAll('input[name="peripherals"]:checked');
-            let periphList = Array.from(periphCheckboxes).map(cb => cb.value.toUpperCase()).join(', ');
-            if (periphList === "") periphList = "NONE";
+            const hwChecked = document.querySelectorAll('input[name="peripherals"]:checked');
+            const swChecked = document.querySelectorAll('input[name="swaddons"]:checked');
+            let hwList = Array.from(hwChecked).map(cb => cb.value.toUpperCase()).join(', ');
+            if (hwList === "") hwList = "NONE";
+            let swList = Array.from(swChecked).map(cb => cb.value.toUpperCase()).join(', ');
+            if (swList === "") swList = "NONE";
 
-            // Update DOM
-            const sumMcu = document.getElementById('sum-mcu');
-            const sumRfid = document.getElementById('sum-rfid');
+            const flags = [];
+            const hwById = {};
+            HW_ADDONS.forEach(a => hwById[a.v] = a);
+            const swById = {};
+            SW_ADDONS.forEach(a => swById[a.v] = a);
+            hwChecked.forEach(cb => { if (hwById[cb.value]?.flag) flags.push('-D' + hwById[cb.value].flag); });
+            swChecked.forEach(cb => { if (swById[cb.value]?.flag) flags.push('-D' + swById[cb.value].flag); });
+
+            const warnings = [];
+            swChecked.forEach(cb => {
+                const dep = swById[cb.value]?.dep;
+                if (dep && !document.querySelector(`input[name="peripherals"][value="${dep}"]`)?.checked) {
+                    const depName = hwById[dep]?.name || dep;
+                    warnings.push(`${swById[cb.value].name} exige o módulo ${depName} (passo anterior).`);
+                }
+            });
+            if (Array.from(hwChecked).some(cb => cb.value === 'oled')) warnings.push('OLED SSD1306 ainda não tem driver no firmware — flag TRAKR_HAS_OLED entra no build e ativa quando implementado.');
+            const roadmapSw = Array.from(swChecked).some(cb => swById[cb.value]?.badge === 'ROADMAP');
+            const roadmapHw = Array.from(hwChecked).some(cb => hwById[cb.value]?.badge === 'ROADMAP');
+            if (roadmapSw || roadmapHw) warnings.push('Addons do roadmap não existem no firmware atual — o build os ignora até a implementação.');
+
+            const sumAntenna = document.getElementById('sum-antenna');
             const sumPeriph = document.getElementById('sum-periph');
+            const sumSw = document.getElementById('sum-sw');
+            const sumFlags = document.getElementById('sum-flags');
+            const sumWarnings = document.getElementById('sum-warnings');
             
-            if(sumMcu) sumMcu.innerText = mcu;
-            if(sumRfid) sumRfid.innerText = rfid;
-            if(sumPeriph) sumPeriph.innerText = periphList;
+            if(sumAntenna) sumAntenna.innerText = antennaLabel;
+            if(sumPeriph) sumPeriph.innerText = hwList;
+            if(sumSw) sumSw.innerText = swList;
+            if(sumFlags) sumFlags.innerText = flags.join(' ') || '-DNONE';
+            if(sumWarnings) {
+                if(warnings.length) {
+                    sumWarnings.classList.remove('hidden');
+                    sumWarnings.innerHTML = warnings.map(w => `> AVISO: ${w}`).join('<br>');
+                } else {
+                    sumWarnings.classList.add('hidden');
+                }
+            }
+        }
+
+        function updateCounts() {
+            const hw = document.querySelectorAll('input[name="peripherals"]:checked').length;
+            const sw = document.querySelectorAll('input[name="swaddons"]:checked').length;
+            const hwCount = document.getElementById('hw-count');
+            const swCount = document.getElementById('sw-count');
+            if(hwCount) hwCount.innerText = `${hw} selecionados`;
+            if(swCount) swCount.innerText = `${sw} selecionados`;
+        }
+
+        function buildConfigJson() {
+            const antenna = document.querySelector('input[name="antenna"]:checked')?.value || 'interna';
+            const hardware = Array.from(document.querySelectorAll('input[name="peripherals"]:checked')).map(cb => cb.value);
+            const software = Array.from(document.querySelectorAll('input[name="swaddons"]:checked')).map(cb => cb.value);
+            const flags = [];
+            const hwById = {};
+            HW_ADDONS.forEach(a => hwById[a.v] = a);
+            const swById = {};
+            SW_ADDONS.forEach(a => swById[a.v] = a);
+            hardware.forEach(v => { if (hwById[v]?.flag) flags.push(hwById[v].flag); });
+            software.forEach(v => { if (swById[v]?.flag) flags.push(swById[v].flag); });
+            return {
+                "schema": "trakr-build-config/v1",
+                "target": "esp32",
+                "antenna": antenna,
+                "hardware_addons": hardware,
+                "software_addons": software,
+                "build_flags": flags
+            };
+        }
+
+        function fillManifest() {
+            const el = document.getElementById('modal-manifest');
+            if(el) el.textContent = JSON.stringify(buildConfigJson(), null, 2);
+        }
+
+        function downloadConfig() {
+            const config = buildConfigJson();
+            const blob = new Blob([JSON.stringify(config, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'trakr-config.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            fillManifest();
+            openModal(modalDownload);
         }
 
         function showStep(step) {
@@ -589,7 +799,7 @@
             if(currentEl) currentEl.classList.add('active');
 
             // Update Header
-            if(stepIndicator) stepIndicator.innerText = `STEP ${step} OF ${steps}`;
+            if(stepIndicator) stepIndicator.innerText = `ETAPA ${step} DE ${steps}`;
             if(stepTitle) stepTitle.innerText = stepTitles[step-1];
             if(progressBar) progressBar.style.width = `${(step / steps) * 100}%`;
 
@@ -628,8 +838,12 @@
 
         // Add change listeners to auto-update summary if they click back and forth
         document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('change', updateSummary);
+            input.addEventListener('change', () => {
+                updateSummary();
+                updateCounts();
+            });
         });
+        updateCounts();
 
         // Modal Logic
         const modalDownload = document.getElementById('modal-download');
@@ -674,8 +888,16 @@
         // Download .bin trigger
         if(btnDownloadBin) {
             btnDownloadBin.addEventListener('click', () => {
+                updateSummary();
+                fillManifest();
                 openModal(modalDownload);
             });
+        }
+
+        // Download trakr-config.json trigger
+        const btnDownloadConfig = document.getElementById('btn-download-config');
+        if(btnDownloadConfig) {
+            btnDownloadConfig.addEventListener('click', downloadConfig);
         }
 
         // Web Serial trigger (Simulated for Demo)
@@ -700,14 +922,14 @@
                 
                 progress.style.width = '0%';
                 pct.innerText = '0%';
-                log.innerText = 'Connecting to /dev/ttyUSB0...';
+                log.innerText = 'Conectando ao /dev/ttyUSB0...';
                 
                 // Simulate flashing process
-                setTimeout(() => { log.innerText = 'Erasing flash...'; progress.style.width = '10%'; pct.innerText = '10%'; }, 1000);
-                setTimeout(() => { log.innerText = 'Writing at 0x10000... (24%)'; progress.style.width = '24%'; pct.innerText = '24%'; }, 2000);
-                setTimeout(() => { log.innerText = 'Writing at 0x10000... (58%)'; progress.style.width = '58%'; pct.innerText = '58%'; }, 3000);
-                setTimeout(() => { log.innerText = 'Writing at 0x10000... (89%)'; progress.style.width = '89%'; pct.innerText = '89%'; }, 4000);
-                setTimeout(() => { log.innerText = 'Verifying payload hash...'; progress.style.width = '100%'; pct.innerText = '100%'; }, 5000);
+                setTimeout(() => { log.innerText = 'Apagando flash...'; progress.style.width = '10%'; pct.innerText = '10%'; }, 1000);
+                setTimeout(() => { log.innerText = 'Gravando em 0x10000... (24%)'; progress.style.width = '24%'; pct.innerText = '24%'; }, 2000);
+                setTimeout(() => { log.innerText = 'Gravando em 0x10000... (58%)'; progress.style.width = '58%'; pct.innerText = '58%'; }, 3000);
+                setTimeout(() => { log.innerText = 'Gravando em 0x10000... (89%)'; progress.style.width = '89%'; pct.innerText = '89%'; }, 4000);
+                setTimeout(() => { log.innerText = 'Verificando hash do payload...'; progress.style.width = '100%'; pct.innerText = '100%'; }, 5000);
                 
                 setTimeout(() => {
                     document.getElementById('serial-state-loading').classList.add('hidden');
@@ -717,6 +939,38 @@
                 }, 6000);
             });
         }
+
+        // APK Release Info
+        const apkVersionEl = document.getElementById('apk-version');
+        const apkSizeEl = document.getElementById('apk-size');
+        const apkDownloadEl = document.getElementById('apk-download');
+        fetch('https://api.github.com/repos/charlles-dev/trakr/releases/latest')
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(release => {
+                const asset = (release.assets || []).find(a => a.name === 'trakr.apk');
+                if(apkVersionEl) apkVersionEl.textContent = release.tag_name;
+                if(apkSizeEl && asset) apkSizeEl.textContent = (asset.size / 1048576).toFixed(1) + ' MB';
+                if(asset && apkDownloadEl) apkDownloadEl.href = asset.browser_download_url;
+            })
+            .catch(() => {
+                if(apkVersionEl) apkVersionEl.textContent = 'v0.0.0';
+            });
+
+        // Custom build status
+        const binStatus = document.getElementById('bin-status');
+        fetch('https://api.github.com/repos/charlles-dev/trakr/releases/tags/custom-build')
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(release => {
+                const asset = (release.assets || []).find(a => a.name === 'trakr-node.bin');
+                if(asset && binStatus) {
+                    binStatus.textContent = `Último build: ${new Date(asset.updated_at).toLocaleString('pt-BR')} · ${(asset.size / 1048576).toFixed(1)} MB`;
+                } else if(binStatus) {
+                    binStatus.textContent = 'Ainda não existe build customizado — dispare o workflow Firmware Build.';
+                }
+            })
+            .catch(() => {
+                if(binStatus) binStatus.textContent = 'Ainda não existe build customizado — dispare o workflow Firmware Build.';
+            });
     </script>
 </body>
 </html>

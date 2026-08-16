@@ -6,6 +6,7 @@
     <string name="tab_tools">Ferramentas</string>
     <string name="tab_alerts">Alertas</string>
     <string name="tab_radar">Radar</string>
+    <string name="tab_stats">Estatísticas</string>
     <string name="tab_config">Config</string>
     <string name="action_open_config">Configurações</string>
 
@@ -169,4 +170,34 @@
     <string name="settings_minutes">%1$d min</string>
     <string name="action_reload">Recarregar</string>
     <string name="msg_config_failed">Falha ao atualizar as configurações do rastreador</string>
+    <string name="msg_auth_required">PIN necessário — autentique-se primeiro</string>
+    <string name="msg_auth_failed">PIN incorreto</string>
+    <string name="msg_auth_ok">PIN autenticado — sessão liberada por 5 min</string>
+    <string name="action_auth">Autenticar</string>
+    <string name="settings_pin">PIN de acesso</string>
+    <string name="settings_pin_hint">Protege adição/remoção de ferramentas. Deixe vazio para remover.</string>
+    <string name="settings_pin_set">PIN configurado</string>
+    <string name="settings_pin_not_set">Sem PIN — rastreador aberto</string>
+    <string name="settings_pin_auth">Digite o PIN atual</string>
+    <string name="settings_pin_new">Novo PIN</string>
+    <string name="settings_pin_confirm">Repetir novo PIN</string>
+    <string name="settings_pin_save">Salvar PIN</string>
+    <string name="settings_pin_clear">Remover PIN</string>
+    <string name="settings_pin_mismatch">PINs não coincidem</string>
+    <string name="settings_pin_too_short">PIN precisa ter 4 a 32 caracteres</string>
+    <string name="settings_connection">Conexão BLE</string>
+    <string name="settings_connection_hint">Status da conexão com o TRK-Finder</string>
+    <string name="settings_connected">Conectado</string>
+    <string name="settings_disconnected">Desconectado</string>
+    <string name="settings_authed">Autenticado</string>
+    <string name="settings_not_authed">Não autenticado</string>
+    <string name="action_rescan">Varrer agora</string>
+    <string name="settings_rescan_hint">Força leitura imediata do YRM100 sem usar o botão físico</string>
+    <string name="settings_backup">Backup e restore</string>
+    <string name="settings_backup_hint">Exporta tudo em JSON único (ferramentas, alertas, configs)</string>
+    <string name="action_export_backup">Exportar backup</string>
+    <string name="action_import_backup">Importar backup</string>
+    <string name="msg_backup_exported">Backup exportado — compartilhe o JSON</string>
+    <string name="msg_backup_imported">Backup importado com sucesso</string>
+    <string name="msg_backup_failed">Falha no backup/restore</string>
 </resources>

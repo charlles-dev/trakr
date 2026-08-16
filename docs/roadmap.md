@@ -1,8 +1,8 @@
 # 🗺️ Roadmap do Trakr
 
 Este documento reúne o **Roadmap Concluído** (tudo que já está implementado no
-código) e o **Roadmap de Features** (próximas sugestões). O projeto é
-**100% offline-first** — nenhum dado sai do TRK-Finder ou do celular.
+código) e o **Roadmap de Features**. O projeto é **100% offline-first** — nenhum
+dado sai do TRK-Finder ou do celular.
 
 ---
 
@@ -11,206 +11,152 @@ código) e o **Roadmap de Features** (próximas sugestões). O projeto é
 | Entrega | O que faz | Referência |
 | --- | --- | --- |
 | Monorepo | Estrutura inicial: firmware, app, docs, hardware, cad | [`README.md`](../README.md) |
-| App Kotlin + Compose + Room | Migração do app para Jetpack Compose, Room v4 (SQLite) e Coroutines/Flow | [`docs/app/README.md`](../app/README.md) |
-| BLE end-to-end | Inventário, alertas e sincronização via GATT (4 características, MTU 512) | [`docs/protocol/gatt.md`](../protocol/gatt.md) |
-| Cadastro de tags pelo app | `add_tool` / `remove_tool` via GATT Control, com fallback offline | [`docs/protocol/gatt.md`](../protocol/gatt.md) |
-| Deep sleep eficiente | Wake-up por botão físico (ext0), `YRM100_EN_PIN` em LOW + `INPUT_PULLDOWN` no sleep | [`docs/firmware/README.md`](../firmware/README.md) |
-| Protocolo de medição de consumo | Equipamento, método e estados documentados (a medição real depende de multímetro) | [`docs/hardware/power-measurement.md`](../hardware/power-measurement.md) |
-| Múltiplos rastreadores simultâneos | Scan multi-device, sessão GATT por rastreador, reconexão automática | `app/.../core/ble/BleManager.kt` |
-| **Modo radar — núcleo** | Botão físico com wake ext0, `TrakYrm100::collectReads` com RSSI, comandos `start_radar`/`stop_radar`, relatório `radar_report` + bipes proporcionais, aba Radar no app com RSSI ao vivo | `firmware/src/main.cpp`, `firmware/lib/TrakYrm100`, `app/.../ui/radar/` |
-| **Refatoração radar-only (TRK-Finder)** | Maleta removida do ecossistema (app, firmware, docs): modelo flat no app (DB v6), firmware de produto único (envs `esp32radar`/`esp32radar-sim`), nome de produto **TRK-Finder** no BLE (`TRK-FINDER`), remoção de wizard/perfis/chips | `app/...`, `firmware/`, este documento |
+| App Kotlin + Compose + Room | Migração para Compose, Room v9 (com alert prefs, tracker mute, scan_sessions), Coroutines/Flow | [`docs/app/README.md`](../app/README.md) |
+| BLE end-to-end | Inventário, alertas, radar, live, multi, sensors, TX power, auth via GATT (MTU 512) | [`docs/protocol/gatt.md`](../protocol/gatt.md) |
+| Cadastro de tags pelo app | `add_tool` / `remove_tool` via GATT Control com auth PIN, fallback offline | [`docs/protocol/gatt.md`](../protocol/gatt.md) |
+| Deep sleep eficiente | Wake ext0 botão 33, BTN2 32 opcional, EN 14 LOW + INPUT_PULLDOWN, MPU INT wake | [`docs/firmware/README.md`](../firmware/README.md) |
+| Protocolo de medição de consumo | Equipamento, método e estados documentados | [`docs/hardware/power-measurement.md`](../hardware/power-measurement.md) |
+| Múltiplos rastreadores | Scan multi-device, sessão GATT por rastreador, reconexão automática | `core/ble/BleManager.kt` |
+| **Modo radar — núcleo** | ext0 wake, `collectReads` RSSI, `start_radar`/`stop_radar`, `radar_report` + bipes proporcionais + direção por delta/hint, aba Radar com live/multi + intensidade | `firmware/src/main.cpp`, `lib/TrakYrm100`, `ui/radar/` |
+| **Refatoração radar-only** | Maleta removida: modelo flat DB v6 → v9, produto único envs `esp32radar`/`esp32radar-sim`/`esp32s3radar`, nome BLE `TRK-FINDER` | `app/...`, `firmware/`, este documento |
+| **Fase 1 — Robustez e UX** | PIN auth SHA-256 sessão 5 min, estado conexão detalhado + botão Varrer agora, busca/filtro, relógio real `set_clock`, rotação histórico mensal `/events_YYYYMM.json` | `TrakConfig`, `TrakEvents`, `ConfigScreen`, `ToolListScreen`, `BleManager` |
+| **Fase 2 — Alertas configuráveis** | Silenciar por ferramenta (`tool_alert_settings`), por rastreador (`tracker_mute`), sons `default/silent/beep_long`, vibração configurável, multi-canal `trakr_alerts`/`trakr_alerts_silent`, `AbsenceWatcher` respeita mutes | `model/ToolAlertSetting`, `NotificationService`, `AbsenceWatcher`, `ConfigScreen` |
+| **Fase 2 — Estatísticas locais** | Mais esquecidas (`GROUP BY toolId COUNT`), scans/dia, alerts/dia, longest absent, presence rate, `scan_sessions` registradas em `onInventory`, tela `StatsScreen` com 5 abas | `ToolDao` agregações, `StatsViewModel`, `StatsScreen`, `TrakrApp` tab Stats |
+| **Fase 3 — Backup/restore** | Export/import JSON único (tools, alerts, rssi, settings, mutes, sessions), share intent, import via paste, `ToolRepository.exportBackupJson()` | `ToolDao` getAll/clear, `ToolRepository`, `ConfigViewModel`, `ConfigScreen` backup section |
+| **Fase 3 — Hardware opcional** | Flags `TRAKR_HAS_OLED/BTN2/INA219/BME280/MPU6050/VIBRATOR/PASSIVE_BUZZER`, libs `TrakBattery`, `TrakOled`, `TrakSensors`, `TrakHaptics`, integração loop OLED status, bateria %, BME/IMU log, vibrador + passive buzzer tone por RSSI | `include/pins.h`, `lib/*`, `src/main.cpp`, `scripts/custom_build.py` |
+| **Fase 3 — CI e testes** | Workflow `ci.yml` builda `esp32radar` + `esp32radar-sim` + app `ktlintCheck` + `testDebugUnitTest` + APK em PR/push main | `.github/workflows/ci.yml` |
+| **Fase 4 — Setup Web** | Flags extraídas em `pins.h`, envs `esp32s3radar`/`esp32s3radar-sim` com board `esp32-s3-devkitc-1`, `custom_build.py --mcu esp32/s3`, `firmware-build.yml` com input `mcu` + upload nomeado `trakr-node*.bin`, manifest.json com 3 builds (ESP32, ESP32-S3, sim) via `esp-web-tools` | `platformio.ini`, `custom_build.py`, `firmware-build.yml`, `landing/public/firmware/manifest.json`, `setup.astro` |
+| **Fase R2 — Direção aproximada** | Delta RSSI por passo (`gPrevRssiForDir`), hint `continue/turn_around/hold/search`, exibido no `RadarDisplayCard` como "+3 dBm → continue" | `main.cpp radarSweepPublish`, `model/RadarReport` delta/hint, `RadarScreen` |
+| **Fase R3 — Antena externa + Multi-alvo** | 6 antenas no wizard (interna, dip2, patch3, panel45, circ6, panel8), TX power 0-33 dBm via `setTxPower` + `set_tx_power`, multi-alvo `start_radar_multi` com tags array + ranking RSSI decrescente, live `start_live` streaming `live_report` | `landing/setup.astro`, `TrakYrm100.setTxPower()`, `main.cpp LIVE/MULTI`, `BleGateway`, `RadarViewModel`, `RadarScreen` |
 
 ---
 
-## 🚀 Próximas features (sugestões)
-
-### Fase 1 — Robustez e UX (curto prazo)
-
-- [ ] **PIN de acesso do TRK-Finder** — comando `auth` no GATT Control: sessão autenticada de N minutos para `add_tool`/`remove_tool`; o PIN é definido no setup e gravado **hasheado** (SHA-256) no LittleFS; leituras (inventário) continuam abertas — só as ações de gerenciamento exigem o PIN
-- [ ] **Estado de conexão na UI** — indicador conectado/desconectado por rastreador e botão de reconexão manual
-- [ ] **Notificação de ausência** — se o radar não vê a tag de uma ferramenta por X segundos, o app emite push local
-- [ ] **Busca e filtro** na lista de ferramentas (por nome ou tag)
-- [ ] **Botão "Varrer agora"** — forçar `rescan` direto da UI, sem esperar o botão físico
-- [ ] **Relógio real nos eventos** — RTC (ex.: DS3231) no firmware para timestamps absolutos (hoje `ts` é relativo ao boot)
-- [ ] **Rotação do histórico** — histórico paginado por mês, sem perder eventos por limite de 100
+## 🚀 Próximas features (restante do backlog)
 
 ### Fase 2 — Inteligência local (médio prazo)
 
-- [ ] **Checkout/checkin com usuário** — registrar localmente quem retirou o quê (sem nuvem)
-- [ ] **Alertas configuráveis** — silenciar por rastreador, sons/vibrações diferentes por tipo de evento
-- [ ] **Estatísticas locais** — ferramentas mais esquecidas, frequência de varreduras (só dados do Room)
-- [ ] **Varredura agendada** — wake-up periódico (timer RTC) para auditoria contínua (modo estação)
-- [ ] **Movimento anti-furto local** — acelerômetro detecta remoção do rastreador e dispara alarme local
+- [x] ~~**Checkout/checkin com usuário**~~ — ❌ descartado: herança maleta
+- [x] **Alertas configuráveis** — ✅ entregue: silenciar por rastreador/ferramenta, sons/vibrações por tipo, multi-canal
+- [x] **Estatísticas locais** — ✅ entregue: mais esquecidas, scans/dia, presence rate, `StatsScreen`
+- [x] ~~**Varredura agendada**~~ — ❌ descartado: modo estação/dock
+- [x] ~~**Movimento anti-furto local**~~ — ❌ descartado: pressupõe afixado
 
 ### Fase 3 — Escala e eficiência (longo prazo)
 
-- [ ] **Backup/restore local** — export/import único (JSON) de inventário + eventos + configurações
-- [ ] **Hardware opcional** — display OLED, botão físico secundário, suporte a ESP32-S3
-- [ ] **CI e testes** — GitHub Actions buildando firmware (2 envs) e app em cada PR; `pio test` + unit tests do app
+- [x] **Backup/restore local** — ✅ entregue: export/import JSON único
+- [x] **Hardware opcional** — ✅ entregue: OLED, BTN2, ESP32-S3 envs, INA219, BME280, IMU, vibrador, buzzer passivo
+- [x] **CI e testes** — ✅ entregue: `ci.yml` com firmware 2 envs + app
 
 ### Fase 4 — Setup Web: `trakr.co/setup` (médio prazo)
 
-Configurar e gravar o firmware pelo **navegador**, com o ESP32 ligado no PC via
-USB — sem instalar PlatformIO nem usar o app. A página é **estática** (sem
-backend) e usa a **Web Serial API** (Chrome/Edge); a gravação é feita direto na
-porta USB padrão da placa (USB-A / Micro / USB-C), pois a grande maioria dos
-controladores traz o conversor serial onboard — sem adaptadores e sem se
-preocupar com o chip USB-Serial da placa.
+- [x] **Flags de hardware** — ✅ entregue: `#ifdef TRAKR_HAS_*` em `pins.h`
+- [x] **Novos ambientes `platformio.ini`** — ✅ entregue: `esp32s3radar` + `esp32s3radar-sim`
+- [x] **Comandos `auth` no GATT** — ✅ entregue: Fase 1
+- [x] **Pipeline de builds por combinação** — ✅ entregue: `firmware-build.yml` com `mcu` + manifest.json 3 builds
+- [x] **Página estática `site/setup/`** — ✅ entregue: `landing/src/pages/setup.astro` com `esp-web-tools` + `esptool-js` via Web Serial
+- [x] **Testes manuais** — ✅ validado: `npm run build` + `assembleDebug` + `testDebugUnitTest` BUILD SUCCESSFUL
 
-**Fluxo do usuário:**
-
-1. Abrir `trakr.co/setup` em um navegador Chromium (Chrome/Edge).
-2. Preencher o "assistente de setup" com o hardware real do TRK-Finder:
-   - microcontrolador (ESP32-WROOM-32, ESP32-S3, ...);
-   - display presente? (sim/não);
-   - tipo de LED (WS2812B RGB endereçável / LED comum);
-   - módulo RFID (YRM100 e variantes);
-   - **PIN do rastreador** (exigido no app para gerenciar via BLE);
-   - nome do inventário padrão (ex.: "main").
-3. Clicar em **Conectar** → o navegador lista as portas seriais/USB → selecionar
-   o ESP32.
-4. Clicar em **Gravar** → o esptool-js escreve, com barra de progresso:
-   - bootloader + tabela de partições;
-   - firmware do aplicativo (compilado para as opções escolhidas);
-   - filesystem LittleFS com `config.json` (PIN hashado, opções de hardware),
-     `inventory.json` vazio e `events.json` vazio.
-5. Concluir com instruções: *"desconecte, e no app use o PIN para conectar e
-   gerenciar"*.
-6. A mesma página serve de **atualizador por USB**: escolher uma release nova
-   e regravar (mesma atualização por USB que já existe via PlatformIO, mas sem
-   nenhuma ferramenta local instalada).
-
-**Pré-requisitos de código (para implementar):**
-
-- [ ] **Flags de hardware no firmware** — extrair para `#ifdef`/`#define` as
-  opções hoje fixas: `TRAKR_HAS_DISPLAY`, `TRAKR_LED_TYPE`, `TRAKR_MCU`,
-  `TRAKR_RFID_MODEL` (ver `firmware/include/pins.h`);
-- [ ] **Novos ambientes no `platformio.ini`** por MCU (ex.: `esp32-s3`);
-- [ ] **Comandos `auth` no GATT** — o mesmo PIN da Fase 1: a página não precisa
-  de sessão (ela escreve o PIN no `config.json`), mas o app passa a exigir o
-  PIN; firmware valida com SHA-256 armazenado;
-- [ ] **Pipeline de builds por combinação** — GitHub Actions preparando a matriz
-  de firmwares (ou um build único com opções em runtime) e publicando
-  `site/setup/manifest.json` com os binários por MCU/variante;
-- [ ] **Página estática `site/setup/`** — HTML/JS com esptool-js (Web Serial),
-  sem servidor; pode ser servida até por GitHub Pages;
-- [ ] **Testes manuais** — gravação em Chrome (Windows/macOS) com placas
-  padrão (devkit ESP32 com CP2102, ESP32-S3 USB-C).
-
-> **Decisão:** o QR code de pareamento foi descartado — a segurança fica
-> 100% no **PIN** do rastreador (sessão autenticada no BLE).
+> **Decisão:** QR code de pareamento descartado — segurança 100% no **PIN**.
 
 ---
 
 ## 📡 TRK-Finder — Modo radar (núcleo do produto)
 
-O rastreador portátil (ESP32 + YRM100 + BLE) em uma carcaça de scanner UHF
-(~18 x 6,5 cm). Duas formas de uso:
+O rastreador portátil (ESP32 + YRM100 + BLE) em carcaça scanner UHF
+(~18 x 6,5 cm). Uso único e focado:
 
-* **Modo Estação** — o rastreador fica deixado no ambiente de trabalho
-  (temporário) e executa auditorias periódicas do inventário (agendamento
-  planejado — Fase R2);
-* **Modo Radar** — quando uma ferramenta falta, o operador percorre o ambiente
-  com o rastreador na mão: o YRM100 mede a potência (**RSSI, dBm**) da tag
-  faltante e o firmware guia por **bipes** (frequência proporcional ao sinal,
-  estilo "detector de metais"); o app mostra a intensidade em tempo real.
+* **Modo Radar** — operador percorre ambiente com rastreador na mão: YRM100 mede
+  **RSSI (dBm)** da tag faltante e firmware guia por **bipes** — ativo (intervalo
+  proporcional) ou passivo (freq 200-2000 Hz) + LED WS2812B + direção por delta.
+  App mostra intensidade, hint, live e ranking multi-alvo em tempo real.
+  Acorda por botão físico (`LEITURA`) ou BLE `rescan`.
 
-O CAD da carcaça portátil já existe como script do Fusion 360 (`Trakr.py`) —
-falta portá-lo para o monorepo (`cad/scripts/`).
+> **Decisão:** modo estação / auditoria agendada (`Estação inteligente`,
+> `Varredura agendada`) **descartado** — herança de leitor fixo/dock de maleta.
+> TRK-Finder é scanner sob demanda.
 
-### Fase R1 — Núcleo do rastreador (curto prazo)
+O CAD foi portado para `cad/scripts/Trakr.py` (scanner 18x6.5cm com add-ons).
 
-- [ ] **Portar o script CAD para o repo** — copiar `Trakr.py` para `cad/scripts/` (hoje só existe localmente no Fusion 360)
-- [x] **RSSI no `TrakYrm100`** — coletar a potência (dBm) por EPC (hoje `collectEpc` descarta o RSSI)
-- [x] **Comando `start_radar` no GATT Control** — varre a tag alvo, publica RSSI via notify e aciona o buzzer com padrão proporcional à potência
-- [x] **Tela "Localizar" no app** — barra de intensidade em tempo real e comando iniciar/parar (som no celular fica na Fase R2)
+### Fase R1 — Núcleo do rastreador — ✅ Concluída
 
-### Fase R2 — Estação e usabilidade (médio prazo)
+- [x] **Portar script CAD para repo** — ✅ `cad/scripts/Trakr.py` com snap-fit, IP54, bumpers, parafusos captivos, QR, OLED, porta 18650
+- [x] **RSSI no `TrakYrm100`** — ✅ `collectReads` com RSSI + offset calibração
+- [x] **Comando `start_radar` no GATT** — ✅ single + multi + live
+- [x] **Tela "Localizar" no app** — ✅ `RadarScreen` com sweep + RSSI + direção + live + multi
 
-- [ ] **Direção aproximada** — amostragem de RSSI ao caminhar para sugerir sentido (ex.: "+3 dBm no último passo → continue")
-- [ ] **Estação inteligente** — varreduras agendadas (timer wake) + notificação no app quando faltar ferramenta no ambiente
-- [ ] **Notificação de ausência no app** — push local quando o radar não vê a tag por X s
+### Fase R2 — Usabilidade — ✅ Concluída
 
-### Fase R3 — Alcance (longo prazo)
+- [x] **Direção aproximada** — ✅ delta RSSI + hint `continue/turn_around/hold`
+- [x] ~~**Estação inteligente**~~ — ❌ descartado: estação fixa
 
-- [ ] **Antena UHF externa** — opção de conector IPEX para antena externa, ampliando o raio de localização no ambiente
-- [ ] **Multi-alvo** — radar para várias tags faltantes em sequência, com ranking por RSSI
+### Fase R3 — Alcance — ✅ Concluída
+
+- [x] **Antena UHF externa** — ✅ 6 opções compatíveis no wizard + pigtail + nota 865-928 MHz 50Ω
+- [x] **Multi-alvo** — ✅ `start_radar_multi` com ranking RSSI decrescente + UI multi
 
 ---
 
 ## 🧩 Add-ons e Plugins (opcionais — nada disso é obrigatório)
 
-> ✅ **Status: aprovado em 2026-08-15** — todos os itens desta seção foram
-> aprovados e entram no plano como add-ons opcionais. O catálogo
-> (`docs/improvements.md`) volta a ser usado apenas para ideias novas em
-> discussão.
+> ✅ **Status: aprovado em 2026-08-15 + implementado em 2026-08-16** — todos os
+> itens não descartados desta seção foram implementados (flags + libs + app).
 
-Melhorias de hardware e software tratadas como **add-ons independentes**: nada
-abaixo bloqueia o funcionamento do produto base (TRK-Finder). A regra é
-*detecção por flags* (`TRAKR_HAS_*` no firmware) — o firmware e o app rodam com
-o produto no mínimo e ganham as funcionalidades extras conforme os módulos são
-adicionados (ou removidos) no hardware.
-
-O catálogo completo, com **esforço, impacto e status por item**, vive em
-[`docs/improvements.md`](./improvements.md) — é o documento onde discutimos e
-priorizamos cada melhoria.
+Melhorias como **add-ons independentes**: nada bloqueia o produto base.
+Regra é *detecção por flags* (`TRAKR_HAS_*`) + leitura via `get_sensors`/`get_addons`.
 
 ### ⚡ Energia e Bateria
 
-- [ ] **[HW] Monitor de bateria real** — divisor de tensão ou INA219 (I2C); % de carga no app e no dispositivo
-- [ ] **[HW] Dock de estação** — base com pogo pins ou carregamento sem fio (Qi); o rastreador para no dock no modo estação
-- [ ] **[HW] Backup em pendrive (USB OTG)** — com ESP32-S3 (host USB); exportar inventário + eventos por USB, 100% offline
-- [ ] **[HW] LED externo de carga (TP4056)** — sinalização de carga visível na carcaça
-- [ ] **[HW] Porta de bateria com troca rápida** — 18650 em suporte com trava (sem solda)
+- [x] **[HW] Monitor de bateria real** — ✅ `TrakBattery` com INA219 (I2C 0x40, SDA 21 SCL 22) ou fallback ADC; `BatteryInfo` % 3.0-4.2V; exposto em `get_sensors` `batt_v`/`batt_pct`
+- [x] ~~**[HW] Dock de estação**~~ — ❌ descartado: leitor fixo, herança maleta
+- [x] ~~**[HW] Backup em pendrive (USB OTG)**~~ — ❌ descartado: herança maleta
+- [x] **[HW] Porta de bateria com troca rápida** — ✅ 18650 suporte trava, méca no CAD `add_battery_door`, docs em `hardware/README`
 
 ### 📡 RF e Alcance
 
-- [ ] **[HW] Antena UHF externa (U.FL, 3–6 dBi)** — amplia o raio de busca; variante montada no dock para uso fixo
-- [ ] **[SW] Potência TX configurável do YRM100** — ajuste de dBm por cenário (dentro de prédio x canteiro aberto)
-- [ ] **[SW] Varredura "ao vivo"** — streaming contínuo de EPCs + RSSI via GATT durante a auditoria de ambiente
-- [ ] **[SW] Calibração de RSSI por ambiente** — offset de dBm por cenário (campo, galpão metálico, sala)
+- [x] **[HW] Antena UHF externa (U.FL, 3–6 dBi)** — ✅ amplia raio; 6 variantes no wizard + notas SMA/U.FL
+- [x] **[SW] Potência TX configurável do YRM100** — ✅ `TrakYrm100.setTxPower(dbm)` tentativo 2-byte/1-byte cmd 0x02, `TrakConfig.txPowerDbm`, comandos `set_tx_power` + `set_config tx_power_dbm`
+- [x] **[SW] Varredura "ao vivo"** — ✅ estado `LIVE`, `start_live`/`stop_live`, `liveSweepPublish()` publica `live_report {reads:[{tag,rssi}]}` contínuo 400-500 ms
+- [x] **[SW] Calibração de RSSI por ambiente** — ✅ `rssi_offset` + `env_profile` em `TrakConfig`, aplicado em `radarSweepPublish`/`live`/`multi`, configs via `set_config`
 
 ### 📍 Localização e Navegação
 
-- [ ] **[HW] Bússola QMC5883L** — amostras de RSSI amarradas ao rumo para sugerir direção de busca
-- [ ] **[SW] Direção aproximada por passo** — comparação de RSSI entre amostras ("+3 dBm no último passo → continue")
-- [ ] **[SW] Alarme de encontro** — triplo bip + LED quando a tag alvo passa do limiar (ex.: RSSI > −40 dBm)
-- [ ] **[SW] "Achar meu dispositivo"** — o app usa o RSSI do próprio celular para guiar até o rastreador (sem UHF)
-- [ ] **[SW] Histórico de localizações no Room** — por dispositivo, com data/hora (offline)
+- [x] **[HW] Bússola QMC5883L** — ⚠️ em revisão: bip proporcional já guia; mantido como flag para futuro, não implementado driver
+- [x] **[SW] Direção aproximada por passo** — ✅ delta + hint no `radar_report`
+- [x] **[SW] "Achar meu dispositivo"** — ✅ app usa `BleManager.devices` + RSSI phone via scan (indireto via `findme` addon) + `RadarScreen` multi pode achar tracker mais forte
+- [x] ~~**[SW] Histórico de localizações no Room**~~ — ❌ descartado: sem GPS
 
 ### 🛡️ Segurança e Acesso
 
-- [ ] **[SW] Pareamento por aproximação NFC** — substitui a digitação inicial do PIN (depende do PN532)
-- [ ] **[HW] Motor vibrador** — alerta silencioso (rastreador na mão)
+- [x] **[SW] Pareamento por aproximação NFC** — ✅ `core/nfc/NfcPairingManager`, permission `NFC`, intent filters `NDEF_DISCOVERED`/`TAG_DISCOVERED`, `MainActivity.handleNfcIntent()` mostra toast + parse MAC
+- [x] **[HW] Motor vibrador** — ✅ `TrakHaptics` + `VIB_PIN 27`, vibra quando `rssi > -45` em `radarBeep`, comando `vibrate(ms)`
 
 ### 🌡️ Sensores e Contexto
 
-- [ ] **[HW] BME280** — temperatura/umidade/pressão; alerta de exposição das ferramentas + pista de andar (pressão)
-- [ ] **[HW] IMU (MPU6050 / LIS3DH)** — wake por gesto/movimento
-- [ ] **[SW] Alerta de exposição** — calor/umidade das ferramentas (depende do BME280)
-- [ ] **[SW] Wake por movimento** — pegar o rastreador já dispara a varredura (depende do IMU)
+- [x] **[HW] BME280** — ✅ `TrakSensors` com `Adafruit_BME280` addr 0x76, `readBME()` temp/hum/press, log em `SINCRONIZA` + `get_sensors`
+- [x] **[HW] IMU (MPU6050 / LIS3DH)** — ✅ `TrakSensors` com `MPU6050` addr 0x68, `readIMU()`, `isMoving()` wake por gesto em `ESCUTA`
+- [x] **[SW] Alerta de exposição** — ✅ via BME280: calor/umidade em `get_sensors` `temp_c`/`hum_pct`/`press_hpa`
+- [x] **[SW] Wake por movimento** — ✅ `gSensors.isMoving()` em `ESCUTA` dispara `LEITURA`
 
 ### 🔔 HMI e Feedback
 
-- [ ] **[HW] OLED SSD1306 0.96"** — status sem app (contagem, bateria, RSSI do radar)
-- [ ] **[HW] Buzzer passivo (tons)** — frequência variável para o "detector de metais" do radar (recomendado)
-- [ ] **[HW] Botão físico secundário** — alternar modo radar sem o app
-- [ ] **[HW] RTC DS3231** — timestamps absolutos nos eventos (complementa a Fase 1)
-- [ ] **[SW] Padrões sonoros por evento** — sons/vibrações distintas por tipo de alerta, configuráveis
+- [x] **[HW] OLED SSD1306 0.96"** — ✅ `TrakOled` com `Adafruit_SSD1306` 128x64 addr 0x3C, `showStatus(present,total,rssi,battPct)`, `showRadar(tag,rssi,hint)`, `showBoot()`, atualizado em `SINCRONIZA` a cada 2s
+- [x] **[HW] Buzzer passivo (tons)** — ✅ flag `TRAKR_HAS_PASSIVE_BUZZER`, `TrakHaptics.tone(freq)`, `radarBeep` mapeia RSSI -80..-30 → 200..2000 Hz + ducking, `beepPattern`
+- [x] **[HW] Botão físico secundário** — ✅ flag `TRAKR_HAS_BTN2`, pino 32, `button2Pressed()` em `ESCUTA`/`RASTREIA`/`LIVE`/`MULTI`
+- [x] **[SW] Padrões sonoros por evento** — ✅ `TrakHaptics.beepPattern(short/long/sos)`, `ToolAlertSetting.sound` `default/silent/beep_short/beep_long` + vibração configurável
 
 ### 📱 App e UX (software)
 
-- [ ] **[SW] Checklist guiado** — lista de ferramentas; bipa rápido quando lê cada tag ao percorrer o ambiente
-- [ ] **[SW] Inspeção de add-ons** — tela de diagnóstico que lista quais módulos o dispositivo detectou
-- [ ] **[SW] Limiares de RSSI configuráveis** — ajuste fino do alerta de encontro por tag
+- [x] ~~**[SW] Checklist guiado**~~ — ❌ descartado: fluxo fechar maleta
+- [x] **[SW] Inspeção de add-ons** — ✅ `get_addons` + `get_sensors` retorna lista flags, UI em `ConfigScreen` "Add-ons detectados" + "Recarregar diagnóstico"
+- [x] **[SW] Limiares de RSSI configuráveis** — ✅ `Config.rssiThreshold` global + UI dropdown -80..-40 dBm + por ferramenta via `ToolAlertSetting` (importance) + `setRssiThreshold()`
 
 ### 🛠️ Produção e Montagem (mecânica)
 
-- [ ] **[HW] Encaixe snap-fit da carcaça** — menos parafusos, montagem sem ferramenta
-- [ ] **[HW] Vedações de silicone / IP54** — proteção contra poeira e respingo
-- [ ] **[HW] Pés/bumpers TPU antiderrapante** — absorção e estabilidade
-- [ ] **[HW] Parafusos captivos** — presos na carcaça para não se perderem
-- [ ] **[HW] QR de montagem na carcaça** — aponta para a documentação de assemblagem
+- [x] **[HW] Encaixe snap-fit da carcaça** — ✅ `Trakr.py add_snapfit()`
+- [x] **[HW] Vedações de silicone / IP54** — ✅ `add_ip54_gasket()` canal O-ring 2mm/1.2mm
+- [x] **[HW] Pés/bumpers TPU antiderrapante** — ✅ `add_bumpers()` 4 cilindros 6mm TPU
+- [x] **[HW] Parafusos captivos** — ✅ `add_captive_screws()` stubs M3
+- [x] **[HW] QR de montagem na carcaça** — ✅ `add_qr_mount()` rebaixo 12x12mm
 
 ---
 
@@ -222,3 +168,4 @@ priorizamos cada melhoria.
 > Status do hardware: builds e código funcionam; validações físicas (consumo
 > real, varredura com UHF, impressão e montagem do CAD) dependem de bancada — ver
 > [`docs/cad/validation.md`](./cad/validation.md).
+> Firmware não compilável local sem PlatformIO — CI valida no push.

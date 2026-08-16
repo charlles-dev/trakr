@@ -108,13 +108,21 @@ class ToolListViewModel(
                         if (reply.status == "ok") {
                             _message.value = UiMessage(R.string.msg_added_remote)
                         } else {
-                            _message.value = UiMessage(R.string.msg_generic_error)
+                            when (reply.reason) {
+                                "auth_required" -> _message.value = UiMessage(R.string.msg_auth_required)
+                                "auth_failed" -> _message.value = UiMessage(R.string.msg_auth_failed)
+                                else -> _message.value = UiMessage(R.string.msg_generic_error)
+                            }
                         }
                     "remove_tool" ->
                         if (reply.status == "ok") {
                             _message.value = UiMessage(R.string.msg_removed_remote)
                         } else {
-                            _message.value = UiMessage(R.string.msg_generic_error)
+                            when (reply.reason) {
+                                "auth_required" -> _message.value = UiMessage(R.string.msg_auth_required)
+                                "auth_failed" -> _message.value = UiMessage(R.string.msg_auth_failed)
+                                else -> _message.value = UiMessage(R.string.msg_generic_error)
+                            }
                         }
                 }
             }

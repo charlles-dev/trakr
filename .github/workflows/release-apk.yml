@@ -1,0 +1,33 @@
+name: Release APK
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  apk:
+    name: Build e anexa APK à release
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build release APK
+        run: ./gradlew assembleRelease
+
+      - name: Anexa APK à release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          APK=$(ls build/outputs/apk/release/*.apk | head -1)
+          gh release upload "${{ github.event.release.tag_name }}" "$APK"
+          gh release upload "${{ github.event.release.tag_name }}" "$APK:trakr.apk"

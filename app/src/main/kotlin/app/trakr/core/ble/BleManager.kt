@@ -74,13 +74,13 @@ object BleManager : BleGateway {
     override val devices: StateFlow<List<BleDeviceInfo>> = _devices.asStateFlow()
 
     private val _radarReport = MutableStateFlow<RadarReport?>(null)
-
-    /** Ãšltimo relatÃ³rio do modo radar (rastreador portÃ¡til), ou null. */
     override val radarReport: StateFlow<RadarReport?> = _radarReport.asStateFlow()
+    private val _liveReport = MutableStateFlow<app.trakr.model.LiveReport?>(null)
+    override val liveReport: StateFlow<app.trakr.model.LiveReport?> = _liveReport.asStateFlow()
+    private val _multiReport = MutableStateFlow<app.trakr.model.MultiRadarReport?>(null)
+    override val multiReport: StateFlow<app.trakr.model.MultiRadarReport?> = _multiReport.asStateFlow()
 
     private val _lastReply = MutableStateFlow<CmdReply?>(null)
-
-    /** Ãšltimo ACK de comando recebido do firmware, ou null. */
     override val lastReply: StateFlow<CmdReply?> = _lastReply.asStateFlow()
 
     val connectedCount: Int get() = sessions.size
@@ -338,11 +338,26 @@ object BleManager : BleGateway {
 
                 gatt.requestMtu(REQUESTED_MTU)
 
-                // Pede a varredura inicial: o firmware responde com o
-                // inventÃ¡rio completo (notify) e entra em sincronizaÃ§Ã£o.
+                // Sincroniza o relógio do rastreador com o epoch UTC do celular
+                // (firmware calcula delta e persiste em config.json) e em seguida
+                // pede a varredura inicial — o firmware responde com inventário
+                // completo (notify) e entra em sincronização.
                 service.getCharacteristic(BleProfile.CONTROL_UUID)?.let { control ->
                     try {
-                        writeCharacteristic(gatt, control, """{"cmd":"rescan"}""")
+                        val epochMs = System.currentTimeMillis()
+                        writeCharacteristic(gatt, control, """{"cmd":"set_clock","epoch_ms":$epochMs}""")
+                        // Pequeno delay para evitar colisão de WRITE no GATT
+                        // (stack BLE não tem fila de escrita nesta implementação).
+                        scope.launch {
+                            delay(350)
+                            try {
+                                writeCharacteristic(gatt, control, """{"cmd":"rescan"}""")
+                            } catch (e: SecurityException) {
+                                _status.value = BleStatus.Error(str(R.string.ble_error_write_permission))
+                            } catch (_: Exception) {
+                                // Ignora falhas de escrita pós-desconexão
+                            }
+                        }
                     } catch (e: SecurityException) {
                         _status.value = BleStatus.Error(str(R.string.ble_error_write_permission))
                     }
@@ -516,6 +531,58 @@ object BleManager : BleGateway {
         sendControl(doc.toString(), onUnavailable)
     }
 
+    /** Autentica no rastreador: {"cmd":"auth","pin":"..."} */
+    override fun auth(
+        pin: String,
+        onUnavailable: () -> Unit,
+    ) {
+        val doc = JSONObject()
+        doc.put("cmd", "auth")
+        doc.put("pin", pin)
+        sendControl(doc.toString(), onUnavailable)
+    }
+
+    override fun getHistory(
+        month: String?,
+        onUnavailable: () -> Unit,
+    ) {
+        val doc = JSONObject()
+        doc.put("cmd", "get_history")
+        if (!month.isNullOrBlank()) doc.put("month", month)
+        sendControl(doc.toString(), onUnavailable)
+    }
+
+    override fun listArchives(onUnavailable: () -> Unit) {
+        sendControl("""{"cmd":"list_archives"}""", onUnavailable)
+    }
+
+    override fun getSensors(onUnavailable: () -> Unit) {
+        sendControl("""{"cmd":"get_sensors"}""", onUnavailable)
+    }
+
+    override fun getAddons(onUnavailable: () -> Unit) {
+        sendControl("""{"cmd":"get_addons"}""", onUnavailable)
+    }
+
+    override fun startLive(intervalMs: Int, onUnavailable: () -> Unit) {
+        sendControl("""{"cmd":"start_live","interval_ms":$intervalMs}""", onUnavailable)
+    }
+
+    override fun stopLive(onUnavailable: () -> Unit) {
+        sendControl("""{"cmd":"stop_live"}""", onUnavailable)
+    }
+
+    override fun startMultiRadar(tags: List<String>, onUnavailable: () -> Unit) {
+        val doc = JSONObject()
+        doc.put("cmd", "start_radar_multi")
+        doc.put("tags", org.json.JSONArray(tags))
+        sendControl(doc.toString(), onUnavailable)
+    }
+
+    override fun setTxPower(dbm: Int, onUnavailable: () -> Unit) {
+        sendControl("""{"cmd":"set_tx_power","dbm":$dbm}""", onUnavailable)
+    }
+
     // ---------------- OTA (firmware) ----------------
 
     /** Abre a sessÃ£o OTA no rastreador: {"cmd":"ota_begin","size":N} */
@@ -550,22 +617,29 @@ object BleManager : BleGateway {
 
     // ---------------- PersistÃªncia ----------------
 
-    private fun onInventory(json: String) {
+        private fun onInventory(json: String) {
         val tools = InventoryParser.parseInventory(json)
         scope.launch {
             try {
                 repository.saveInventory(tools)
+                repository.insertScanSession(
+                    app.trakr.model.ScanSession(
+                        ts = System.currentTimeMillis(),
+                        connectedTrackers = sessions.size,
+                        toolsSeen = tools.count { it.present },
+                        toolsTotal = tools.size,
+                        triggeredBy = "inventory",
+                    ),
+                )
             } catch (e: Exception) {
-                Log.w(TAG, "Falha ao salvar inventÃ¡rio local", e)
+                Log.w(TAG, "Falha ao salvar inventario local", e)
             }
         }
     }
 
     private fun onEvent(json: String) {
-        val report = InventoryParser.parseRadarReport(json)
-        if (report != null) {
+        InventoryParser.parseRadarReport(json)?.let { report ->
             _radarReport.value = report
-            // Espelha o estado da tag no inventÃ¡rio local (Ãºltimo visto).
             if (report.tag.isNotBlank()) {
                 val now = System.currentTimeMillis()
                 scope.launch {
@@ -578,10 +652,23 @@ object BleManager : BleGateway {
                         )
                         repository.recordRssi(report.tag, report.rssi)
                     } catch (e: Exception) {
-                        Log.w(TAG, "Falha ao espelhar radar_report no inventÃ¡rio", e)
+                        Log.w(TAG, "Falha ao espelhar radar_report", e)
                     }
                 }
             }
+            return
+        }
+        InventoryParser.parseLiveReport(json)?.let { live ->
+            _liveReport.value = live
+            scope.launch {
+                live.reads.forEach { r ->
+                    try { repository.recordRssi(r.tag, r.rssi) } catch (_: Exception) {}
+                }
+            }
+            return
+        }
+        InventoryParser.parseMultiReport(json)?.let { multi ->
+            _multiReport.value = multi
             return
         }
 

@@ -4,24 +4,23 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Feixe de varredura (45° a partir do centro) -->
-    <path
-        android:fillColor="#2EE69B"
-        android:pathData="M54,54 L84,54 A30,30 0 0,0 69,28 Z" />
-    <!-- Anel externo -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#2EE69B"
-        android:strokeWidth="3"
-        android:pathData="M54,54 m-30,0 a30,30 0 1,0 60,0 a30,30 0 1,0 -60,0" />
-    <!-- Anel interno (mais discreto) -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#802EE69B"
-        android:strokeWidth="2.5"
-        android:pathData="M54,54 m-20,0 a20,20 0 1,0 40,0 a20,20 0 1,0 -40,0" />
-    <!-- Centro da varredura -->
-    <path
-        android:fillColor="#2EE69B"
-        android:pathData="M54,54 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+    <!-- Logo Trakr (landing/public/logo.svg) centralizado na safe zone -->
+    <group
+        android:scaleX="0.113014"
+        android:scaleY="0.113014"
+        android:translateX="21"
+        android:translateY="22.92">
+        <path
+            android:fillColor="#20B898"
+            android:pathData="M38,0 L546,0 A38,38 0 0,1 584,38 L584,74 A38,38 0 0,1 546,112 L38,112 A38,38 0 0,1 0,74 L0,38 A38,38 0 0,1 38,0 Z" />
+        <path
+            android:fillColor="#20B898"
+            android:pathData="M38,145 L546,145 A38,38 0 0,1 584,183 L584,219 A38,38 0 0,1 546,257 L38,257 A38,38 0 0,1 0,219 L0,183 A38,38 0 0,1 38,145 Z" />
+        <path
+            android:fillColor="#20B898"
+            android:pathData="M270,145 L314,145 A44,44 0 0,1 358,189 L358,493 A44,44 0 0,1 314,537 L270,537 A44,44 0 0,1 226,493 L226,189 A44,44 0 0,1 270,145 Z" />
+        <path
+            android:fillColor="#F7FAF9"
+            android:pathData="M480,500 a50,50 0 1,0 100,0 a50,50 0 1,0 -100,0" />
+    </group>
 </vector>

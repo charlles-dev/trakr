@@ -43,12 +43,20 @@ class TrakYrm100 {
 
   bool isPowerEnabled() const { return power_enabled_; }
 
+  // Potência TX configurável (dBm): envia ao módulo e guarda em RAM.
+  // Valores típicos 0-27 dBm. Retorna true se ACK recebido.
+  bool setTxPower(uint8_t dbm);
+
+  // Última potência configurada (0 = default do módulo)
+  uint8_t lastTxPower() const { return last_tx_dbm_; }
+
  private:
   HardwareSerial* port_ = nullptr;
   uint32_t baud_ = 115200;
   uint8_t rx_pin_ = 16;
   uint8_t tx_pin_ = 17;
   bool power_enabled_ = false;
+  uint8_t last_tx_dbm_ = TRAKR_DEFAULT_TX_DBM;
 
   void sendFrame(uint8_t cmd, const uint8_t* payload, uint8_t payloadLen);
   bool awaitFrame(uint8_t& cmd, uint8_t* data, uint8_t& dataLen, uint32_t timeoutMs);
@@ -57,8 +65,14 @@ class TrakYrm100 {
 
 // ---- Comandos (calibrar com o datasheet da placa) ----
 enum YrmCmd : uint8_t {
-  CMD_GET_VERSION    = 0x01,
+  CMD_GET_VERSION     = 0x01,
+  CMD_SET_TX_POWER    = 0x02, // tentativa conforme família M100 (validar)
   CMD_START_INVENTORY = 0x15,  // varredura contínua (multiple tags)
   CMD_STOP_INVENTORY  = 0x16,
   CMD_SINGLE_READ     = 0x17,
+  CMD_GET_TX_POWER    = 0x0B, // leitura power em alguns firmwares
+};
+
+enum : uint8_t {
+  TRAKR_DEFAULT_TX_DBM = 26,
 };

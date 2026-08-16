@@ -29,14 +29,11 @@ class RadarViewModel(
     private val ble: BleGateway,
 ) : ViewModel() {
     val devices: StateFlow<List<BleDeviceInfo>> = ble.devices
-
-    /** RelatÃ³rio mais recente do modo radar. */
     val radarReport: StateFlow<RadarReport?> = ble.radarReport
-
-    /** Ferramentas cadastradas (fonte para escolher o alvo). */
+    val liveReport = ble.liveReport
+    val multiReport = ble.multiReport
     val tools: Flow<List<Tool>> = repository.observeTools()
 
-    /** Snapshot das ferramentas (para enviar id + tag ao firmware). */
     private val toolsSnapshot = MutableStateFlow<List<Tool>>(emptyList())
 
     private val _targetId = MutableStateFlow<String?>(null)
@@ -48,11 +45,8 @@ class RadarViewModel(
     private val _message = MutableStateFlow<UiMessage?>(null)
     val message: StateFlow<UiMessage?> = _message.asStateFlow()
 
-    /** True quando existe pelo menos um TRK-Finder conectado. */
     val hasRadarDevice: StateFlow<Boolean> =
-        devices
-            .map { it.isNotEmpty() }
-            .stateIn(viewModelScope, SharingStarted.Eagerly, false)
+        devices.map { it.isNotEmpty() }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     fun selectTarget(id: String) {
         _targetId.value = id
@@ -69,8 +63,6 @@ class RadarViewModel(
             _message.value = UiMessage(R.string.msg_choose_target)
             return
         }
-        // Otimista: se o firmware recusar (ex.: ferramenta inexistente),
-        // o ACK abaixo reverte o estado e informa o motivo.
         _running.value = true
         ble.startRadar(id, tool.epc) {
             _running.value = false
@@ -80,7 +72,29 @@ class RadarViewModel(
 
     fun stop() {
         _running.value = false
-        ble.stopRadar { /* silencioso: o radar pode jÃ¡ ter parado */ }
+        ble.stopRadar { }
+        ble.stopLive { }
+    }
+
+    fun startLive() {
+        _running.value = true
+        ble.startLive(500) {
+            _running.value = false
+            _message.value = UiMessage(R.string.msg_no_device)
+        }
+    }
+
+    fun startMulti() {
+        val epcs = toolsSnapshot.value.map { it.epc }.filter { it.isNotBlank() }
+        if (epcs.isEmpty()) {
+            _message.value = UiMessage(R.string.msg_no_device)
+            return
+        }
+        _running.value = true
+        ble.startMultiRadar(epcs) {
+            _running.value = false
+            _message.value = UiMessage(R.string.msg_no_device)
+        }
     }
 
     init {
@@ -100,7 +114,13 @@ class RadarViewModel(
                                     else -> UiMessage(R.string.msg_start_refused)
                                 }
                         }
-                    "stop_radar" -> _running.value = false
+                    "stop_radar", "stop_live" -> _running.value = false
+                    "start_live", "start_radar_multi", "start_multi" -> {
+                        if (reply.status == "error") {
+                            _running.value = false
+                            _message.value = UiMessage(R.string.msg_start_refused)
+                        }
+                    }
                 }
             }
         }

@@ -87,6 +87,8 @@ fun RadarScreen(
 ) {
     val devices by viewModel.devices.collectAsStateWithLifecycle()
     val report by viewModel.radarReport.collectAsStateWithLifecycle()
+    val liveReport by viewModel.liveReport.collectAsStateWithLifecycle()
+    val multiReport by viewModel.multiReport.collectAsStateWithLifecycle()
     val tools by viewModel.tools.collectAsStateWithLifecycle(initialValue = emptyList())
     val targetId by viewModel.targetId.collectAsStateWithLifecycle()
     val running by viewModel.running.collectAsStateWithLifecycle()
@@ -211,7 +213,7 @@ fun RadarScreen(
                     )
                 }
 
-                RadarDisplayCard(report = report, running = running)
+                RadarDisplayCard(report = report, running = running, liveReport = liveReport, multiReport = multiReport)
 
                 TargetPicker(
                     tools = tools,
@@ -244,6 +246,21 @@ fun RadarScreen(
                     ) {
                         Text(stringResource(R.string.radar_stop))
                     }
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = viewModel::startLive,
+                        enabled = !running,
+                        modifier = Modifier.weight(1f).pressScale(),
+                    ) { Text("Ao vivo") }
+                    OutlinedButton(
+                        onClick = viewModel::startMulti,
+                        enabled = !running,
+                        modifier = Modifier.weight(1f).pressScale(),
+                    ) { Text("Multi-alvo") }
                 }
 
                 message?.let {
@@ -318,24 +335,37 @@ fun RadarScreen(
     }
 }
 
-/** Painel principal: varredura circular animada + leitura de RSSI. */
+/** Painel principal: varredura circular animada + leitura de RSSI + direção por passo + ao vivo + multi. */
 @Composable
 internal fun RadarDisplayCard(
     report: RadarReport?,
     running: Boolean,
+    liveReport: app.trakr.model.LiveReport? = null,
+    multiReport: app.trakr.model.MultiRadarReport? = null,
 ) {
     val present = report?.present == true
     val rssi = report?.rssi ?: -100
+    val delta = report?.delta ?: 0
+    val hint = report?.hint ?: "search"
     val normalized = if (present) ((rssi + 80).toFloat() / 50f).coerceIn(0f, 1f) else 0f
 
     val statusText =
         when {
             !running -> stringResource(R.string.radar_status_idle)
-            report == null -> stringResource(R.string.radar_status_waiting)
+            report == null && liveReport == null && multiReport == null -> stringResource(R.string.radar_status_waiting)
+            liveReport != null -> "Ao vivo: ${liveReport.reads.size} tags"
+            multiReport != null -> "Multi: ${multiReport.ranking.size} alvos"
             !present -> stringResource(R.string.radar_status_no_signal)
             rssi > -45 -> stringResource(R.string.radar_status_found)
             else -> stringResource(R.string.radar_status_near)
         }
+
+    val directionText = when (hint) {
+        "continue" -> "+${delta} dBm → continue"
+        "turn_around" -> "${delta} dBm → volte"
+        "hold" -> "Sinal estável"
+        else -> "Procurando…"
+    }
 
     // Scan line: linha fina que varre o painel de cima a baixo durante a busca.
     val scanY by rememberInfiniteTransition(label = "scan").animateFloat(
@@ -393,6 +423,30 @@ internal fun RadarDisplayCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    if (running && present) {
+                        Text(
+                            text = directionText,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontFamily = MonospaceTypography,
+                        )
+                    }
+                    liveReport?.let { live ->
+                        Text(
+                            text = live.reads.take(3).joinToString("\n") { "${it.tag.takeLast(6)} ${it.rssi} dBm" },
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = MonospaceTypography,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    multiReport?.let { multi ->
+                        Text(
+                            text = multi.ranking.take(3).joinToString("\n") { "${it.tag.takeLast(6)} ${it.rssi} dBm" },
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = MonospaceTypography,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                 }
             }
             if (running) {
