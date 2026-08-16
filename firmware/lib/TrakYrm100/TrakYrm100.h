@@ -20,6 +20,10 @@ struct TrakRead {
   int8_t rssi;
 };
 
+#ifndef TRAKR_DEFAULT_TX_DBM
+#define TRAKR_DEFAULT_TX_DBM 26
+#endif
+
 class TrakYrm100 {
  public:
   // Inicializa o UART e energiza o módulo (pino EN, se definido em pins.h).
@@ -71,8 +75,4 @@ enum YrmCmd : uint8_t {
   CMD_STOP_INVENTORY  = 0x16,
   CMD_SINGLE_READ     = 0x17,
   CMD_GET_TX_POWER    = 0x0B, // leitura power em alguns firmwares
-};
-
-enum : uint8_t {
-  TRAKR_DEFAULT_TX_DBM = 26,
 };
