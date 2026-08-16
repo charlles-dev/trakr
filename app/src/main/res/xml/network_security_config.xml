@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Sem tráfego de rede no app (tudo via BLE local): bloqueia cleartext
+    explicitamente como camada defensiva caso alguma lib faça HTTP.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>

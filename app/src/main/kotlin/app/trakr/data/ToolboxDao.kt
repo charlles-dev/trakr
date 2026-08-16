@@ -41,6 +41,12 @@ interface ToolboxDao {
     @Query("SELECT * FROM alerts ORDER BY created_at DESC")
     fun observeAlerts(): Flow<List<AlertEvent>>
 
+    @Query("UPDATE alerts SET read = 1 WHERE id = :id")
+    suspend fun markAlertRead(id: Long)
+
+    @Query("DELETE FROM alerts")
+    suspend fun clearAlerts()
+
     @Insert
     suspend fun insertRssiSample(sample: RssiSample)
 

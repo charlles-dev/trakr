@@ -56,6 +56,17 @@ class InventoryParserTest {
         assertTrue(InventoryParser.parseInventory("not json").isEmpty())
     }
 
+    @Test
+    fun parseInventory_fallbackNameAndEpcFieldAlias() {
+        val json = """{"tools":[{"id":"07","epc":"E2801160"}]}"""
+
+        val tools = InventoryParser.parseInventory(json)
+
+        assertEquals(1, tools.size)
+        assertEquals("Ferramenta 1", tools[0].name)
+        assertEquals("E2801160", tools[0].epc)
+    }
+
     // ---------------- parseRadarReport ----------------
 
     @Test
@@ -68,6 +79,15 @@ class InventoryParserTest {
         assertEquals("E28011606000020400000001", report?.tag)
         assertEquals(-52, report?.rssi)
         assertTrue(report?.present == true)
+    }
+
+    @Test
+    fun parseRadarReport_missingFieldsFallBackToDefaults() {
+        val report = InventoryParser.parseRadarReport("""{"type":"radar_report"}""")
+
+        assertEquals("", report?.tag)
+        assertEquals(-100, report?.rssi)
+        assertTrue(report?.present == false)
     }
 
     @Test
@@ -99,6 +119,24 @@ class InventoryParserTest {
 
         assertEquals("error", reply?.status)
         assertEquals("tool_not_found", reply?.reason)
+    }
+
+    @Test
+    fun parseCmdReply_blankReasonYieldsNullReason() {
+        val reply =
+            InventoryParser.parseCmdReply(
+                """{"type":"cmd_reply","cmd":"ota_begin","status":"ok","reason":" "}""",
+            )
+
+        assertEquals("ota_begin", reply?.cmd)
+        assertEquals("ok", reply?.status)
+        assertNull(reply?.reason)
+    }
+
+    @Test
+    fun parseCmdReply_invalidJsonReturnsNull() {
+        assertNull(InventoryParser.parseCmdReply("not json"))
+        assertNull(InventoryParser.parseCmdReply("""{"type":123}"""))
     }
 
     @Test

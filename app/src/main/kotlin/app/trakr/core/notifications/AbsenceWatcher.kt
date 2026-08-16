@@ -1,8 +1,10 @@
 package app.trakr.core.notifications
 
 import android.content.Context
+import android.util.Log
 import app.trakr.data.AppContainer
 import app.trakr.model.AlertEvent
+import app.trakr.model.Tool
 import app.trakr.repository.ToolboxRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -25,11 +27,37 @@ import kotlinx.coroutines.launch
  */
 class AbsenceWatcher(context: Context) {
     companion object {
+        private const val TAG = "AbsenceWatcher"
+
         /** Tempo sem ver a tag para considerar "ausente" (modo radar). */
         const val ABSENCE_MS = 60_000L
 
         /** Ticker de reavaliação caso o Flow do Room não emita (ex: radar parado). */
         private const val TICK_MS = 30_000L
+
+        /**
+         * Regra pura de ausência: atualiza [alerted] e devolve as tags que
+         * devem disparar alerta agora. Tags presentes resetam o dedupe.
+         */
+        internal fun evaluateAbsent(
+            tools: List<Tool>,
+            now: Long,
+            alerted: MutableSet<String>,
+        ): List<Tool> {
+            val toNotify = mutableListOf<Tool>()
+            tools.forEach { tool ->
+                val lastSeen = tool.lastSeenAt
+                if (tool.present) {
+                    alerted.remove(tool.id)
+                } else if (lastSeen != null &&
+                    now - lastSeen >= ABSENCE_MS &&
+                    alerted.add(tool.id)
+                ) {
+                    toNotify += tool
+                }
+            }
+            return toNotify
+        }
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -60,21 +88,19 @@ class AbsenceWatcher(context: Context) {
         alerted.clear()
     }
 
-    private suspend fun check(tools: List<app.trakr.model.Tool>) {
+    private suspend fun check(tools: List<Tool>) {
         val now = System.currentTimeMillis()
-        tools.forEach { tool ->
-            val lastSeen = tool.lastSeenAt
-            if (tool.present) {
-                // Tag voltou a ser vista: libera o próximo alerta.
-                alerted.remove(tool.id)
-            } else if (lastSeen != null &&
-                now - lastSeen >= ABSENCE_MS &&
-                alerted.add(tool.id)
-            ) {
-                notifier.showMissingToolAlert(tool.name)
+        evaluateAbsent(tools, now, alerted).forEach { tool ->
+            try {
+                notifier.showMissingToolAlert(tool.name, tool.id)
                 repository.insertAlert(
                     AlertEvent(toolId = tool.id, toolName = tool.name),
                 )
+            } catch (e: Exception) {
+                // Não deixa uma falha de notificação matar o watcher (collectLatest):
+                // libera o dedupe para tentar de novo no próximo ciclo.
+                alerted.remove(tool.id)
+                Log.w(TAG, "Falha ao registrar alerta de ausência", e)
             }
         }
     }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -37,12 +38,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.trakr.R
 import app.trakr.model.Tool
+import app.trakr.ui.theme.AlertRed
+import app.trakr.ui.theme.AmberWarn
 import app.trakr.ui.theme.MonospaceTypography
+import app.trakr.ui.theme.NeonGreen
+import app.trakr.ui.theme.TrakrTheme
 
 /** Ponto pulsante: sinaliza conexão ao vivo / presença. */
 @Composable
@@ -249,26 +255,37 @@ fun StatTile(
     }
 }
 
+/** Limita a largura do conteúdo (tablets/landscape) mantendo legibilidade. */
+fun Modifier.maxContentWidth(): Modifier = this.widthIn(max = 640.dp)
+
 /** Banner de estado de conexão com o rastreador. */
 @Composable
 fun ConnectionBanner(
     deviceName: String?,
     connected: Boolean,
     modifier: Modifier = Modifier,
+    scanning: Boolean = false,
 ) {
     val (dot, badge, text) =
-        if (connected) {
-            Triple(
-                MaterialTheme.colorScheme.primary,
-                stringResource(R.string.connection_live),
-                deviceName ?: stringResource(R.string.connection_connected),
-            )
-        } else {
-            Triple(
-                MaterialTheme.colorScheme.error,
-                stringResource(R.string.connection_offline),
-                stringResource(R.string.connection_none),
-            )
+        when {
+            connected ->
+                Triple(
+                    MaterialTheme.colorScheme.primary,
+                    stringResource(R.string.connection_live),
+                    deviceName ?: stringResource(R.string.connection_connected),
+                )
+            scanning ->
+                Triple(
+                    MaterialTheme.colorScheme.primary,
+                    stringResource(R.string.connection_scanning),
+                    stringResource(R.string.dashboard_scanning),
+                )
+            else ->
+                Triple(
+                    MaterialTheme.colorScheme.error,
+                    stringResource(R.string.connection_offline),
+                    stringResource(R.string.connection_none),
+                )
         }
     Surface(
         modifier = modifier.fillMaxWidth(),
@@ -342,5 +359,73 @@ fun SectionHeader(
             text = text,
             style = MaterialTheme.typography.titleMedium,
         )
+    }
+}
+
+// ---------------- Previews ----------------
+
+@Preview(showBackground = true, backgroundColor = 0xFF0B1210)
+@Composable
+private fun ToolCardPreview() {
+    TrakrTheme(darkTheme = true) {
+        ToolCard(
+            tool =
+                Tool(
+                    id = "1",
+                    name = "Parafusadeira",
+                    epc = "E28011606000020400000001",
+                    present = true,
+                    rssi = -52,
+                ),
+            onClick = {},
+            trailing = { StatusBadge(text = "DETECTADO", color = NeonGreen) },
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0B1210)
+@Composable
+private fun StatusBadgePreview() {
+    TrakrTheme(darkTheme = true) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            StatusBadge(text = "DETECTADO", color = NeonGreen)
+            StatusBadge(text = "AUSENTE", color = AlertRed)
+            StatusBadge(text = "LIVE", color = AmberWarn)
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0B1210)
+@Composable
+private fun EmptyStatePreview() {
+    TrakrTheme(darkTheme = true) {
+        EmptyState(
+            icon = Icons.Filled.Build,
+            title = "Nenhuma ferramenta",
+            hint = "Adicione sua primeira ferramenta para começar",
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0B1210)
+@Composable
+private fun StatTilePreview() {
+    TrakrTheme(darkTheme = true) {
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatTile(label = "FERRAMENTAS", value = "12")
+            StatTile(label = "PRESENTES", value = "9", valueColor = NeonGreen)
+            StatTile(label = "AUSENTES", value = "3", valueColor = AlertRed)
+        }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0B1210)
+@Composable
+private fun ConnectionBannerPreview() {
+    TrakrTheme(darkTheme = true) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            ConnectionBanner(deviceName = "TRK-FINDER-01", connected = true)
+            ConnectionBanner(deviceName = null, connected = false)
+        }
     }
 }

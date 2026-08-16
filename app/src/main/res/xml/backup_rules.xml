@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Backup completo automático (Android 11 e anteriores): exclui o banco
+    local (cache re-sincronizado pelo rastreador) e as preferências de tema.
+-->
+<full-backup-content>
+    <exclude domain="database" path="trakr.db" />
+    <exclude domain="database" path="trakr.db-wal" />
+    <exclude domain="database" path="trakr.db-shm" />
+    <exclude domain="sharedpref" path="trakr_prefs.xml" />
+</full-backup-content>

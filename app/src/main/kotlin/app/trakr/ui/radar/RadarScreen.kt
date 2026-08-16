@@ -59,6 +59,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -69,17 +70,20 @@ import app.trakr.model.RadarReport
 import app.trakr.model.Tool
 import app.trakr.ui.components.EmptyState
 import app.trakr.ui.components.PulseDot
+import app.trakr.ui.components.maxContentWidth
 import app.trakr.ui.motion.pressScale
 import app.trakr.ui.theme.AlertRed
 import app.trakr.ui.theme.MonospaceTypography
 import app.trakr.ui.theme.TrakrRadar
+import app.trakr.ui.theme.TrakrTheme
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RadarScreen(
     modifier: Modifier = Modifier,
-    viewModel: RadarViewModel = viewModel(),
+    pendingTargetId: String? = null,
+    viewModel: RadarViewModel = viewModel(factory = RadarViewModel.Factory),
 ) {
     val devices by viewModel.devices.collectAsStateWithLifecycle()
     val report by viewModel.radarReport.collectAsStateWithLifecycle()
@@ -87,6 +91,14 @@ fun RadarScreen(
     val targetId by viewModel.targetId.collectAsStateWithLifecycle()
     val running by viewModel.running.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
+
+    // Deep link de "Localizar": pré-seleciona o alvo sem substituir a escolha do usuário.
+    LaunchedEffect(pendingTargetId, tools, targetId) {
+        val pending = pendingTargetId ?: return@LaunchedEffect
+        if (tools.any { it.id == pending } && targetId != pending) {
+            viewModel.selectTarget(pending)
+        }
+    }
 
     val radarDevices = devices
 
@@ -171,107 +183,115 @@ fun RadarScreen(
             return@Scaffold
         }
 
-        Column(
+        Box(
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(padding),
+            contentAlignment = Alignment.TopCenter,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                PulseDot(
-                    color = if (running) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = radarDevices.first().name.uppercase(),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontFamily = MonospaceTypography,
-                )
-            }
-
-            RadarDisplayCard(report = report, running = running)
-
-            TargetPicker(
-                tools = tools,
-                targetId = targetId,
-                onSelect = viewModel::selectTarget,
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .maxContentWidth()
+                        .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Button(
-                    onClick = viewModel::start,
-                    enabled = !running,
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .pressScale(),
-                ) {
-                    Text(stringResource(R.string.radar_start))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    PulseDot(
+                        color = if (running) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = radarDevices.first().name.uppercase(),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = MonospaceTypography,
+                    )
                 }
-                OutlinedButton(
-                    onClick = viewModel::stop,
-                    enabled = running,
-                    colors =
-                        ButtonDefaults.outlinedButtonColors(
-                            contentColor = AlertRed,
-                        ),
-                    modifier = Modifier.pressScale(),
-                ) {
-                    Text(stringResource(R.string.radar_stop))
-                }
-            }
 
-            message?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
+                RadarDisplayCard(report = report, running = running)
+
+                TargetPicker(
+                    tools = tools,
+                    targetId = targetId,
+                    onSelect = viewModel::selectTarget,
                 )
-            }
 
-            otaProgress?.let { progress ->
-                Surface(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    Button(
+                        onClick = viewModel::start,
+                        enabled = !running,
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .pressScale(),
                     ) {
-                        Text(
-                            text = stringResource(R.string.ota_progress, progress),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = MonospaceTypography,
-                        )
-                        LinearProgressIndicator(
-                            progress = { progress / 100f },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        Text(stringResource(R.string.radar_start))
+                    }
+                    OutlinedButton(
+                        onClick = viewModel::stop,
+                        enabled = running,
+                        colors =
+                            ButtonDefaults.outlinedButtonColors(
+                                contentColor = AlertRed,
+                            ),
+                        modifier = Modifier.pressScale(),
+                    ) {
+                        Text(stringResource(R.string.radar_stop))
                     }
                 }
-            }
 
-            if (otaDone) {
-                Text(
-                    text = stringResource(R.string.ota_done),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-            otaError?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                )
+                message?.let {
+                    Text(
+                        text = it.resolve(context),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+
+                otaProgress?.let { progress ->
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.ota_progress, progress),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontFamily = MonospaceTypography,
+                            )
+                            LinearProgressIndicator(
+                                progress = { progress / 100f },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
+                }
+
+                if (otaDone) {
+                    Text(
+                        text = stringResource(R.string.ota_done),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                otaError?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
         }
     }
@@ -300,7 +320,7 @@ fun RadarScreen(
 
 /** Painel principal: varredura circular animada + leitura de RSSI. */
 @Composable
-private fun RadarDisplayCard(
+internal fun RadarDisplayCard(
     report: RadarReport?,
     running: Boolean,
 ) {
@@ -515,7 +535,7 @@ private fun RadarSweep(
 }
 
 @Composable
-private fun TargetPicker(
+internal fun TargetPicker(
     tools: List<Tool>,
     targetId: String?,
     onSelect: (String) -> Unit,
@@ -560,5 +580,34 @@ private fun TargetPicker(
                 }
             }
         }
+    }
+}
+
+// ---------------- Previews ----------------
+
+@Preview(showBackground = true, backgroundColor = 0xFF0B1210)
+@Composable
+internal fun RadarDisplayCardPreview() {
+    TrakrTheme(darkTheme = true) {
+        RadarDisplayCard(
+            report = RadarReport(tag = "E28011606000020400000001", rssi = -52, present = true),
+            running = true,
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF0B1210)
+@Composable
+internal fun TargetPickerPreview() {
+    TrakrTheme(darkTheme = true) {
+        TargetPicker(
+            tools =
+                listOf(
+                    Tool(id = "1", name = "Parafusadeira", epc = "E28011606000020400000001"),
+                    Tool(id = "2", name = "Furadeira", epc = "E28011606000020400000002"),
+                ),
+            targetId = null,
+            onSelect = {},
+        )
     }
 }

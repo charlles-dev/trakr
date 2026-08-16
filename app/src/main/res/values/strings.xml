@@ -10,6 +10,7 @@
     <!-- Componentes -->
     <string name="connection_live">LIVE</string>
     <string name="connection_offline">OFFLINE</string>
+    <string name="connection_scanning">PROCURANDO</string>
     <string name="connection_connected">Rastreador conectado</string>
     <string name="connection_none">Nenhum rastreador conectado</string>
     <string name="status_detected">DETECTADO</string>
@@ -19,6 +20,7 @@
     <!-- Dashboard -->
     <string name="dashboard_empty">Conecte seu rastreador por BLE</string>
     <string name="dashboard_empty_hint">Ligue o rastreador e aproxime o celular para sincronizar.</string>
+    <string name="dashboard_empty_cta">Gerenciar ferramentas</string>
     <string name="stat_total">TOTAL</string>
     <string name="stat_detected">DETECTADOS</string>
     <string name="stat_absent">AUSENTES</string>
@@ -44,6 +46,24 @@
     <string name="msg_adding">Adicionando \"%1$s\"…</string>
     <string name="msg_removed_local">Rastreador offline — removido apenas no app</string>
     <string name="msg_removing">Removendo \"%1$s\"…</string>
+    <string name="msg_generic_error">Não foi possível concluir a operação</string>
+    <string name="msg_added_remote">Salvo no rastreador</string>
+    <string name="msg_removed_remote">Removido do rastreador</string>
+    <string name="msg_confirm_remove_title">Remover %1$s?</string>
+    <string name="msg_confirm_remove_hint">A ferramenta será removida do app e do rastreador.</string>
+    <string name="action_remove">Remover</string>
+    <string name="dashboard_scanning">Procurando rastreador…</string>
+    <string name="action_locate">Localizar</string>
+    <string name="action_clear_alerts">Limpar alertas</string>
+    <string name="alerts_cleared">Alertas limpos</string>
+    <string name="time_now">agora</string>
+    <string name="time_minutes">há %1$d min</string>
+    <string name="time_hours">há %1$d h</string>
+    <string name="time_days">há %1$d d</string>
+    <string name="alerts_today">Hoje</string>
+    <string name="alerts_yesterday">Ontem</string>
+    <string name="alerts_day">Datas anteriores</string>
+    <string name="status_new">NOVO</string>
 
     <!-- Detalhe de ferramenta -->
     <string name="title_details">Detalhes</string>

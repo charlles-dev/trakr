@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -43,10 +46,13 @@ import app.trakr.model.RssiSample
 import app.trakr.model.Tool
 import app.trakr.ui.components.SectionHeader
 import app.trakr.ui.components.StatusBadge
+import app.trakr.ui.components.maxContentWidth
 import app.trakr.ui.theme.AlertRed
 import app.trakr.ui.theme.AmberWarn
 import app.trakr.ui.theme.MonospaceTypography
 import app.trakr.ui.theme.NeonGreen
+import app.trakr.ui.theme.TrakrRadar
+import app.trakr.ui.theme.TrakrTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -68,7 +74,8 @@ fun ToolDetailScreen(
     tool: Tool,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ToolDetailViewModel = viewModel(key = tool.id),
+    onLocate: () -> Unit = {},
+    viewModel: ToolDetailViewModel = viewModel(key = tool.id, factory = ToolDetailViewModel.Factory),
 ) {
     val samples by viewModel.samples.collectAsStateWithLifecycle(emptyList())
 
@@ -76,6 +83,25 @@ fun ToolDetailScreen(
         viewModel.setEpc(tool.epc)
     }
 
+    ToolDetailContent(
+        tool = tool,
+        samples = samples,
+        onBack = onBack,
+        onLocate = onLocate,
+        modifier = modifier,
+    )
+}
+
+/** Conteúdo da tela de detalhe (stateless: sem ViewModel, testável/previewável). */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ToolDetailContent(
+    tool: Tool,
+    samples: List<RssiSample>,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    onLocate: () -> Unit = {},
+) {
     Column(
         modifier =
             modifier
@@ -99,7 +125,12 @@ fun ToolDetailScreen(
         )
 
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .maxContentWidth()
+                    .fillMaxHeight()
+                    .align(Alignment.CenterHorizontally),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -142,6 +173,21 @@ fun ToolDetailScreen(
                             },
                         color = if (tool.present) NeonGreen else AlertRed,
                     )
+                }
+            }
+
+            item {
+                Button(
+                    onClick = onLocate,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(
+                        TrakrRadar,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.action_locate))
                 }
             }
 
@@ -278,5 +324,32 @@ private fun RssiRow(sample: RssiSample) {
                 )
             }
         }
+    }
+}
+
+// ---------------- Previews ----------------
+
+@Preview(showBackground = true, backgroundColor = 0xFF0B1210)
+@Composable
+internal fun ToolDetailContentPreview() {
+    TrakrTheme(darkTheme = true) {
+        ToolDetailContent(
+            tool =
+                Tool(
+                    id = "1",
+                    name = "Parafusadeira",
+                    epc = "E28011606000020400000001",
+                    present = true,
+                    rssi = -52,
+                    lastSeenAt = System.currentTimeMillis(),
+                ),
+            samples =
+                listOf(
+                    RssiSample(id = 1, epc = "E28011606000020400000001", rssi = -52),
+                    RssiSample(id = 2, epc = "E28011606000020400000001", rssi = -64),
+                ),
+            onBack = {},
+            modifier = Modifier.fillMaxSize(),
+        )
     }
 }

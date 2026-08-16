@@ -13,6 +13,7 @@ import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.Build
+import android.util.Log
 import app.trakr.R
 import app.trakr.data.AppContainer
 import app.trakr.data.InventoryParser
@@ -58,27 +59,28 @@ data class BleDeviceInfo(
  * - Roda um escaner periódico para (re)conectar rastreadores que apareçam/sumam;
  * - Roteia eventos (radar_report/cmd_reply) e inventário de cada sessão.
  */
-object BleManager {
+object BleManager : BleGateway {
+    private const val TAG = "BleManager"
     private const val REQUESTED_MTU = 512
     private const val SCAN_WINDOW_MS = 5000L
     private const val RESCAN_INTERVAL_MS = 20000L
     private val cccdUuid: UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
     private val _status = MutableStateFlow<BleStatus>(BleStatus.Idle)
-    val status: StateFlow<BleStatus> = _status.asStateFlow()
+    override val status: StateFlow<BleStatus> = _status.asStateFlow()
 
     private val _devices = MutableStateFlow<List<BleDeviceInfo>>(emptyList())
-    val devices: StateFlow<List<BleDeviceInfo>> = _devices.asStateFlow()
+    override val devices: StateFlow<List<BleDeviceInfo>> = _devices.asStateFlow()
 
     private val _radarReport = MutableStateFlow<RadarReport?>(null)
 
     /** Último relatório do modo radar (rastreador portátil), ou null. */
-    val radarReport: StateFlow<RadarReport?> = _radarReport.asStateFlow()
+    override val radarReport: StateFlow<RadarReport?> = _radarReport.asStateFlow()
 
     private val _lastReply = MutableStateFlow<CmdReply?>(null)
 
     /** Último ACK de comando recebido do firmware, ou null. */
-    val lastReply: StateFlow<CmdReply?> = _lastReply.asStateFlow()
+    override val lastReply: StateFlow<CmdReply?> = _lastReply.asStateFlow()
 
     val connectedCount: Int get() = sessions.size
 
@@ -144,7 +146,7 @@ object BleManager {
     }
 
     /** Pede um novo ciclo de escaneamento (usado também no onDestroy do app). */
-    fun rescan() {
+    override fun rescan() {
         if (running) startScanWindow()
     }
 
@@ -457,7 +459,7 @@ object BleManager {
     // ---------------- Comandos (GATT Control) ----------------
 
     /** Adiciona ferramenta no rastreador: {"cmd":"add_tool","name":...,"tag":...} */
-    fun addTool(
+    override fun addTool(
         name: String,
         epc: String,
         onUnavailable: () -> Unit,
@@ -469,7 +471,7 @@ object BleManager {
     }
 
     /** Remove ferramenta do rastreador: id + epc (o firmware casa por EPC se preciso). */
-    fun removeTool(
+    override fun removeTool(
         id: String,
         epc: String,
         onUnavailable: () -> Unit,
@@ -481,7 +483,7 @@ object BleManager {
     }
 
     /** Inicia o modo radar: id + tag (o firmware casa por EPC preferencialmente). */
-    fun startRadar(
+    override fun startRadar(
         toolId: String,
         tag: String,
         onUnavailable: () -> Unit,
@@ -493,7 +495,7 @@ object BleManager {
     }
 
     /** Para o modo radar: {"cmd":"stop_radar"} */
-    fun stopRadar(onUnavailable: () -> Unit) {
+    override fun stopRadar(onUnavailable: () -> Unit) {
         sendControl("""{"cmd":"stop_radar"}""", onUnavailable)
     }
 
@@ -533,7 +535,13 @@ object BleManager {
 
     private fun onInventory(json: String) {
         val tools = InventoryParser.parseInventory(json)
-        scope.launch { repository.saveInventory(tools) }
+        scope.launch {
+            try {
+                repository.saveInventory(tools)
+            } catch (e: Exception) {
+                Log.w(TAG, "Falha ao salvar inventário local", e)
+            }
+        }
     }
 
     private fun onEvent(json: String) {
@@ -544,13 +552,17 @@ object BleManager {
             if (report.tag.isNotBlank()) {
                 val now = System.currentTimeMillis()
                 scope.launch {
-                    repository.updateToolState(
-                        epc = report.tag,
-                        present = report.present,
-                        rssi = report.rssi,
-                        lastSeenAt = now,
-                    )
-                    repository.recordRssi(report.tag, report.rssi)
+                    try {
+                        repository.updateToolState(
+                            epc = report.tag,
+                            present = report.present,
+                            rssi = report.rssi,
+                            lastSeenAt = now,
+                        )
+                        repository.recordRssi(report.tag, report.rssi)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Falha ao espelhar radar_report no inventário", e)
+                    }
                 }
             }
             return

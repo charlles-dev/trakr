@@ -1,7 +1,10 @@
 package app.trakr.ui.tools
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import app.trakr.data.AppContainer
 import app.trakr.model.RssiSample
 import app.trakr.repository.ToolboxRepository
@@ -13,8 +16,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 
-class ToolDetailViewModel : ViewModel() {
-    private val repository = ToolboxRepository(AppContainer.database.toolboxDao())
+class ToolDetailViewModel(
+    private val repository: ToolboxRepository,
+) : ViewModel() {
     private val epc = MutableStateFlow<String?>(null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -29,5 +33,14 @@ class ToolDetailViewModel : ViewModel() {
 
     fun setEpc(value: String) {
         epc.value = value
+    }
+
+    companion object {
+        val Factory: ViewModelProvider.Factory =
+            viewModelFactory {
+                initializer {
+                    ToolDetailViewModel(ToolboxRepository(AppContainer.database.toolboxDao()))
+                }
+            }
     }
 }

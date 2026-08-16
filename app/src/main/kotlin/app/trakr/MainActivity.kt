@@ -20,6 +20,11 @@ import app.trakr.ui.theme.ThemePrefs
 import app.trakr.ui.theme.TrakrTheme
 
 class MainActivity : ComponentActivity() {
+    companion object {
+        /** Extra com o id da ferramenta aberta por notificação (deep link). */
+        const val EXTRA_TARGET_ID = "target_id"
+    }
+
     private val permissionLauncher =
         registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions(),
@@ -27,9 +32,12 @@ class MainActivity : ComponentActivity() {
             if (granted.values.any { it }) startBleService()
         }
 
+    private val pendingTargetId = mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        pendingTargetId.value = intent.getStringExtra(EXTRA_TARGET_ID)
         requestRuntimePermissions()
         setContent {
             var darkTheme by remember { mutableStateOf(ThemePrefs.isDark(this)) }
@@ -40,9 +48,17 @@ class MainActivity : ComponentActivity() {
                         darkTheme = !darkTheme
                         ThemePrefs.setDark(this, darkTheme)
                     },
+                    initialTargetId = pendingTargetId.value,
+                    onTargetConsumed = { pendingTargetId.value = null },
                 )
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        pendingTargetId.value = intent.getStringExtra(EXTRA_TARGET_ID)
     }
 
     private fun startBleService() {

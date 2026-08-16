@@ -2,10 +2,13 @@ package app.trakr.core.notifications
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import app.trakr.MainActivity
 import app.trakr.R
 
 class NotificationService(private val context: Context) {
@@ -26,11 +29,28 @@ class NotificationService(private val context: Context) {
         }
     }
 
-    /** Alerta local quando uma ferramenta não é encontrada. */
-    fun showMissingToolAlert(toolName: String) {
+    /** Alerta local quando uma ferramenta não é encontrada (toque abre o detalhe). */
+    fun showMissingToolAlert(
+        toolName: String,
+        toolId: String,
+    ) {
         val manager = NotificationManagerCompat.from(context)
         // API 33+ exige permissão runtime POST_NOTIFICATIONS.
         if (!manager.areNotificationsEnabled()) return
+
+        val openTool =
+            Intent(context, MainActivity::class.java)
+                .setAction(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_LAUNCHER)
+                .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                .putExtra(MainActivity.EXTRA_TARGET_ID, toolId)
+        val pending =
+            PendingIntent.getActivity(
+                context,
+                toolId.hashCode(),
+                openTool,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
 
         val notification =
             NotificationCompat.Builder(context, CHANNEL_ID)
@@ -38,8 +58,10 @@ class NotificationService(private val context: Context) {
                 .setContentTitle(context.getString(R.string.app_name))
                 .setContentText(context.getString(R.string.notification_tool_missing, toolName))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setContentIntent(pending)
                 .build()
 
-        manager.notify(toolName.hashCode(), notification)
+        manager.notify(toolId.hashCode(), notification)
     }
 }

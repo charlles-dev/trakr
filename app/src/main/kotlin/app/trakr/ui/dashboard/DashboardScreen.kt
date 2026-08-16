@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,18 +20,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.trakr.R
+import app.trakr.core.ble.BleStatus
 import app.trakr.ui.components.ConnectionBanner
 import app.trakr.ui.components.EmptyState
 import app.trakr.ui.components.SectionHeader
@@ -38,6 +48,7 @@ import app.trakr.ui.components.StatTile
 import app.trakr.ui.components.StatusBadge
 import app.trakr.ui.components.ToolCard
 import app.trakr.ui.components.TrakrWordmark
+import app.trakr.ui.components.maxContentWidth
 import app.trakr.ui.theme.AlertRed
 import app.trakr.ui.theme.NeonGreen
 import app.trakr.ui.theme.TrakrMoon
@@ -49,17 +60,32 @@ fun DashboardScreen(
     modifier: Modifier = Modifier,
     darkTheme: Boolean = true,
     onToggleTheme: () -> Unit = {},
-    viewModel: DashboardViewModel = viewModel(),
+    onOpenTools: () -> Unit = {},
+    viewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory),
 ) {
     val tools by viewModel.tools.collectAsStateWithLifecycle(initialValue = emptyList())
     val devices by viewModel.devices.collectAsStateWithLifecycle()
+    val status by viewModel.status.collectAsStateWithLifecycle()
+    val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
     val message by viewModel.message.collectAsStateWithLifecycle()
 
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+
+    // Haptic curto quando o rastreador conecta (ou reconecta).
+    val haptic = LocalHapticFeedback.current
+    var wasConnected by remember { mutableStateOf(false) }
+    LaunchedEffect(devices.isNotEmpty()) {
+        val connectedNow = devices.isNotEmpty()
+        if (connectedNow && !wasConnected) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+        }
+        wasConnected = connectedNow
+    }
 
     LaunchedEffect(message) {
         message?.let {
-            snackbarHostState.showSnackbar(it)
+            snackbarHostState.showSnackbar(it.resolve(context))
             viewModel.consumeMessage()
         }
     }
@@ -94,88 +120,96 @@ fun DashboardScreen(
     ) { padding ->
         val presentCount = tools.count { it.present }
         val missingCount = tools.size - presentCount
+        val connected = devices.isNotEmpty()
+        val scanning = status is BleStatus.Scanning
 
-        if (tools.isEmpty()) {
+        PullToRefreshBox(
+            isRefreshing = refreshing,
+            onRefresh = viewModel::refresh,
+            modifier = Modifier.fillMaxSize().padding(padding),
+        ) {
             Box(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.TopCenter,
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(20.dp),
-                ) {
-                    ConnectionBanner(
-                        deviceName = devices.joinToString { it.name }.ifEmpty { null },
-                        connected = devices.isNotEmpty(),
-                        modifier = Modifier.padding(horizontal = 16.dp),
-                    )
-                    EmptyState(
-                        icon = Icons.Filled.Info,
-                        title = stringResource(R.string.dashboard_empty),
-                        hint = stringResource(R.string.dashboard_empty_hint),
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                item {
-                    ConnectionBanner(
-                        deviceName = devices.joinToString { it.name }.ifEmpty { null },
-                        connected = devices.isNotEmpty(),
-                    )
-                }
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                if (tools.isEmpty()) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().maxContentWidth().fillMaxHeight().padding(horizontal = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(20.dp),
                     ) {
-                        StatTile(
-                            label = stringResource(R.string.stat_total),
-                            value = tools.size.toString(),
-                            modifier = Modifier.weight(1f),
+                        ConnectionBanner(
+                            deviceName = devices.joinToString { it.name }.ifEmpty { null },
+                            connected = connected,
+                            scanning = scanning,
+                            modifier = Modifier.padding(top = 24.dp),
                         )
-                        StatTile(
-                            label = stringResource(R.string.stat_detected),
-                            value = presentCount.toString(),
-                            valueColor = NeonGreen,
-                            modifier = Modifier.weight(1f),
+                        EmptyState(
+                            icon = Icons.Filled.Info,
+                            title = stringResource(R.string.dashboard_empty),
+                            hint = stringResource(R.string.dashboard_empty_hint),
                         )
-                        StatTile(
-                            label = stringResource(R.string.stat_absent),
-                            value = missingCount.toString(),
-                            valueColor = if (missingCount > 0) AlertRed else NeonGreen,
-                            modifier = Modifier.weight(1f),
-                        )
+                        TextButton(onClick = onOpenTools) {
+                            Text(stringResource(R.string.dashboard_empty_cta))
+                        }
                     }
-                }
-                item {
-                    SectionHeader(stringResource(R.string.tools_section))
-                }
-                items(tools, key = { it.id }) { tool ->
-                    ToolCard(
-                        tool = tool,
-                        trailing = {
-                            StatusBadge(
-                                text =
-                                    if (tool.present) {
-                                        stringResource(R.string.status_detected)
-                                    } else {
-                                        stringResource(R.string.status_absent)
-                                    },
-                                color = if (tool.present) NeonGreen else AlertRed,
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth().maxContentWidth().fillMaxHeight(),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        item {
+                            ConnectionBanner(
+                                deviceName = devices.joinToString { it.name }.ifEmpty { null },
+                                connected = connected,
+                                scanning = scanning,
                             )
-                        },
-                    )
+                        }
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                StatTile(
+                                    label = stringResource(R.string.stat_total),
+                                    value = tools.size.toString(),
+                                    modifier = Modifier.weight(1f),
+                                )
+                                StatTile(
+                                    label = stringResource(R.string.stat_detected),
+                                    value = presentCount.toString(),
+                                    valueColor = NeonGreen,
+                                    modifier = Modifier.weight(1f),
+                                )
+                                StatTile(
+                                    label = stringResource(R.string.stat_absent),
+                                    value = missingCount.toString(),
+                                    valueColor = if (missingCount > 0) AlertRed else NeonGreen,
+                                    modifier = Modifier.weight(1f),
+                                )
+                            }
+                        }
+                        item {
+                            SectionHeader(stringResource(R.string.tools_section))
+                        }
+                        items(tools, key = { it.id }) { tool ->
+                            ToolCard(
+                                tool = tool,
+                                trailing = {
+                                    StatusBadge(
+                                        text =
+                                            if (tool.present) {
+                                                stringResource(R.string.status_detected)
+                                            } else {
+                                                stringResource(R.string.status_absent)
+                                            },
+                                        color = if (tool.present) NeonGreen else AlertRed,
+                                    )
+                                },
+                            )
+                        }
+                    }
                 }
             }
         }

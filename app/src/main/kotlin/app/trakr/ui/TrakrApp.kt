@@ -19,6 +19,7 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -52,9 +53,21 @@ private enum class Section(
 fun TrakrApp(
     darkTheme: Boolean = true,
     onToggleTheme: () -> Unit = {},
+    initialTargetId: String? = null,
+    onTargetConsumed: () -> Unit = {},
 ) {
     var current by rememberSaveable { mutableStateOf(Section.Dashboard) }
     var booted by rememberSaveable { mutableStateOf(false) }
+    var pendingToolId by rememberSaveable { mutableStateOf<String?>(null) }
+    var radarTargetId by rememberSaveable { mutableStateOf<String?>(null) }
+
+    // Deep link de notificação: abre a aba Ferramentas no detalhe da ferramenta.
+    LaunchedEffect(initialTargetId) {
+        val id = initialTargetId ?: return@LaunchedEffect
+        pendingToolId = id
+        current = Section.Tools
+        onTargetConsumed()
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -122,10 +135,32 @@ fun TrakrApp(
                             modifier = Modifier.padding(padding),
                             darkTheme = darkTheme,
                             onToggleTheme = onToggleTheme,
+                            onOpenTools = { current = Section.Tools },
                         )
-                    Section.Tools -> ToolListScreen(Modifier.padding(padding))
-                    Section.Alerts -> AlertListScreen(Modifier.padding(padding))
-                    Section.Radar -> RadarScreen(Modifier.padding(padding))
+                    Section.Tools ->
+                        ToolListScreen(
+                            Modifier.padding(padding),
+                            pendingToolId = pendingToolId,
+                            onPendingConsumed = { pendingToolId = null },
+                            onLocate = { id ->
+                                radarTargetId = id
+                                pendingToolId = null
+                                current = Section.Radar
+                            },
+                        )
+                    Section.Alerts ->
+                        AlertListScreen(
+                            Modifier.padding(padding),
+                            onOpenTool = { id ->
+                                pendingToolId = id
+                                current = Section.Tools
+                            },
+                        )
+                    Section.Radar ->
+                        RadarScreen(
+                            Modifier.padding(padding),
+                            pendingTargetId = radarTargetId,
+                        )
                 }
             }
         }

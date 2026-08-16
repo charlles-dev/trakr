@@ -30,6 +30,10 @@ class ToolboxRepository(private val dao: ToolboxDao) {
 
     suspend fun insertAlert(alert: AlertEvent) = dao.insertAlert(alert)
 
+    suspend fun markAlertRead(id: Long) = dao.markAlertRead(id)
+
+    suspend fun clearAlerts() = dao.clearAlerts()
+
     /** Registra uma amostra de RSSI do modo radar para o histórico da tag. */
     suspend fun recordRssi(
         epc: String,

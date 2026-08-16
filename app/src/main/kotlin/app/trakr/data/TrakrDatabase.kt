@@ -10,7 +10,7 @@ import app.trakr.model.Tool
 
 @Database(
     entities = [Tool::class, AlertEvent::class, RssiSample::class],
-    version = 7,
+    version = 8,
     exportSchema = false,
 )
 abstract class TrakrDatabase : RoomDatabase() {

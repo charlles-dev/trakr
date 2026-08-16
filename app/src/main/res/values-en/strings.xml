@@ -10,6 +10,7 @@
     <!-- Components -->
     <string name="connection_live">LIVE</string>
     <string name="connection_offline">OFFLINE</string>
+    <string name="connection_scanning">SEARCHING</string>
     <string name="connection_connected">Tracker connected</string>
     <string name="connection_none">No tracker connected</string>
     <string name="status_detected">DETECTED</string>
@@ -19,6 +20,7 @@
     <!-- Dashboard -->
     <string name="dashboard_empty">Connect your tracker over BLE</string>
     <string name="dashboard_empty_hint">Turn on the tracker and bring your phone close to sync.</string>
+    <string name="dashboard_empty_cta">Manage tools</string>
     <string name="stat_total">TOTAL</string>
     <string name="stat_detected">DETECTED</string>
     <string name="stat_absent">MISSING</string>
@@ -44,6 +46,24 @@
     <string name="msg_adding">Adding \"%1$s\"…</string>
     <string name="msg_removed_local">Tracker offline — removed from the app only</string>
     <string name="msg_removing">Removing \"%1$s\"…</string>
+    <string name="msg_generic_error">Could not complete the operation</string>
+    <string name="msg_added_remote">Saved to tracker</string>
+    <string name="msg_removed_remote">Removed from tracker</string>
+    <string name="msg_confirm_remove_title">Remove %1$s?</string>
+    <string name="msg_confirm_remove_hint">The tool will be removed from the app and the tracker.</string>
+    <string name="action_remove">Remove</string>
+    <string name="dashboard_scanning">Looking for tracker…</string>
+    <string name="action_locate">Locate</string>
+    <string name="action_clear_alerts">Clear alerts</string>
+    <string name="alerts_cleared">Alerts cleared</string>
+    <string name="time_now">now</string>
+    <string name="time_minutes">%1$d min ago</string>
+    <string name="time_hours">%1$d h ago</string>
+    <string name="time_days">%1$d d ago</string>
+    <string name="alerts_today">Today</string>
+    <string name="alerts_yesterday">Yesterday</string>
+    <string name="alerts_day">Earlier</string>
+    <string name="status_new">NEW</string>
 
     <!-- Tool detail -->
     <string name="title_details">Details</string>
