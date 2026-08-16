@@ -22,11 +22,15 @@ class FakeBleGateway : BleGateway {
     val startRadarCalls = mutableListOf<Pair<String, String>>()
     var stopRadarCalls = 0
     var rescanCalls = 0
+    var getConfigCalls = 0
+    val setConfigCalls = mutableListOf<Map<String, Any>>()
 
     var addToolUnavailable: (() -> Unit)? = null
     var removeToolUnavailable: (() -> Unit)? = null
     var startRadarUnavailable: (() -> Unit)? = null
     var stopRadarUnavailable: (() -> Unit)? = null
+    var getConfigUnavailable: (() -> Unit)? = null
+    var setConfigUnavailable: (() -> Unit)? = null
 
     override fun addTool(
         name: String,
@@ -62,5 +66,18 @@ class FakeBleGateway : BleGateway {
 
     override fun rescan() {
         rescanCalls++
+    }
+
+    override fun getConfig(onUnavailable: () -> Unit) {
+        getConfigCalls++
+        getConfigUnavailable = onUnavailable
+    }
+
+    override fun setConfig(
+        fields: Map<String, Any>,
+        onUnavailable: () -> Unit,
+    ) {
+        setConfigCalls += fields
+        setConfigUnavailable = onUnavailable
     }
 }

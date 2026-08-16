@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Radar
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -74,7 +75,6 @@ import app.trakr.ui.components.maxContentWidth
 import app.trakr.ui.motion.pressScale
 import app.trakr.ui.theme.AlertRed
 import app.trakr.ui.theme.MonospaceTypography
-import app.trakr.ui.theme.TrakrRadar
 import app.trakr.ui.theme.TrakrTheme
 import kotlinx.coroutines.launch
 
@@ -175,7 +175,7 @@ fun RadarScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 EmptyState(
-                    icon = TrakrRadar,
+                    icon = Icons.Filled.Radar,
                     title = stringResource(R.string.radar_no_device),
                     hint = stringResource(R.string.radar_no_device_hint),
                 )

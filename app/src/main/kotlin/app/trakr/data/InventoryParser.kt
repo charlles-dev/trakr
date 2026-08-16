@@ -50,7 +50,12 @@ object InventoryParser {
     }
 
     /** ACK de comando: {"type":"cmd_reply","cmd":...,"status":...,"reason":...} */
-    data class CmdReply(val cmd: String, val status: String, val reason: String?)
+    data class CmdReply(
+        val cmd: String,
+        val status: String,
+        val reason: String?,
+        val payload: JSONObject? = null,
+    )
 
     fun parseCmdReply(json: String): CmdReply? {
         return try {
@@ -60,9 +65,31 @@ object InventoryParser {
                 cmd = root.optString("cmd", "?"),
                 status = root.optString("status", "?"),
                 reason = root.optString("reason").ifBlank { null },
+                payload = root,
             )
         } catch (e: JSONException) {
             null
         }
     }
+
+    /** Configurações do TRK-Finder: {"listen_ms":...,"radar_ms":...,"beep":...} */
+    data class TrackerConfig(
+        val listenMs: Int,
+        val radarMs: Int,
+        val beep: Boolean,
+    )
+
+    /** Extrai a config do payload de um cmd_reply get_config/set_config. */
+    fun trackerConfig(reply: CmdReply): TrackerConfig? {
+        if (reply.status != "ok") return null
+        if (reply.cmd != "get_config" && reply.cmd != "set_config") return null
+        val payload = reply.payload ?: return null
+        return TrackerConfig(
+            listenMs = payload.optInt("listen_ms", 30000),
+            radarMs = payload.optInt("radar_ms", 120000),
+            beep = payload.optBoolean("beep", true),
+        )
+    }
+
+    fun parseTrackerConfig(json: String): TrackerConfig? = parseCmdReply(json)?.let { trackerConfig(it) }
 }

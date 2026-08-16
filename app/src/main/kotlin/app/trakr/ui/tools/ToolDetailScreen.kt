@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Radar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -51,7 +52,6 @@ import app.trakr.ui.theme.AlertRed
 import app.trakr.ui.theme.AmberWarn
 import app.trakr.ui.theme.MonospaceTypography
 import app.trakr.ui.theme.NeonGreen
-import app.trakr.ui.theme.TrakrRadar
 import app.trakr.ui.theme.TrakrTheme
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -182,7 +182,7 @@ internal fun ToolDetailContent(
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Icon(
-                        TrakrRadar,
+                        Icons.Filled.Radar,
                         contentDescription = null,
                         modifier = Modifier.size(18.dp),
                     )

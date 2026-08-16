@@ -11,6 +11,12 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Radar
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -33,26 +39,29 @@ import app.trakr.ui.alerts.AlertListScreen
 import app.trakr.ui.dashboard.DashboardScreen
 import app.trakr.ui.motion.TrakrEase
 import app.trakr.ui.radar.RadarScreen
-import app.trakr.ui.theme.TrakrAlert
-import app.trakr.ui.theme.TrakrOps
-import app.trakr.ui.theme.TrakrRadar
-import app.trakr.ui.theme.TrakrToolbox
+import app.trakr.ui.settings.ConfigScreen
 import app.trakr.ui.tools.ToolListScreen
 
 private enum class Section(
     val labelRes: Int,
     val icon: ImageVector,
 ) {
-    Dashboard(R.string.tab_dashboard, TrakrOps),
-    Tools(R.string.tab_tools, TrakrToolbox),
-    Alerts(R.string.tab_alerts, TrakrAlert),
-    Radar(R.string.tab_radar, TrakrRadar),
+    Dashboard(R.string.tab_dashboard, Icons.Filled.Home),
+    Tools(R.string.tab_tools, Icons.Filled.Build),
+    Alerts(R.string.tab_alerts, Icons.Filled.Notifications),
+    Radar(R.string.tab_radar, Icons.Filled.Radar),
+
+    // Não aparece na barra inferior: aberto pelo botão de engrenagem
+    // do Dashboard e fechado pelo botão de voltar.
+    Config(R.string.tab_config, Icons.Filled.Settings),
 }
 
 @Composable
 fun TrakrApp(
     darkTheme: Boolean = true,
     onToggleTheme: () -> Unit = {},
+    absenceAlerts: Boolean = true,
+    onAbsenceAlertsChange: (Boolean) -> Unit = {},
     initialTargetId: String? = null,
     onTargetConsumed: () -> Unit = {},
 ) {
@@ -60,6 +69,7 @@ fun TrakrApp(
     var booted by rememberSaveable { mutableStateOf(false) }
     var pendingToolId by rememberSaveable { mutableStateOf<String?>(null) }
     var radarTargetId by rememberSaveable { mutableStateOf<String?>(null) }
+    var configOpen by rememberSaveable { mutableStateOf(false) }
 
     // Deep link de notificação: abre a aba Ferramentas no detalhe da ferramenta.
     LaunchedEffect(initialTargetId) {
@@ -77,11 +87,14 @@ fun TrakrApp(
                     containerColor = MaterialTheme.colorScheme.surfaceContainer,
                     tonalElevation = 0.dp,
                 ) {
-                    Section.entries.forEach { section ->
+                    Section.entries.filter { it != Section.Config }.forEach { section ->
                         val selected = current == section
                         NavigationBarItem(
                             selected = selected,
-                            onClick = { current = section },
+                            onClick = {
+                                configOpen = false
+                                current = section
+                            },
                             icon = {
                                 Icon(
                                     section.icon,
@@ -119,7 +132,7 @@ fun TrakrApp(
             },
         ) { padding ->
             AnimatedContent(
-                targetState = current,
+                targetState = if (configOpen) Section.Config else current,
                 transitionSpec = {
                     (
                         fadeIn(tween(220, easing = TrakrEase)) +
@@ -133,9 +146,8 @@ fun TrakrApp(
                     Section.Dashboard ->
                         DashboardScreen(
                             modifier = Modifier.padding(padding),
-                            darkTheme = darkTheme,
-                            onToggleTheme = onToggleTheme,
                             onOpenTools = { current = Section.Tools },
+                            onOpenConfig = { configOpen = true },
                         )
                     Section.Tools ->
                         ToolListScreen(
@@ -160,6 +172,15 @@ fun TrakrApp(
                         RadarScreen(
                             Modifier.padding(padding),
                             pendingTargetId = radarTargetId,
+                        )
+                    Section.Config ->
+                        ConfigScreen(
+                            modifier = Modifier.padding(padding),
+                            onBack = { configOpen = false },
+                            darkTheme = darkTheme,
+                            onToggleTheme = onToggleTheme,
+                            absenceAlerts = absenceAlerts,
+                            onAbsenceAlertsChange = onAbsenceAlertsChange,
                         )
                 }
             }

@@ -48,4 +48,13 @@ interface BleGateway {
 
     /** Pede um novo ciclo de escaneamento (re-sincronização manual). */
     fun rescan()
+
+    /** Pede as configurações do rastreador: {"cmd":"get_config"}. */
+    fun getConfig(onUnavailable: () -> Unit)
+
+    /** Altera configs do rastreador (listen_ms/radar_ms/beep): {"cmd":"set_config",...}. */
+    fun setConfig(
+        fields: Map<String, Any>,
+        onUnavailable: () -> Unit,
+    )
 }

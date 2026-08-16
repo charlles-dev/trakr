@@ -19,18 +19,21 @@
 
 #include "pins.h"
 #include "ble_profile.h"
+#include "TrakConfig.h"
 #include "TrakInventory.h"
 #include "TrakYrm100.h"
 #include "TrakBle.h"
 #include "TrakLed.h"
 #include "TrakEvents.h"
 
+static TrakConfig gConfig;
 static TrakInventory gInventory;
 static TrakYrm100 gYrm;
 static TrakBle gBle;
 static TrakLed gLed;
 static TrakEvents gEvents;
 
+static const char* kConfigPath = "/config.json";
 static const char* kInventoryPath = "/inventory.json";
 static const char* kEventsPath = "/events.json";
 
@@ -45,8 +48,6 @@ enum class State {
 static State gState = State::ESCUTA;
 static unsigned long gStateSince = 0;
 
-static const unsigned long kListenMs = 30000;     // espera em ESCUTA antes de dormir
-static const unsigned long kRadarMs = 120000;     // duração máxima do modo radar
 static const unsigned long kRadarSweepMs = 400;   // varredura por ciclo do modo radar
 static const unsigned long kSweepMs = 500;        // varredura documentada em ~500 ms
 static const unsigned long kSyncWindowMs = 30000; // janela BLE pós-varredura
@@ -174,6 +175,10 @@ static void radarSweepPublish() {
 // Bip "detector de metais": quanto mais forte o sinal (rssi mais próximo de
 // 0), menor o intervalo e mais rápido o bip. Sem sinal = bip lento e espaçado.
 static void radarBeep(int8_t rssi) {
+  if (!gConfig.beep()) {
+    digitalWrite(BUZZER_PIN, LOW);
+    return;
+  }
   long interval = rssi >= -80 ? map(constrain(rssi, -80, -30), -80, -30, 1000, 100)
                               : 1000;
   const bool on = (millis() % (interval * 2)) < interval;
@@ -210,6 +215,73 @@ static void handleControlCommand(const String& json) {
   }
 
   const char* cmd = doc["cmd"] | "";
+
+  // Configurações do dispositivo: o app lê e altera via config.json.
+  // get_config responde com os valores atuais; set_config aceita campos
+  // parciais (listen_ms/radar_ms/beep) e persiste no LittleFS.
+  if (strcmp(cmd, "get_config") == 0) {
+    JsonDocument out;
+    out["type"] = "cmd_reply";
+    out["cmd"] = "get_config";
+    out["status"] = "ok";
+    out["listen_ms"] = gConfig.listenMs();
+    out["radar_ms"] = gConfig.radarMs();
+    out["beep"] = gConfig.beep();
+    String jsonOut;
+    serializeJson(out, jsonOut);
+    gBle.notifyEvent(jsonOut);
+    return;
+  }
+
+  if (strcmp(cmd, "set_config") == 0) {
+    const bool hasListen = !doc["listen_ms"].isNull();
+    const bool hasRadar = !doc["radar_ms"].isNull();
+    const bool hasBeep = !doc["beep"].isNull();
+    if (!hasListen && !hasRadar && !hasBeep) {
+      replyControl("set_config", "error", "missing_fields");
+      return;
+    }
+    const unsigned long oldListen = gConfig.listenMs();
+    const unsigned long oldRadar = gConfig.radarMs();
+    const bool oldBeep = gConfig.beep();
+    if (hasListen) {
+      const unsigned long v = doc["listen_ms"] | 0ul;
+      if (v < 5000 || v > 300000) {
+        replyControl("set_config", "error", "invalid_value");
+        return;
+      }
+      gConfig.setListenMs(v);
+    }
+    if (hasRadar) {
+      const unsigned long v = doc["radar_ms"] | 0ul;
+      if (v < 10000 || v > 600000) {
+        replyControl("set_config", "error", "invalid_value");
+        return;
+      }
+      gConfig.setRadarMs(v);
+    }
+    if (hasBeep) gConfig.setBeep(doc["beep"] | true);
+    if (!gConfig.save(LittleFS, kConfigPath)) {
+      gConfig.setListenMs(oldListen);
+      gConfig.setRadarMs(oldRadar);
+      gConfig.setBeep(oldBeep);
+      Serial.printf("[TRAKR] ERRO: falha ao salvar %s\n", kConfigPath);
+      replyControl("set_config", "error", "save_failed");
+      return;
+    }
+    Serial.printf("[TRAKR] Config atualizada: %s\n", gConfig.toJsonString().c_str());
+    JsonDocument out;
+    out["type"] = "cmd_reply";
+    out["cmd"] = "set_config";
+    out["status"] = "ok";
+    out["listen_ms"] = gConfig.listenMs();
+    out["radar_ms"] = gConfig.radarMs();
+    out["beep"] = gConfig.beep();
+    String jsonOut;
+    serializeJson(out, jsonOut);
+    gBle.notifyEvent(jsonOut);
+    return;
+  }
 
   if (strcmp(cmd, "rescan") == 0) {
     enter(State::LEITURA);
@@ -451,6 +523,8 @@ void setup() {
     Serial.println("[TRAKR] ERRO: falha ao montar LittleFS");
   }
 
+  gConfig.load(LittleFS, kConfigPath);
+
   if (!gInventory.load(LittleFS, kInventoryPath)) {
     Serial.println("[TRAKR] Inventário vazio — gravar inventory.json em data/");
   }
@@ -493,7 +567,7 @@ void loop() {
       // Espera ativa: LED verde, dorme após o tempo sem interação.
       gLed.set(TrakLed::Color::READY);
       if (buttonPressed()) enter(State::LEITURA);
-      if (millis() - gStateSince >= kListenMs) enter(State::DORME);
+      if (millis() - gStateSince >= gConfig.listenMs()) enter(State::DORME);
       break;
 
     case State::RASTREIA:
@@ -503,7 +577,7 @@ void loop() {
         gRadarTargetEpc = "";
         digitalWrite(BUZZER_PIN, LOW);
         enter(State::LEITURA);
-      } else if (millis() - gStateSince >= kRadarMs) {
+      } else if (millis() - gStateSince >= gConfig.radarMs()) {
         gRadarTargetEpc = "";
         digitalWrite(BUZZER_PIN, LOW);
         enter(State::SINCRONIZA);

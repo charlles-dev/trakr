@@ -143,4 +143,61 @@ class InventoryParserTest {
     fun parseCmdReply_otherTypeReturnsNull() {
         assertNull(InventoryParser.parseCmdReply("""{"type":"radar_report","rssi":-50}"""))
     }
+
+    // ---------------- parseTrackerConfig ----------------
+
+    @Test
+    fun parseTrackerConfig_mapsConfig() {
+        val config =
+            InventoryParser.parseTrackerConfig(
+                """{"type":"cmd_reply","cmd":"get_config","status":"ok","listen_ms":15000,"radar_ms":60000,"beep":false}""",
+            )
+
+        assertEquals(15000, config?.listenMs)
+        assertEquals(60000, config?.radarMs)
+        assertEquals(false, config?.beep)
+    }
+
+    @Test
+    fun parseTrackerConfig_setConfigReplyAlsoMaps() {
+        val config =
+            InventoryParser.parseTrackerConfig(
+                """{"type":"cmd_reply","cmd":"set_config","status":"ok","listen_ms":30000,"radar_ms":120000,"beep":true}""",
+            )
+
+        assertEquals(30000, config?.listenMs)
+        assertEquals(120000, config?.radarMs)
+        assertEquals(true, config?.beep)
+    }
+
+    @Test
+    fun parseTrackerConfig_missingFieldsFallBackToDefaults() {
+        val config =
+            InventoryParser.parseTrackerConfig(
+                """{"type":"cmd_reply","cmd":"get_config","status":"ok"}""",
+            )
+
+        assertEquals(30000, config?.listenMs)
+        assertEquals(120000, config?.radarMs)
+        assertEquals(true, config?.beep)
+    }
+
+    @Test
+    fun parseTrackerConfig_errorStatusReturnsNull() {
+        assertNull(
+            InventoryParser.parseTrackerConfig(
+                """{"type":"cmd_reply","cmd":"set_config","status":"error","reason":"save_failed"}""",
+            ),
+        )
+    }
+
+    @Test
+    fun parseTrackerConfig_otherCommandReturnsNull() {
+        assertNull(
+            InventoryParser.parseTrackerConfig(
+                """{"type":"cmd_reply","cmd":"rescan","status":"ok"}""",
+            ),
+        )
+        assertNull(InventoryParser.parseTrackerConfig("not json"))
+    }
 }

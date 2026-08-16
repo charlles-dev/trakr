@@ -2,7 +2,7 @@
 
 <div align="center">
   <!-- Insira o caminho para a logo vetorizada aqui -->
-  <img src="https://repository-images.githubusercontent.com/1327015653/0a6bcd2f-e1b1-449b-9da8-ee9157fb2588" alt="Trakr Logo" width="400">
+  <img src="https://repository-images.githubusercontent.com/1327015653/0a6bcd2f-e1b1-49b-9da8-ee9157fb2588" alt="Trakr Logo" width="400">
 </div>
 
 <p align="center">

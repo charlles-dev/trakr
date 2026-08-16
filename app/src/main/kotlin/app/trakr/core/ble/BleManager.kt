@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import java.util.UUID
 
 /** Estado global do motor BLE (scan/erros). */
@@ -497,6 +498,22 @@ object BleManager : BleGateway {
     /** Para o modo radar: {"cmd":"stop_radar"} */
     override fun stopRadar(onUnavailable: () -> Unit) {
         sendControl("""{"cmd":"stop_radar"}""", onUnavailable)
+    }
+
+    /** Pede as configurações do rastreador: {"cmd":"get_config"} */
+    override fun getConfig(onUnavailable: () -> Unit) {
+        sendControl("""{"cmd":"get_config"}""", onUnavailable)
+    }
+
+    /** Altera configs do rastreador: {"cmd":"set_config",...} */
+    override fun setConfig(
+        fields: Map<String, Any>,
+        onUnavailable: () -> Unit,
+    ) {
+        val doc = JSONObject()
+        doc.put("cmd", "set_config")
+        fields.forEach { (key, value) -> doc.put(key, value) }
+        sendControl(doc.toString(), onUnavailable)
     }
 
     // ---------------- OTA (firmware) ----------------

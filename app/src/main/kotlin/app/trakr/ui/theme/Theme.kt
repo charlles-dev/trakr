@@ -15,8 +15,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.trakr.R
 
-// Cores da marca: verde neon "ops room" sobre grafite profundo.
-val NeonGreen = Color(0xFF2EE69B)
+// Cores da marca: verde-teal "ops room" sobre grafite profundo.
+val NeonGreen = Color(0xFF20B898)
 val AmberWarn = Color(0xFFF0AE4E)
 val AlertRed = Color(0xFFFF6B6B)
 

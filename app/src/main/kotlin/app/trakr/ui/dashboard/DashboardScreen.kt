@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -51,16 +52,13 @@ import app.trakr.ui.components.TrakrWordmark
 import app.trakr.ui.components.maxContentWidth
 import app.trakr.ui.theme.AlertRed
 import app.trakr.ui.theme.NeonGreen
-import app.trakr.ui.theme.TrakrMoon
-import app.trakr.ui.theme.TrakrSun
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     modifier: Modifier = Modifier,
-    darkTheme: Boolean = true,
-    onToggleTheme: () -> Unit = {},
     onOpenTools: () -> Unit = {},
+    onOpenConfig: () -> Unit = {},
     viewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory),
 ) {
     val tools by viewModel.tools.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -101,15 +99,10 @@ fun DashboardScreen(
                     ),
                 title = { TrakrWordmark() },
                 actions = {
-                    IconButton(onClick = onToggleTheme) {
+                    IconButton(onClick = onOpenConfig) {
                         Icon(
-                            imageVector = if (darkTheme) TrakrSun else TrakrMoon,
-                            contentDescription =
-                                if (darkTheme) {
-                                    stringResource(R.string.action_theme_light)
-                                } else {
-                                    stringResource(R.string.action_theme_dark)
-                                },
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = stringResource(R.string.action_open_config),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }

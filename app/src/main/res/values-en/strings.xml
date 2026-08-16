@@ -6,6 +6,8 @@
     <string name="tab_tools">Tools</string>
     <string name="tab_alerts">Alerts</string>
     <string name="tab_radar">Radar</string>
+    <string name="tab_config">Settings</string>
+    <string name="action_open_config">Settings</string>
 
     <!-- Components -->
     <string name="connection_live">LIVE</string>
@@ -25,8 +27,6 @@
     <string name="stat_detected">DETECTED</string>
     <string name="stat_absent">MISSING</string>
     <string name="tools_section">TOOLS</string>
-    <string name="action_theme_light">Light theme</string>
-    <string name="action_theme_dark">Dark theme</string>
 
     <!-- Tools -->
     <string name="action_add_tool">Add tool</string>
@@ -145,4 +145,28 @@
     <string name="ble_error_notifications">Failed to enable BLE notifications</string>
     <string name="ble_device_fallback">Trakr Radar %1$s</string>
     <string name="ble_multiple_devices">%1$d trackers</string>
+
+    <!-- Settings -->
+    <string name="settings_section_app">App</string>
+    <string name="settings_section_tracker">TRK-Finder</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_absence_alerts">Absence alerts</string>
+    <string name="settings_absence_alerts_hint">Notifies when a tool goes missing.</string>
+    <string name="settings_about_hint">Version %1$s</string>
+    <string name="settings_tracker_connection">Connection</string>
+    <string name="settings_tracker_disconnected">No TRK-Finder connected</string>
+    <string name="settings_beep">Radar beep</string>
+    <string name="settings_beep_hint">Metal detector while locating a tool.</string>
+    <string name="settings_listen_ms">Listen timeout</string>
+    <string name="settings_listen_ms_hint">Active time before sleeping.</string>
+    <string name="settings_radar_ms">Radar duration</string>
+    <string name="settings_radar_ms_hint">Maximum search time.</string>
+    <string name="settings_tracker_unavailable">Connect a TRK-Finder to adjust the tracker.</string>
+    <string name="settings_seconds">%1$d s</string>
+    <string name="settings_minutes">%1$d min</string>
+    <string name="action_reload">Reload</string>
+    <string name="msg_config_failed">Failed to update tracker settings</string>
 </resources>

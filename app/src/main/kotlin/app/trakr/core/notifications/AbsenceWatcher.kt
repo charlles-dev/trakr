@@ -6,6 +6,7 @@ import app.trakr.data.AppContainer
 import app.trakr.model.AlertEvent
 import app.trakr.model.Tool
 import app.trakr.repository.ToolboxRepository
+import app.trakr.ui.settings.SettingsPrefs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -25,7 +26,7 @@ import kotlinx.coroutines.launch
  * o celular bloqueado. O dedupe é por ferramenta: só dispara de novo depois
  * que a tag voltar a ser vista (present = true).
  */
-class AbsenceWatcher(context: Context) {
+class AbsenceWatcher(private val context: Context) {
     companion object {
         private const val TAG = "AbsenceWatcher"
 
@@ -89,6 +90,12 @@ class AbsenceWatcher(context: Context) {
     }
 
     private suspend fun check(tools: List<Tool>) {
+        // Alertas desativados na Config: limpa o dedupe para que a reativação
+        // notifique imediatamente as ferramentas que continuam ausentes.
+        if (!SettingsPrefs.absenceAlertsEnabled(context)) {
+            alerted.clear()
+            return
+        }
         val now = System.currentTimeMillis()
         evaluateAbsent(tools, now, alerted).forEach { tool ->
             try {

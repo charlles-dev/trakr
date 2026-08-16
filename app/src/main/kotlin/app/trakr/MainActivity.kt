@@ -16,6 +16,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import app.trakr.core.ble.BleForegroundService
 import app.trakr.ui.TrakrApp
+import app.trakr.ui.settings.SettingsPrefs
 import app.trakr.ui.theme.ThemePrefs
 import app.trakr.ui.theme.TrakrTheme
 
@@ -41,12 +42,18 @@ class MainActivity : ComponentActivity() {
         requestRuntimePermissions()
         setContent {
             var darkTheme by remember { mutableStateOf(ThemePrefs.isDark(this)) }
+            var absenceAlerts by remember { mutableStateOf(SettingsPrefs.absenceAlertsEnabled(this)) }
             TrakrTheme(darkTheme = darkTheme) {
                 TrakrApp(
                     darkTheme = darkTheme,
                     onToggleTheme = {
                         darkTheme = !darkTheme
                         ThemePrefs.setDark(this, darkTheme)
+                    },
+                    absenceAlerts = absenceAlerts,
+                    onAbsenceAlertsChange = { enabled ->
+                        absenceAlerts = enabled
+                        SettingsPrefs.setAbsenceAlertsEnabled(this, enabled)
                     },
                     initialTargetId = pendingTargetId.value,
                     onTargetConsumed = { pendingTargetId.value = null },
