@@ -128,7 +128,10 @@ class ConfigViewModel(
     val allToolSettings = ToolRepository(AppContainer.database.toolDao()).observeAllToolSettings()
     val trackerMutes = ToolRepository(AppContainer.database.toolDao()).observeTrackerMutes()
 
-    fun setToolMuted(toolId: String, muted: Boolean) {
+    fun setToolMuted(
+        toolId: String,
+        muted: Boolean,
+    ) {
         viewModelScope.launch {
             val repo = ToolRepository(AppContainer.database.toolDao())
             val existing = repo.observeToolSetting(toolId)
@@ -136,7 +139,8 @@ class ConfigViewModel(
             var current: app.trakr.model.ToolAlertSetting? = null
             try {
                 current = daoGetToolSetting(toolId)
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+            }
             val newSetting = (current ?: app.trakr.model.ToolAlertSetting(toolId = toolId)).copy(muted = muted)
             repo.upsertToolSetting(newSetting)
         }
@@ -146,7 +150,10 @@ class ConfigViewModel(
         return AppContainer.database.toolDao().getAllToolSettings().find { it.toolId == toolId }
     }
 
-    fun setTrackerMuted(address: String, muted: Boolean) {
+    fun setTrackerMuted(
+        address: String,
+        muted: Boolean,
+    ) {
         viewModelScope.launch {
             val repo = ToolRepository(AppContainer.database.toolDao())
             repo.setTrackerMute(app.trakr.model.TrackerMute(address = address, muted = muted))
@@ -235,17 +242,18 @@ class ConfigViewModel(
                         if (reply.status == "ok") {
                             val p = reply.payload
                             if (p != null) {
-                                _sensors.value = SensorInfo(
-                                    hasOled = p.optBoolean("has_oled", false),
-                                    hasIna219 = p.optBoolean("has_ina219", false),
-                                    hasBme280 = p.optBoolean("has_bme280", false),
-                                    hasMpu = p.optBoolean("has_mpu", false),
-                                    hasVib = p.optBoolean("has_vib", false),
-                                    hasBtn2 = p.optBoolean("has_btn2", false),
-                                    txPowerDbm = p.optInt("tx_power_dbm", 26),
-                                    rssiOffset = p.optInt("rssi_offset", 0),
-                                    env = p.optString("env", "default"),
-                                )
+                                _sensors.value =
+                                    SensorInfo(
+                                        hasOled = p.optBoolean("has_oled", false),
+                                        hasIna219 = p.optBoolean("has_ina219", false),
+                                        hasBme280 = p.optBoolean("has_bme280", false),
+                                        hasMpu = p.optBoolean("has_mpu", false),
+                                        hasVib = p.optBoolean("has_vib", false),
+                                        hasBtn2 = p.optBoolean("has_btn2", false),
+                                        txPowerDbm = p.optInt("tx_power_dbm", 26),
+                                        rssiOffset = p.optInt("rssi_offset", 0),
+                                        env = p.optString("env", "default"),
+                                    )
                             }
                         }
                     }

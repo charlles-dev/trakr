@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -20,7 +21,6 @@ import app.trakr.ui.TrakrApp
 import app.trakr.ui.settings.SettingsPrefs
 import app.trakr.ui.theme.ThemePrefs
 import app.trakr.ui.theme.TrakrTheme
-import android.widget.Toast
 
 class MainActivity : ComponentActivity() {
     companion object {
@@ -76,7 +76,8 @@ class MainActivity : ComponentActivity() {
     private fun handleNfcIntent(intent: Intent) {
         if (intent.action == android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED ||
             intent.action == android.nfc.NfcAdapter.ACTION_TAG_DISCOVERED ||
-            intent.action == android.nfc.NfcAdapter.ACTION_TECH_DISCOVERED) {
+            intent.action == android.nfc.NfcAdapter.ACTION_TECH_DISCOVERED
+        ) {
             val nfcData = NfcPairingManager.parseIntent(intent)
             if (nfcData != null) {
                 pendingNfcBle.value = nfcData.bleAddress ?: nfcData.raw
