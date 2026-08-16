@@ -21,7 +21,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
+            // Assina release com debug keystore para ser instalável diretamente sem certificados de produção.
+            // Trocar por keystore de produção quando houver (via env KEYSTORE_*).
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

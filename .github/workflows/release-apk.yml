@@ -31,5 +31,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           APK=$(ls build/outputs/apk/release/*.apk | head -1)
-          gh release upload "${{ github.event.release.tag_name }}" "$APK"
-          gh release upload "${{ github.event.release.tag_name }}" "$APK:trakr.apk"
+          cp "$APK" build/outputs/apk/release/trakr.apk
+          gh release upload "${{ github.event.release.tag_name }}" "$APK" --clobber
+          gh release upload "${{ github.event.release.tag_name }}" build/outputs/apk/release/trakr.apk --clobber
