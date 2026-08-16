@@ -19,11 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import app.trakr.R
 import app.trakr.ui.components.maxContentWidth
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -78,7 +76,13 @@ fun StatsScreen(
                     Text("Ferramentas mais esquecidas", style = MaterialTheme.typography.titleSmall)
                 }
                 if (mostForgotten.isEmpty()) {
-                    item { Text("Nenhum alerta registrado", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    item {
+                        Text(
+                            "Nenhum alerta registrado",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 } else {
                     items(mostForgotten) { item ->
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -88,16 +92,35 @@ fun StatsScreen(
                     }
                 }
 
-                item { HorizontalDivider(Modifier.padding(vertical = 4.dp)); Text("Ausentes há mais tempo", style = MaterialTheme.typography.titleSmall) }
+                item {
+                    HorizontalDivider(Modifier.padding(vertical = 4.dp))
+                    Text("Ausentes há mais tempo", style = MaterialTheme.typography.titleSmall)
+                }
                 if (longestAbsent.isEmpty()) {
-                    item { Text("Todas presentes", style = MaterialTheme.typography.bodySmall) }
+                    item {
+                        Text(
+                            "Todas presentes",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
                 } else {
                     items(longestAbsent) { tool ->
-                        Text("${tool.name} — ausente desde ${tool.lastSeenAt?.let { java.text.SimpleDateFormat("dd/MM HH:mm").format(java.util.Date(it)) } ?: "--"}", style = MaterialTheme.typography.bodySmall)
+                        val fmt = java.text.SimpleDateFormat("dd/MM HH:mm")
+                        val dateStr =
+                            tool.lastSeenAt?.let {
+                                fmt.format(java.util.Date(it))
+                            } ?: "--"
+                        Text(
+                            "${tool.name} — ausente desde $dateStr",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
                     }
                 }
 
-                item { HorizontalDivider(Modifier.padding(vertical = 4.dp)); Text("Varreduras por dia", style = MaterialTheme.typography.titleSmall) }
+                item {
+                    HorizontalDivider(Modifier.padding(vertical = 4.dp))
+                    Text("Varreduras por dia", style = MaterialTheme.typography.titleSmall)
+                }
                 items(scansPerDay) { dc ->
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(dc.day, style = MaterialTheme.typography.bodySmall)
@@ -105,7 +128,10 @@ fun StatsScreen(
                     }
                 }
 
-                item { HorizontalDivider(Modifier.padding(vertical = 4.dp)); Text("Alertas por dia", style = MaterialTheme.typography.titleSmall) }
+                item {
+                    HorizontalDivider(Modifier.padding(vertical = 4.dp))
+                    Text("Alertas por dia", style = MaterialTheme.typography.titleSmall)
+                }
                 items(alertsPerDay) { dc ->
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(dc.day, style = MaterialTheme.typography.bodySmall)
@@ -113,10 +139,18 @@ fun StatsScreen(
                     }
                 }
 
-                item { HorizontalDivider(Modifier.padding(vertical = 4.dp)); Text("Últimas sessões de varredura", style = MaterialTheme.typography.titleSmall) }
+                item {
+                    HorizontalDivider(Modifier.padding(vertical = 4.dp))
+                    Text("Últimas sessões de varredura", style = MaterialTheme.typography.titleSmall)
+                }
                 items(recentScans) { s ->
+                    val fmt = java.text.SimpleDateFormat("dd/MM HH:mm")
+                    val dateStr = fmt.format(java.util.Date(s.ts))
+                    val line =
+                        "$dateStr — ${s.toolsSeen}/${s.toolsTotal} via " +
+                            "${s.triggeredBy} (${s.connectedTrackers} trackers)"
                     Text(
-                        "${java.text.SimpleDateFormat("dd/MM HH:mm").format(java.util.Date(s.ts))} — ${s.toolsSeen}/${s.toolsTotal} vistas via ${s.triggeredBy} (${s.connectedTrackers} trackers)",
+                        line,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

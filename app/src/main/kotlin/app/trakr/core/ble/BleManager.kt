@@ -564,7 +564,10 @@ object BleManager : BleGateway {
         sendControl("""{"cmd":"get_addons"}""", onUnavailable)
     }
 
-    override fun startLive(intervalMs: Int, onUnavailable: () -> Unit) {
+    override fun startLive(
+        intervalMs: Int,
+        onUnavailable: () -> Unit,
+    ) {
         sendControl("""{"cmd":"start_live","interval_ms":$intervalMs}""", onUnavailable)
     }
 
@@ -572,14 +575,20 @@ object BleManager : BleGateway {
         sendControl("""{"cmd":"stop_live"}""", onUnavailable)
     }
 
-    override fun startMultiRadar(tags: List<String>, onUnavailable: () -> Unit) {
+    override fun startMultiRadar(
+        tags: List<String>,
+        onUnavailable: () -> Unit,
+    ) {
         val doc = JSONObject()
         doc.put("cmd", "start_radar_multi")
         doc.put("tags", org.json.JSONArray(tags))
         sendControl(doc.toString(), onUnavailable)
     }
 
-    override fun setTxPower(dbm: Int, onUnavailable: () -> Unit) {
+    override fun setTxPower(
+        dbm: Int,
+        onUnavailable: () -> Unit,
+    ) {
         sendControl("""{"cmd":"set_tx_power","dbm":$dbm}""", onUnavailable)
     }
 
@@ -617,7 +626,7 @@ object BleManager : BleGateway {
 
     // ---------------- PersistÃªncia ----------------
 
-        private fun onInventory(json: String) {
+    private fun onInventory(json: String) {
         val tools = InventoryParser.parseInventory(json)
         scope.launch {
             try {
@@ -662,7 +671,10 @@ object BleManager : BleGateway {
             _liveReport.value = live
             scope.launch {
                 live.reads.forEach { r ->
-                    try { repository.recordRssi(r.tag, r.rssi) } catch (_: Exception) {}
+                    try {
+                        repository.recordRssi(r.tag, r.rssi)
+                    } catch (_: Exception) {
+                    }
                 }
             }
             return

@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:max-line-length", "MaxLineLength")
+
 package app.trakr.ui.settings
 
 import androidx.compose.foundation.layout.Box
@@ -79,11 +81,12 @@ fun ConfigScreen(
 
     LaunchedEffect(backupJson) {
         backupJson?.let { json ->
-            val sendIntent = android.content.Intent().apply {
-                action = android.content.Intent.ACTION_SEND
-                putExtra(android.content.Intent.EXTRA_TEXT, json)
-                type = "text/plain"
-            }
+            val sendIntent =
+                android.content.Intent().apply {
+                    action = android.content.Intent.ACTION_SEND
+                    putExtra(android.content.Intent.EXTRA_TEXT, json)
+                    type = "text/plain"
+                }
             val chooser = android.content.Intent.createChooser(sendIntent, "Backup Trakr")
             context.startActivity(chooser)
             viewModel.consumeBackup()
@@ -184,12 +187,22 @@ fun ConfigScreen(
                     modifier = Modifier.padding(top = 4.dp),
                 )
                 Text(
-                    text = when (bleStatus) {
-                        is BleStatus.Connected -> "${stringResource(R.string.settings_connected)}: ${(bleStatus as BleStatus.Connected).deviceName}"
-                        BleStatus.Scanning -> "Scanning…"
-                        BleStatus.Disabled -> stringResource(R.string.settings_disconnected) + " (BLE off)"
-                        else -> if (isConnected) stringResource(R.string.settings_connected) else stringResource(R.string.settings_disconnected)
-                    },
+                    text =
+                        when (bleStatus) {
+                            is BleStatus.Connected -> "${stringResource(
+                                R.string.settings_connected,
+                            )}: ${(bleStatus as BleStatus.Connected).deviceName}"
+                            BleStatus.Scanning -> "Scanning…"
+                            BleStatus.Disabled -> stringResource(R.string.settings_disconnected) + " (BLE off)"
+                            else ->
+                                if (isConnected) {
+                                    stringResource(
+                                        R.string.settings_connected,
+                                    )
+                                } else {
+                                    stringResource(R.string.settings_disconnected)
+                                }
+                        },
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (isConnected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -202,7 +215,14 @@ fun ConfigScreen(
                 }
                 if (config != null && config!!.hasPin) {
                     Text(
-                        text = if (config!!.authed) stringResource(R.string.settings_authed) + " — ${config!!.authExpiresMs / 1000}s" else stringResource(R.string.settings_not_authed),
+                        text =
+                            if (config!!.authed) {
+                                stringResource(R.string.settings_authed) + " — ${config!!.authExpiresMs / 1000}s"
+                            } else {
+                                stringResource(
+                                    R.string.settings_not_authed,
+                                )
+                            },
                         style = MaterialTheme.typography.bodySmall,
                         color = if (config!!.authed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(top = 2.dp),
@@ -211,9 +231,10 @@ fun ConfigScreen(
 
                 // Ações: Varrer agora + Recarregar
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
                 ) {
                     OutlinedButton(
                         onClick = viewModel::rescan,
@@ -243,14 +264,23 @@ fun ConfigScreen(
                     HorizontalDivider(Modifier.padding(vertical = 8.dp))
                     Text("Add-ons detectados", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
                     Text(
-                        text = if (addons.isEmpty() && sensors == null) "Carregando..." else if (addons.isEmpty()) "Nenhum add-on opcional detectado — base: LED, buzzer, radar, bateria (sim), etc."
-                        else "Detectados: ${addons.joinToString(", ")}",
+                        text =
+                            if (addons.isEmpty() && sensors == null) {
+                                "Carregando..."
+                            } else if (addons.isEmpty()) {
+                                "Nenhum add-on opcional detectado — base: LED, buzzer, radar, bateria (sim), etc."
+                            } else {
+                                "Detectados: ${addons.joinToString(", ")}"
+                            },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     sensors?.let { s ->
                         Column(modifier = Modifier.padding(top = 4.dp)) {
-                            Text("TX ${s.txPowerDbm} dBm, offset ${s.rssiOffset} dB, env ${s.env}", style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                "TX ${s.txPowerDbm} dBm, offset ${s.rssiOffset} dB, env ${s.env}",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
                             Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
                                 if (s.hasOled) Text("OLED", style = MaterialTheme.typography.labelSmall)
                                 if (s.hasIna219) Text("INA219", style = MaterialTheme.typography.labelSmall)
@@ -261,7 +291,11 @@ fun ConfigScreen(
                             }
                         }
                     }
-                    OutlinedButton(onClick = { viewModel.loadSensors() }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp), enabled = isConnected) {
+                    OutlinedButton(
+                        onClick = { viewModel.loadSensors() },
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                        enabled = isConnected,
+                    ) {
                         Text("Recarregar diagnóstico")
                     }
                 }
@@ -292,7 +326,7 @@ fun ConfigScreen(
                     hint = "Calibração por ambiente (campo, galpão metálico)",
                     valueLabel = "${config?.rssiOffset ?: sensors?.rssiOffset ?: 0} dB (env: ${config?.envProfile ?: sensors?.env ?: "default"})",
                     enabled = trackerAvailable,
-                    options = offsetOptions.map { it to "${it} dB" },
+                    options = offsetOptions.map { it to "$it dB" },
                     onSelect = viewModel::setRssiOffset,
                 )
                 val thOptions = listOf(-80, -70, -60, -50, -40)
@@ -397,7 +431,14 @@ fun ConfigScreen(
                     modifier = Modifier.padding(bottom = 4.dp),
                 )
                 Text(
-                    text = if (config?.hasPin == true) stringResource(R.string.settings_pin_set) else stringResource(R.string.settings_pin_not_set),
+                    text =
+                        if (config?.hasPin == true) {
+                            stringResource(
+                                R.string.settings_pin_set,
+                            )
+                        } else {
+                            stringResource(R.string.settings_pin_not_set)
+                        },
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (config?.hasPin == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -411,13 +452,17 @@ fun ConfigScreen(
                 if (config?.hasPin == true && config?.authed == false) {
                     OutlinedTextField(
                         value = authPin,
-                        onValueChange = { authPin = it; pinError = null },
+                        onValueChange = {
+                            authPin = it
+                            pinError = null
+                        },
                         label = { Text(stringResource(R.string.settings_pin_auth)) },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
                     )
                     Button(
                         onClick = {
@@ -428,9 +473,10 @@ fun ConfigScreen(
                                 authPin = ""
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 8.dp),
                         enabled = isConnected,
                     ) {
                         Text(stringResource(R.string.action_auth))
@@ -440,23 +486,31 @@ fun ConfigScreen(
                 // Novo PIN / troca de PIN
                 OutlinedTextField(
                     value = newPin,
-                    onValueChange = { newPin = it; pinError = null },
+                    onValueChange = {
+                        newPin = it
+                        pinError = null
+                    },
                     label = { Text(stringResource(R.string.settings_pin_new)) },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
                 )
                 OutlinedTextField(
                     value = confirmPin,
-                    onValueChange = { confirmPin = it; pinError = null },
+                    onValueChange = {
+                        confirmPin = it
+                        pinError = null
+                    },
                     label = { Text(stringResource(R.string.settings_pin_confirm)) },
                     visualTransformation = PasswordVisualTransformation(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
                 )
                 pinError?.let {
                     Text(
@@ -467,9 +521,10 @@ fun ConfigScreen(
                     )
                 }
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
                 ) {
                     Button(
                         onClick = {
@@ -519,7 +574,10 @@ fun ConfigScreen(
                     if (isConnected) viewModel.loadSensors()
                 }
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+                ) {
                     Button(onClick = { viewModel.exportBackup() }, modifier = Modifier.weight(1f)) {
                         Text(stringResource(R.string.action_export_backup))
                     }

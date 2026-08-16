@@ -123,7 +123,10 @@ class FakeBleGateway : BleGateway {
         getAddonsCalls++
     }
 
-    override fun startLive(intervalMs: Int, onUnavailable: () -> Unit) {
+    override fun startLive(
+        intervalMs: Int,
+        onUnavailable: () -> Unit,
+    ) {
         startLiveCalls++
     }
 
@@ -131,11 +134,17 @@ class FakeBleGateway : BleGateway {
         stopLiveCalls++
     }
 
-    override fun startMultiRadar(tags: List<String>, onUnavailable: () -> Unit) {
+    override fun startMultiRadar(
+        tags: List<String>,
+        onUnavailable: () -> Unit,
+    ) {
         startMultiCalls += tags
     }
 
-    override fun setTxPower(dbm: Int, onUnavailable: () -> Unit) {
+    override fun setTxPower(
+        dbm: Int,
+        onUnavailable: () -> Unit,
+    ) {
         setTxPowerCalls += dbm
     }
 }

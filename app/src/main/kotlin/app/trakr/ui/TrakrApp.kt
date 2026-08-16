@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Notifications
@@ -42,7 +43,6 @@ import app.trakr.ui.radar.RadarScreen
 import app.trakr.ui.settings.ConfigScreen
 import app.trakr.ui.stats.StatsScreen
 import app.trakr.ui.tools.ToolListScreen
-import androidx.compose.material.icons.filled.BarChart
 
 private enum class Section(
     val labelRes: Int,

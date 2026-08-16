@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:max-line-length", "MaxLineLength")
+
 package app.trakr.data
 
 import androidx.room.Dao
@@ -89,7 +91,9 @@ interface ToolDao {
     @Query("SELECT * FROM scan_sessions ORDER BY ts DESC LIMIT :limit")
     fun observeScanSessions(limit: Int = 100): Flow<List<ScanSession>>
 
-    @Query("SELECT date(ts/1000, 'unixepoch', 'localtime') as day, COUNT(*) as cnt FROM scan_sessions GROUP BY day ORDER BY day DESC LIMIT :days")
+    @Query(
+        "SELECT date(ts/1000, 'unixepoch', 'localtime') as day, COUNT(*) as cnt FROM scan_sessions GROUP BY day ORDER BY day DESC LIMIT :days",
+    )
     fun observeScansPerDay(days: Int = 7): Flow<List<DayCount>>
 
     // ---- Estatísticas de alertas ----

@@ -7,9 +7,9 @@ import androidx.room.PrimaryKey
 data class ToolAlertSetting(
     @PrimaryKey val toolId: String,
     val muted: Boolean = false,
-    val sound: String = "default", // default, beep_short, beep_long, silent
+    val sound: String = "default",
     val vibration: Boolean = true,
-    val importance: Int = 4, // NotificationManager.IMPORTANCE_HIGH
+    val importance: Int = 4,
 )
 
 @Entity(tableName = "tracker_mute")
@@ -25,7 +25,7 @@ data class ScanSession(
     val connectedTrackers: Int = 0,
     val toolsSeen: Int = 0,
     val toolsTotal: Int = 0,
-    val triggeredBy: String = "rescan", // rescan, button, radar, boot
+    val triggeredBy: String = "rescan",
 )
 
 data class MostForgotten(
@@ -35,7 +35,7 @@ data class MostForgotten(
 )
 
 data class DayCount(
-    val day: String, // YYYY-MM-DD
+    val day: String,
     val cnt: Int,
 )
 

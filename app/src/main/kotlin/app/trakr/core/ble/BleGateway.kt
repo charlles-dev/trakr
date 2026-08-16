@@ -76,11 +76,23 @@ interface BleGateway {
     fun listArchives(onUnavailable: () -> Unit)
 
     fun getSensors(onUnavailable: () -> Unit)
+
     fun getAddons(onUnavailable: () -> Unit)
 
-    fun startLive(intervalMs: Int = 500, onUnavailable: () -> Unit)
-    fun stopLive(onUnavailable: () -> Unit)
-    fun startMultiRadar(tags: List<String>, onUnavailable: () -> Unit)
+    fun startLive(
+        intervalMs: Int = 500,
+        onUnavailable: () -> Unit,
+    )
 
-    fun setTxPower(dbm: Int, onUnavailable: () -> Unit)
+    fun stopLive(onUnavailable: () -> Unit)
+
+    fun startMultiRadar(
+        tags: List<String>,
+        onUnavailable: () -> Unit,
+    )
+
+    fun setTxPower(
+        dbm: Int,
+        onUnavailable: () -> Unit,
+    )
 }

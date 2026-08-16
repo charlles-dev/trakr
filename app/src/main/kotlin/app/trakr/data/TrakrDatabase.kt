@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:max-line-length", "MaxLineLength")
+
 package app.trakr.data
 
 import android.content.Context
@@ -22,13 +24,18 @@ abstract class TrakrDatabase : RoomDatabase() {
     abstract fun toolDao(): ToolDao
 }
 
-val MIGRATION_8_9 = object : Migration(8, 9) {
-    override fun migrate(db: SupportSQLiteDatabase) {
-        db.execSQL("CREATE TABLE IF NOT EXISTS tool_alert_settings (toolId TEXT NOT NULL PRIMARY KEY, muted INTEGER NOT NULL, sound TEXT NOT NULL, vibration INTEGER NOT NULL, importance INTEGER NOT NULL)")
-        db.execSQL("CREATE TABLE IF NOT EXISTS tracker_mute (address TEXT NOT NULL PRIMARY KEY, muted INTEGER NOT NULL)")
-        db.execSQL("CREATE TABLE IF NOT EXISTS scan_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ts INTEGER NOT NULL, connectedTrackers INTEGER NOT NULL, toolsSeen INTEGER NOT NULL, toolsTotal INTEGER NOT NULL, triggeredBy TEXT NOT NULL)")
+val MIGRATION_8_9 =
+    object : Migration(8, 9) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS tool_alert_settings (toolId TEXT NOT NULL PRIMARY KEY, muted INTEGER NOT NULL, sound TEXT NOT NULL, vibration INTEGER NOT NULL, importance INTEGER NOT NULL)",
+            )
+            db.execSQL("CREATE TABLE IF NOT EXISTS tracker_mute (address TEXT NOT NULL PRIMARY KEY, muted INTEGER NOT NULL)")
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS scan_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, ts INTEGER NOT NULL, connectedTrackers INTEGER NOT NULL, toolsSeen INTEGER NOT NULL, toolsTotal INTEGER NOT NULL, triggeredBy TEXT NOT NULL)",
+            )
+        }
     }
-}
 
 /**
  * Container de dependÃªncias simples.

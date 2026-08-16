@@ -360,12 +360,13 @@ internal fun RadarDisplayCard(
             else -> stringResource(R.string.radar_status_near)
         }
 
-    val directionText = when (hint) {
-        "continue" -> "+${delta} dBm → continue"
-        "turn_around" -> "${delta} dBm → volte"
-        "hold" -> "Sinal estável"
-        else -> "Procurando…"
-    }
+    val directionText =
+        when (hint) {
+            "continue" -> "+$delta dBm → continue"
+            "turn_around" -> "$delta dBm → volte"
+            "hold" -> "Sinal estável"
+            else -> "Procurando…"
+        }
 
     // Scan line: linha fina que varre o painel de cima a baixo durante a busca.
     val scanY by rememberInfiniteTransition(label = "scan").animateFloat(
