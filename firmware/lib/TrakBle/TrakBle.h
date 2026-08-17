@@ -37,6 +37,17 @@ class TrakBle {
   void onSubscriptionChanged(bool enabled) { notifications_enabled_ = enabled; }
 
  private:
+  // Payloads JSON longos (inventário com muitos itens, histórico) podem
+  // estourar o ATT MTU do cliente. Se o payload passar de kDirectMaxBytes,
+  // divide em chunks e cada notify carrega um envelope:
+  //   {"t":"chunk","k":"<kind>","n":<total>,"i":<idx>,"d":"<fatia JSON>"}
+  // O app remonta na ordem. Quebra sempre em limite de caractere UTF-8.
+  void notifyChunked(NimBLECharacteristic* ch, const char* kind,
+                     const String& json);
+
+  static constexpr size_t kDirectMaxBytes = 400;
+  static constexpr size_t kChunkRawMaxBytes = 340;
+
   NimBLECharacteristic* inventoryChar_ = nullptr;
   NimBLECharacteristic* eventChar_ = nullptr;
   NimBLECharacteristic* historyChar_ = nullptr;

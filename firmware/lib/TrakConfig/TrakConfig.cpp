@@ -14,8 +14,21 @@ bool TrakConfig::load(fs::FS& fs, const char* path) {
   DeserializationError err = deserializeJson(doc, file);
   file.close();
   if (err) {
+    // Arquivo corrompido: tenta restaurar do backup antes de usar padrões.
+    String bak = String(path) + ".bak";
     Serial.printf("[TRAKR] ERRO JSON (config): %s\n", err.c_str());
-    return false;
+    file = fs.open(bak, "r");
+    if (!file) {
+      Serial.println("[TRAKR] Sem backup disponivel — usando padroes");
+      return false;
+    }
+    err = deserializeJson(doc, file);
+    file.close();
+    if (err) {
+      Serial.println("[TRAKR] Backup tambem corrompido — usando padroes");
+      return false;
+    }
+    Serial.println("[TRAKR] config.json restaurado do backup (.bak)");
   }
 
   listen_ms_ = doc["listen_ms"] | listen_ms_;
@@ -47,11 +60,23 @@ bool TrakConfig::save(fs::FS& fs, const char* path) const {
   doc["env_profile"] = env_profile_;
   if (hasPin()) doc["pin_hash"] = pin_hash_;
 
-  File file = fs.open(path, "w");
+  // Gravação atômica "tmp + rename" com backup (.bak), contra corrupção
+  // por perda de energia no meio da gravação (ver TrakInventory::save).
+  const String tmp = String(path) + ".tmp";
+  const String bak = String(path) + ".bak";
+
+  File file = fs.open(tmp, "w");
   if (!file) return false;
-  bool ok = serializeJson(doc, file) > 0;
+  const bool ok = serializeJson(doc, file) > 0;
   file.close();
-  return ok;
+  if (!ok) {
+    fs.remove(tmp);
+    return false;
+  }
+  if (fs.exists(path)) fs.rename(path, bak);
+  const bool promoted = fs.rename(tmp, path);
+  if (!promoted) fs.remove(tmp);
+  return promoted;
 }
 
 String TrakConfig::toJsonString() const {

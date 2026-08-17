@@ -12,9 +12,23 @@ bool TrakInventory::load(fs::FS& fs, const char* path) {
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, file);
   file.close();
-  if (err) {
-    Serial.printf("[TRAKR] ERRO JSON: %s\n", err.c_str());
-    return false;
+  if (err || !doc["tools"].is<JsonArray>()) {
+    // Arquivo corrompido/incompleto: tenta restaurar do backup.
+    String bak = String(path) + ".bak";
+    Serial.printf("[TRAKR] ERRO JSON (inventory): %s\n",
+                  err ? err.c_str() : "schema invalido");
+    file = fs.open(bak, "r");
+    if (!file) {
+      Serial.println("[TRAKR] Sem backup disponivel — inventario vazio");
+      return false;
+    }
+    err = deserializeJson(doc, file);
+    file.close();
+    if (err || !doc["tools"].is<JsonArray>()) {
+      Serial.println("[TRAKR] Backup tambem corrompido — inventario vazio");
+      return false;
+    }
+    Serial.println("[TRAKR] Inventario restaurado do backup (.bak)");
   }
 
   tools_.clear();
@@ -42,18 +56,34 @@ bool TrakInventory::save(fs::FS& fs, const char* path) const {
     o["present"] = t.present;
   }
 
-  File file = fs.open(path, "w");
+  // Gravação atômica estilo "tmp + rename": o arquivo principal só é
+  // substituído após a escrita completa, e o anterior vira .bak (backup
+  // contra corrupção por perda de energia no meio da gravação).
+  const String tmp = String(path) + ".tmp";
+  const String bak = String(path) + ".bak";
+
+  File file = fs.open(tmp, "w");
   if (!file) return false;
-  bool ok = serializeJson(doc, file) > 0;
+  const bool ok = serializeJson(doc, file) > 0;
   file.close();
-  return ok;
+  if (!ok) {
+    fs.remove(tmp);
+    return false;
+  }
+  if (fs.exists(path)) fs.rename(path, bak);
+  const bool promoted = fs.rename(tmp, path);
+  if (!promoted) fs.remove(tmp);
+  return promoted;
 }
 
 void TrakInventory::sweep(const std::vector<String>& readEpcs) {
   newly_missing_.clear();
+  newly_found_.clear();
 
+  // Histerese: só marca ausente após kMissingThreshold varreduras
+  // consecutivas sem leitura; volta a presente imediatamente quando lida.
   for (auto& t : tools_) {
-    bool wasPresent = t.present;
+    const bool wasPresent = t.present;
     bool read = false;
     if (!t.epc.isEmpty()) {
       for (const auto& epc : readEpcs) {
@@ -63,9 +93,21 @@ void TrakInventory::sweep(const std::vector<String>& readEpcs) {
         }
       }
     }
-    t.present = read;
-    if (wasPresent && !read) {
-      newly_missing_.push_back(&t);
+
+    bool nowPresent;
+    if (read) {
+      t.miss_streak = 0;
+      nowPresent = true;
+    } else {
+      t.miss_streak++;
+      nowPresent = (t.miss_streak < TrakInventory::kMissingThreshold) && t.present;
+    }
+    t.present = nowPresent;
+
+    if (wasPresent && !nowPresent) {
+      newly_missing_.push_back(&t);  // cruzou o limiar: sumiu de verdade
+    } else if (!wasPresent && nowPresent) {
+      newly_found_.push_back(&t);    // voltou a ser lida
     }
   }
 }

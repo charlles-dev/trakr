@@ -90,6 +90,7 @@ object BleManager : BleGateway {
 
     private var context: Context? = null
     private val sessions = mutableMapOf<String, BleSession>()
+    private val chunkBuffers = mutableMapOf<Pair<String, String>, ChunkAssembly>()
     private val foundDevices = mutableMapOf<String, BluetoothDevice>()
     private var scanJob: Job? = null
     private var rescanJob: Job? = null
@@ -281,6 +282,7 @@ object BleManager : BleGateway {
         fun drop() {
             disconnect()
             BleManager.sessions.remove(device.address)
+            BleManager.dropSessionBuffers(this)
             BleManager.updateDevices()
             if (BleManager.running) BleManager.scheduleRescan() else BleManager.rescan()
             if (BleManager.sessions.isEmpty()) BleManager._status.value = BleStatus.Idle
@@ -389,17 +391,74 @@ object BleManager : BleGateway {
                 handleCharacteristic(session, characteristic, value)
             }
 
-            private fun handleCharacteristic(
-                session: BleSession,
-                characteristic: BluetoothGattCharacteristic,
-                value: ByteArray,
-            ) {
-                val text = value.toString(Charsets.UTF_8)
-                when (characteristic.uuid) {
-                    BleProfile.INVENTORY_UUID -> onInventory(text)
-                    BleProfile.EVENT_UUID -> onEvent(text)
-                }
+/** Descartar sessão e buffers de chunks órfãos ao desconectar/expirar. */
+    private fun dropSessionBuffers(session: BleSession) {
+        chunkBuffers.keys.retainAll { it.first != session.device.address }
+    }
+
+    private fun handleCharacteristic(
+        session: BleSession,
+        characteristic: BluetoothGattCharacteristic,
+        value: ByteArray,
+    ) {
+        val text = value.toString(Charsets.UTF_8)
+        when (characteristic.uuid) {
+            BleProfile.INVENTORY_UUID -> dispatch(session, text) { onInventory(it) }
+            BleProfile.EVENT_UUID -> dispatch(session, text) { onEvent(it) }
+        }
+    }
+
+    /**
+     * Reage a payloads JSON, remontando mensagens divididas em chunks pelo
+     * firmware (envelope {"t":"chunk","k":...,"n":...,"i":...,"d":...}).
+     * Envelopes não-chunk (ou os antigos, sem chunking) seguem direto.
+     */
+    private fun dispatch(
+        session: BleSession,
+        text: String,
+        deliver: (String) -> Unit,
+    ) {
+        val envelope = try {
+            JSONObject(text)
+        } catch (_: Exception) {
+            null
+        }
+        if (envelope == null || envelope.optString("t") != "chunk") {
+            deliver(text)
+            return
+        }
+
+        val key = session.device.address to envelope.optString("k")
+        val total = envelope.optInt("n", -1)
+        val index = envelope.optInt("i", -1)
+        val data = envelope.optString("d")
+        if (total <= 0 || index < 0 || index >= total) {
+            chunkBuffers.remove(key)
+            return
+        }
+
+        var assembly = chunkBuffers[key]
+        if (assembly == null || assembly.total != total) {
+            assembly = ChunkAssembly(total)
+            chunkBuffers[key] = assembly
+        }
+        if (assembly.parts[index] == null) {
+            assembly.received++
+            assembly.parts[index] = data
+        }
+        if (assembly.received == total) {
+            chunkBuffers.remove(key)
+            if (assembly.parts.all { it != null }) {
+                deliver(assembly.parts.joinToString(""))
             }
+        }
+    }
+
+    /** Buffer de remontagem de chunks de uma mensagem JSON. */
+    private class ChunkAssembly(val total: Int) {
+        var received = 0
+        val parts = arrayOfNulls<String>(total)
+    }
         }
 
     // ---------------- Utilidades GATT ----------------

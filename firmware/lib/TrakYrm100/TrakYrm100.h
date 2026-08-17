@@ -51,6 +51,10 @@ class TrakYrm100 {
   // Valores típicos 0-27 dBm. Retorna true se ACK recebido.
   bool setTxPower(uint8_t dbm);
 
+  // Grava um novo EPC (12 bytes) na tag no campo. Retorna true SOMENTE se o
+  // módulo confirmar com ACK — nunca afirma sucesso sem confirmação.
+  bool writeEpc(const uint8_t* epc, uint8_t len);
+
   // Última potência configurada (0 = default do módulo)
   uint8_t lastTxPower() const { return last_tx_dbm_; }
 
@@ -75,4 +79,5 @@ enum YrmCmd : uint8_t {
   CMD_STOP_INVENTORY  = 0x16,
   CMD_SINGLE_READ     = 0x17,
   CMD_GET_TX_POWER    = 0x0B, // leitura power em alguns firmwares
+  CMD_WRITE_EPC       = 0x0F, // tentativa — VALIDAR no datasheet da placa
 };

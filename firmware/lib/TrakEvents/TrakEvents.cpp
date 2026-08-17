@@ -13,9 +13,23 @@ bool TrakEvents::load(fs::FS& fs, const char* path) {
   JsonDocument doc;
   DeserializationError err = deserializeJson(doc, file);
   file.close();
-  if (err) {
-    Serial.printf("[TRAKR] ERRO JSON (events): %s\n", err.c_str());
-    return false;
+  if (err || !doc.is<JsonArray>()) {
+    // Corrompido: tenta restaurar do backup antes de começar vazio.
+    String bak = String(path) + ".bak";
+    Serial.printf("[TRAKR] ERRO JSON (events): %s\n",
+                  err ? err.c_str() : "schema invalido");
+    file = fs.open(bak, "r");
+    if (!file) {
+      Serial.println("[TRAKR] Sem backup disponivel — historico vazio");
+      return false;
+    }
+    err = deserializeJson(doc, file);
+    file.close();
+    if (err || !doc.is<JsonArray>()) {
+      Serial.println("[TRAKR] Backup tambem corrompido — historico vazio");
+      return false;
+    }
+    Serial.println("[TRAKR] events.json restaurado do backup (.bak)");
   }
 
   events_.clear();
@@ -43,11 +57,23 @@ bool TrakEvents::save(fs::FS& fs, const char* path) const {
     if (!ev.toolName.isEmpty()) o["name"] = ev.toolName;
   }
 
-  File file = fs.open(path, "w");
+  // Gravação atômica "tmp + rename" com backup (.bak), contra corrupção
+  // por perda de energia no meio da gravação (ver TrakInventory::save).
+  const String tmp = String(path) + ".tmp";
+  const String bak = String(path) + ".bak";
+
+  File file = fs.open(tmp, "w");
   if (!file) return false;
-  bool ok = serializeJson(doc, file) > 0;
+  const bool ok = serializeJson(doc, file) > 0;
   file.close();
-  return ok;
+  if (!ok) {
+    fs.remove(tmp);
+    return false;
+  }
+  if (fs.exists(path)) fs.rename(path, bak);
+  const bool promoted = fs.rename(tmp, path);
+  if (!promoted) fs.remove(tmp);
+  return promoted;
 }
 
 String TrakEvents::monthKeyForTs(uint64_t ts) {
@@ -85,10 +111,14 @@ bool TrakEvents::archiveEvent(fs::FS& fs, const Event& ev) const {
   if (!ev.toolId.isEmpty()) o["tool_id"] = ev.toolId;
   if (!ev.toolName.isEmpty()) o["name"] = ev.toolName;
 
-  file = fs.open(path, "w");
+  file = fs.open(path + ".tmp", "w");
   if (!file) return false;
   bool ok = serializeJson(doc, file) > 0;
   file.close();
+  if (!ok) return false;
+  // Atômico: promove o .tmp para o arquivo do mês (backup implícito no .tmp).
+  if (fs.exists(path)) fs.remove(path);
+  ok = fs.rename(path + ".tmp", path);
   if (ok) {
     Serial.printf("[TRAKR] Evento arquivado em %s (%s)\n", path.c_str(), key.c_str());
   }

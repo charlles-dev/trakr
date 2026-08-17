@@ -4,7 +4,8 @@
 //   ESCUTA     -> espera ativa (botão ou comando BLE para agir)
 //   RASTREIA   -> modo radar: procura a tag alvo, mede RSSI e guia por LED/bip
 //   LEITURA    -> varre o YRM100 uma vez e publica o inventário
-//   SINCRONIZA -> janela BLE para o app sincronizar
+//   SINCRONIZA -> janela BLE para o app sincronizar (re-varre com app conectado)
+//   FINDME     -> "find my finder": LED/buzzer pulsando (non-blocking)
 //   DORME      -> deep sleep (wake por botão)
 //
 // Pinagem: include/pins.h | GATT: include/ble_profile.h
@@ -14,6 +15,7 @@
 #include <LittleFS.h>
 #include <esp_ota_ops.h>
 #include <esp_sleep.h>
+#include <esp_task_wdt.h>
 #include <algorithm>
 
 #include <ArduinoJson.h>
@@ -53,6 +55,7 @@ enum class State {
   MULTI,     // radar multi-alvo com ranking RSSI
   LEITURA,   // varredura manual (botão) — publica o inventário
   SINCRONIZA,
+  FINDME,    // "find my finder" (LED/buzzer, non-blocking)
   DORME,
 };
 
@@ -62,6 +65,7 @@ static unsigned long gStateSince = 0;
 static const unsigned long kRadarSweepMs = 400;   // varredura por ciclo do modo radar
 static const unsigned long kSweepMs = 500;        // varredura documentada em ~500 ms
 static const unsigned long kSyncWindowMs = 30000; // janela BLE pós-varredura
+static const unsigned long kMonitorSweepMs = 10000; // re-varredura com app conectado
 
 static void enter(const State s) {
   gState = s;
@@ -150,6 +154,15 @@ static void sweepAndPublish() {
 
   gInventory.sweep(readEpcs);
   gBle.notifyInventory(gInventory.toJsonString());
+
+  // Registra no histórico (events.json) as transições de presença da última
+  // varredura — só dispara na transição (com histerese), sem duplicar.
+  for (const auto* tool : gInventory.newlyMissing()) {
+    pushEvent("tool_missing", tool->id, tool->name);
+  }
+  for (const auto* tool : gInventory.newlyFound()) {
+    pushEvent("tool_found", tool->id, tool->name);
+  }
 }
 
 // ---------------- Modo radar (rastreador portátil) ----------------
@@ -165,6 +178,13 @@ static bool gAuthOk = false;
 static unsigned long gAuthSince = 0;
 static const unsigned long kAuthTimeoutMs = 5 * 60 * 1000;  // 5 min
 
+// Anti-brute-force: após kAuthMaxFails falhas seguidas, bloqueia o auth por
+// kAuthLockoutMs (o PIN tem poucos dígitos e o canal é BLE — dicionário trivial).
+static constexpr uint8_t kAuthMaxFails = 3;
+static constexpr unsigned long kAuthLockoutMs = 30000;
+static uint8_t gAuthFails = 0;
+static unsigned long gAuthLockUntil = 0;
+
 static bool isAuthValid() {
   if (!gConfig.hasPin()) return true;  // sem PIN = aberto
   if (!gAuthOk) return false;
@@ -178,6 +198,7 @@ static bool isAuthValid() {
 static std::vector<String> gMultiTargets;
 static unsigned long gLiveIntervalMs = 500;
 static int8_t gPrevRssiForDir = -100;
+static unsigned long gFindEndAt = 0;  // fim do modo FINDME (find my finder)
 
 static void radarSweepPublish() {
   int8_t bestRssi = -100;
@@ -209,6 +230,9 @@ static void radarSweepPublish() {
     else hint = "hold";
   }
   gPrevRssiForDir = found ? bestRssi : gPrevRssiForDir;
+  // BUGFIX: gLastRadarRssi alimenta o radarBeep() no RASTREIA — sem esta
+  // atribuição o bip nunca reagia ao sinal (ficava em -100 ou valor antigo).
+  gLastRadarRssi = found ? bestRssi : -100;
 
   JsonDocument doc;
   doc["type"] = "radar_report";
@@ -380,6 +404,20 @@ static void handleControlCommand(const String& json) {
 
   const char* cmd = doc["cmd"] | "";
 
+  // Versão do firmware: o app usa para gating de features (compatibilidade).
+  if (strcmp(cmd, "get_version") == 0) {
+    JsonDocument out;
+    out["type"] = "cmd_reply";
+    out["cmd"] = "get_version";
+    out["status"] = "ok";
+    out["fw_version"] = TRAKR_FW_VERSION;
+    out["git_commit"] = TRAKR_GIT_COMMIT;
+    String jsonOut;
+    serializeJson(out, jsonOut);
+    gBle.notifyEvent(jsonOut);
+    return;
+  }
+
   // Configurações do dispositivo: o app lê e altera via config.json.
   // get_config responde com os valores atuais (inclui has_pin/authed + RF calibration);
   // set_config aceita campos parciais (listen_ms/radar_ms/beep/pin/tx_power/rssi).
@@ -397,6 +435,8 @@ static void handleControlCommand(const String& json) {
     out["env_profile"] = gConfig.envProfile();
     out["has_pin"] = gConfig.hasPin();
     out["authed"] = isAuthValid();
+    out["fw_version"] = TRAKR_FW_VERSION;
+    out["git_commit"] = TRAKR_GIT_COMMIT;
     if (gAuthOk && gConfig.hasPin()) {
       unsigned long elapsed = millis() - gAuthSince;
       unsigned long remaining = (elapsed < kAuthTimeoutMs) ? (kAuthTimeoutMs - elapsed) : 0;
@@ -564,6 +604,18 @@ static void handleControlCommand(const String& json) {
       replyControl("auth", "ok");
       return;
     }
+    if (millis() < gAuthLockUntil) {
+      JsonDocument out;
+      out["type"] = "cmd_reply";
+      out["cmd"] = "auth";
+      out["status"] = "error";
+      out["reason"] = "locked";
+      out["retry_after_ms"] = gAuthLockUntil - millis();
+      String jsonOut;
+      serializeJson(out, jsonOut);
+      gBle.notifyEvent(jsonOut);
+      return;
+    }
     const char* pinRaw = doc["pin"] | "";
     if (pinRaw[0] == '\0') {
       replyControl("auth", "error", "missing_fields");
@@ -573,11 +625,21 @@ static void handleControlCommand(const String& json) {
     if (gConfig.verifyPin(pinStr)) {
       gAuthOk = true;
       gAuthSince = millis();
+      gAuthFails = 0;  // reset do contador de tentativas
       Serial.println("[TRAKR] PIN ok — sessão autenticada");
       replyControl("auth", "ok");
     } else {
-      Serial.println("[TRAKR] PIN falhou");
-      replyControl("auth", "error", "auth_failed");
+      gAuthFails++;
+      if (gAuthFails >= kAuthMaxFails) {
+        gAuthLockUntil = millis() + kAuthLockoutMs;
+        gAuthFails = 0;
+        Serial.printf("[TRAKR] PIN falhou — bloqueio de %lu ms\n",
+                      (unsigned long)kAuthLockoutMs);
+        replyControl("auth", "error", "locked");
+      } else {
+        Serial.printf("[TRAKR] PIN falhou (%u/%u)\n", gAuthFails, kAuthMaxFails);
+        replyControl("auth", "error", "auth_failed");
+      }
     }
     return;
   }
@@ -606,25 +668,42 @@ static void handleControlCommand(const String& json) {
 
   if (strcmp(cmd, "get_history") == 0) {
     const char* month = doc["month"] | "";
-    JsonDocument out;
-    out["type"] = "cmd_reply";
-    out["cmd"] = "get_history";
-    out["status"] = "ok";
+    // Paginação: resposta pode ser enorme (200 eventos) — o app percorre
+    // com offset/limit. Default: 50 eventos iniciais.
+    int limit = doc["limit"] | 50;
+    int offset = doc["offset"] | 0;
+    if (limit < 1) limit = 1;
+    if (limit > 200) limit = 200;
+    if (offset < 0) offset = 0;
+
+    JsonDocument histDoc;
     if (month[0] != '\0') {
       String m = String(month);
       String hist = gEvents.archiveJsonForMonth(LittleFS, m);
       // Re-parse para inserir no reply
-      JsonDocument histDoc;
       deserializeJson(histDoc, hist);
-      out["month"] = m;
-      out["history"] = histDoc.as<JsonArray>();
     } else {
-      JsonDocument histDoc;
       deserializeJson(histDoc, gEvents.toJsonString());
-      out["history"] = histDoc.as<JsonArray>();
     }
+    const JsonArray all = histDoc.as<JsonArray>();
+    const int total = all.size();
+
+    JsonDocument out;
+    out["type"] = "cmd_reply";
+    out["cmd"] = "get_history";
+    out["status"] = "ok";
+    if (month[0] != '\0') out["month"] = month;
+    JsonArray slice = out["history"].to<JsonArray>();
+    int end = offset + limit;
+    if (end > total) end = total;
+    for (int i = offset; i < end; i++) {
+      slice.add(all[i]);
+    }
+    out["total"] = total;
+    out["has_more"] = end < total;
     String jsonOut;
     serializeJson(out, jsonOut);
+    gBle.notifyEvent(jsonOut);
     gBle.notifyEvent(jsonOut);
     return;
   }
@@ -706,17 +785,14 @@ static void handleControlCommand(const String& json) {
 
   if (strcmp(cmd, "find_device") == 0 || strcmp(cmd, "locate_finder") == 0) {
     int durationSec = doc["duration_sec"] | 5;
+    if (durationSec < 1) durationSec = 1;
+    if (durationSec > 60) durationSec = 60;
     Serial.printf("[TRAKR] Find My Finder ativado por %d s\n", durationSec);
+    // Non-blocking: o estado FINDME pulsa LED/buzzer no loop(); o comando
+    // volta imediatamente (não trava o processamento de outros comandos).
+    gFindEndAt = millis() + (durationSec * 1000UL);
     replyControl(cmd, "ok");
-    unsigned long endAt = millis() + (durationSec * 1000UL);
-    while (millis() < endAt) {
-      gLed.on(255, 255, 255);
-      gHaptics.tone(2400);
-      delay(120);
-      gLed.off();
-      gHaptics.noTone();
-      delay(120);
-    }
+    enter(State::FINDME);
     return;
   }
 
@@ -732,12 +808,41 @@ static void handleControlCommand(const String& json) {
   }
 
   if (strcmp(cmd, "write_epc") == 0) {
+    if (!isAuthValid()) {
+      replyControl("write_epc", "error", "auth_required");
+      return;
+    }
     const char* newEpc = doc["new_epc"] | doc["epc"] | "";
-    if (strlen(newEpc) > 0) {
-      replyControl("write_epc", "ok");
-      Serial.printf("[TRAKR] EPC gravado com sucesso: %s\n", newEpc);
-    } else {
+    const size_t epcLen = strlen(newEpc);
+    // EPC UHF padrão: 24 chars hex (12 bytes).
+    if (epcLen != 24) {
       replyControl("write_epc", "error", "invalid_epc");
+      return;
+    }
+    uint8_t epcBytes[12];
+    for (size_t i = 0; i < 12; i++) {
+      const char c0 = newEpc[2 * i];
+      const char c1 = newEpc[2 * i + 1];
+      const auto hexVal = [](char c) -> int {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        return -1;
+      };
+      const int h0 = hexVal(c0);
+      const int h1 = hexVal(c1);
+      if (h0 < 0 || h1 < 0) {
+        replyControl("write_epc", "error", "invalid_epc");
+        return;
+      }
+      epcBytes[i] = (uint8_t)((h0 << 4) | h1);
+    }
+    if (gYrm.writeEpc(epcBytes, 12)) {
+      Serial.printf("[TRAKR] EPC gravado no módulo: %s\n", newEpc);
+      replyControl("write_epc", "ok");
+    } else {
+      // Sem ACK do YRM100: não afirmar sucesso (comportamento honesto).
+      replyControl("write_epc", "error", "write_failed");
     }
     return;
   }
@@ -1064,6 +1169,11 @@ static void otaWriteChunk(const uint8_t* data, size_t len) {
 
 static void handleOtaCommand(const JsonDocument& doc, const char* cmd) {
   if (strcmp(cmd, "ota_begin") == 0) {
+    // Segurança: flash via BLE exige sessão autenticada por PIN (se houver).
+    if (!isAuthValid()) {
+      replyControl("ota_begin", "error", "auth_required");
+      return;
+    }
     const uint32_t size = doc["size"] | 0u;
     if (size == 0 || gOtaHandle != 0) {
       replyControl("ota_begin", "error", "invalid_state");
@@ -1087,6 +1197,12 @@ static void handleOtaCommand(const JsonDocument& doc, const char* cmd) {
   if (strcmp(cmd, "ota_end") == 0) {
     if (gOtaHandle == 0) {
       replyControl("ota_end", "error", "no_session");
+      return;
+    }
+    // Auth pode ter expirado durante a transferência — aborta se preciso.
+    if (!isAuthValid()) {
+      abortOta();
+      replyControl("ota_end", "error", "auth_required");
       return;
     }
     if (gOtaReceived != gOtaSize) {
@@ -1145,10 +1261,38 @@ static void goToSleep() {
   esp_deep_sleep_start();
 }
 
+// ---------------- Healthcheck OTA ----------------
+// Valida o firmware atual ~10 s após o boot sem crash: se o novo firmware
+// da OTA estiver PENDING_VERIFY e o dispositivo reiniciar antes disso, o
+// bootloader faz rollback automático para a partição anterior (evita brick
+// por FW ruim que trava no boot).
+
+static bool gOtaValidMarked = false;
+
+static void otaHealthCheck() {
+  if (gOtaValidMarked) return;
+  const esp_partition_t* cur = esp_ota_get_running_partition();
+  if (cur == nullptr) return;
+  esp_ota_img_states_t state;
+  if (esp_ota_get_state_partition(cur, &state) != ESP_OK) return;
+  Serial.printf("[TRAKR] OTA partition %s state: %d\n", cur->label, (int)state);
+  if (state == ESP_OTA_IMG_PENDING_VERIFY) {
+    // Chegou aqui sem crash: firmware novo é válido — confirma o boot.
+    esp_ota_mark_app_valid_cancel_rollback();
+    Serial.println("[TRAKR] OTA: firmware novo validado (rollback cancelado)");
+  }
+  gOtaValidMarked = true;
+}
+
 // ---------------- Setup ----------------
 void setup() {
   Serial.begin(115200);
   delay(200);
+
+  // Watchdog: 30 s sem o loop responder = reset limpo (protege contra
+  // estado preso ou módulo UHF travado).
+  esp_task_wdt_init(30, true);
+  esp_task_wdt_add(nullptr);
 
   const uint32_t wakeCause = esp_sleep_get_wakeup_cause();
   Serial.printf("[TRAKR] Boot | wake cause: %" PRIu32 "\n", wakeCause);
@@ -1172,6 +1316,11 @@ void setup() {
 
   initFeedback();
   gYrm.begin(Serial2, YRM100_BAUD, YRM100_RX_PIN, YRM100_TX_PIN);
+#ifndef TRAKR_SIM
+  // Reaplica a potência TX configurada: após reboot o módulo volta ao
+  // default do fabricante, ignorando o config.json salvo.
+  gYrm.setTxPower(gConfig.txPowerDbm());
+#endif
 
   gEvents.load(LittleFS, kEventsPath);
   gEvents.setClockDeltaMs(gConfig.clockDeltaMs());
@@ -1197,6 +1346,14 @@ void setup() {
 
 // ---------------- Loop ----------------
 void loop() {
+  esp_task_wdt_reset();
+
+  // Healthcheck OTA: valida o FW novo ~10 s após o boot (rollback seguro).
+  {
+    static unsigned long healthcheckAt = millis() + 10000;
+    if (!gOtaValidMarked && millis() >= healthcheckAt) otaHealthCheck();
+  }
+
   switch (gState) {
     case State::ESCUTA:
       gLed.set(TrakLed::Color::READY);
@@ -1276,10 +1433,35 @@ void loop() {
 #endif
       }
       if (gBle.notificationsEnabled()) {
+        // App conectado: re-varre periodicamente para manter o inventário
+        // atualizado ao vivo (sem depender de "rescan" manual).
+        static unsigned long lastMonitorSweep = 0;
+        if (millis() - lastMonitorSweep >= kMonitorSweepMs) {
+          lastMonitorSweep = millis();
+          sweepAndPublish();
+        }
         gStateSince = millis();
         break;
       }
       if (millis() - gStateSince >= kSyncWindowMs) enter(State::DORME);
+      break;
+    }
+
+    case State::FINDME: {
+      // Pulsa LED branco + tom a ~2 Hz, non-blocking (não trava o loop).
+      const bool on = (millis() / 250) % 2 == 0;
+      gLed.set(on ? TrakLed::Color::FINDME : TrakLed::Color::OFF);
+#ifdef TRAKR_HAS_PASSIVE_BUZZER
+      if (on) gHaptics.tone(2400); else gHaptics.noTone();
+#else
+      digitalWrite(BUZZER_PIN, on ? HIGH : LOW);
+#endif
+      if (buttonPressed() || millis() >= gFindEndAt) {
+        gLed.set(TrakLed::Color::OFF);
+        gHaptics.noTone();
+        digitalWrite(BUZZER_PIN, LOW);
+        enter(State::SINCRONIZA);
+      }
       break;
     }
 

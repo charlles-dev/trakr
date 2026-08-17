@@ -12,3 +12,11 @@
 
 // Nome do device visível no scan BLE. O app filtra pelo prefixo "TRK-".
 #define TRAKR_DEVICE_NAME "TRK-FINDER"
+
+// ===== Versão do firmware (aparece no "about" do app via OTA/status) =====
+#define TRAKR_FW_VERSION "0.4.0"
+
+// Hash do commit (injetado via -DTRAKR_GIT_COMMIT=... na build; fallback local).
+#ifndef TRAKR_GIT_COMMIT
+#define TRAKR_GIT_COMMIT "dev"
+#endif

@@ -13,18 +13,28 @@ struct TrakTool {
   String name;  // nome exibível
   String epc;   // EPC da tag UHF (24 chars hex, ex: "E28011606000020400000001")
   bool present = true;
+  uint8_t miss_streak = 0;  // varreduras consecutivas sem ler a tag (RAM)
 };
 
 class TrakInventory {
  public:
+  // Varreduras consecutivas sem leitura antes de marcar a ferramenta como
+  // ausente (histerese anti-falso-positivo: RF é ruidoso).
+  static constexpr uint8_t kMissingThreshold = 3;
+
   bool load(fs::FS& fs, const char* path);
   bool save(fs::FS& fs, const char* path) const;
 
   size_t size() const { return tools_.size(); }
   const std::vector<TrakTool>& tools() const { return tools_; }
 
-  // Ferramentas que estavam presentes e sumiram na última varredura.
+  // Ferramentas que estavam presentes e cruzaram o limiar de ausência na
+  // última varredura (transição presente -> ausente).
   const std::vector<const TrakTool*>& newlyMissing() const { return newly_missing_; }
+
+  // Ferramentas que estavam ausentes e voltaram a ser lidas na varredura
+  // (transição ausente -> presente).
+  const std::vector<const TrakTool*>& newlyFound() const { return newly_found_; }
 
   // Marca presença/ausência conforme os EPCs lidos pelo YRM100.
   void sweep(const std::vector<String>& readEpcs);
@@ -43,10 +53,15 @@ class TrakInventory {
   // Serializa o inventário no mesmo formato do inventory.json.
   String toJsonString() const;
 
-  void clear() { tools_.clear(); newly_missing_.clear(); }
+  void clear() {
+    tools_.clear();
+    newly_missing_.clear();
+    newly_found_.clear();
+  }
   void replaceTools(std::vector<TrakTool>&& tools) { tools_ = std::move(tools); }
 
  private:
   std::vector<TrakTool> tools_;
   std::vector<const TrakTool*> newly_missing_;
+  std::vector<const TrakTool*> newly_found_;
 };

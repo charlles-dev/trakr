@@ -123,13 +123,17 @@ uint8_t TrakYrm100::collectReads(std::vector<TrakRead>& outReads, uint32_t maxRe
     if (!awaitFrame(cmd, data, dataLen, 100)) continue;
 
     if (cmd == CMD_START_INVENTORY || cmd == CMD_SINGLE_READ) {
-      // Payload típico: [PC 2 bytes][EPC 12 bytes][RSSI 1 byte] por tag.
-      // O byte de RSSI (offset + 14) deve ser confirmado no datasheet da
-      // placa — placas mais antigas podem não enviá-lo.
+      // Payload típico: [PC 2 bytes][EPC 12 bytes][RSSI 1 byte opcional] por
+      // tag. O stride por entrada é resolvido por frame: se o payload é
+      // múltiplo de 15, cada entrada inclui RSSI (15 bytes); senão, entradas
+      // de 14 bytes (PC+EPC) e o RSSI fica desconhecido (-100).
+      const uint8_t stride = (dataLen % 15 == 0) ? 15 : 14;
       uint8_t offset = 0;
       while (offset + 14 <= dataLen) {
         String epc = hexEpc(&data[offset + 2], 12);
-        int8_t rssi = (offset + 15 <= dataLen) ? (int8_t)data[offset + 14] : -100;
+        int8_t rssi = (stride == 15 && offset + 15 <= dataLen)
+                          ? (int8_t)data[offset + 14]
+                          : -100;
 
         bool dup = false;
         for (auto& r : outReads) {
@@ -140,7 +144,7 @@ uint8_t TrakYrm100::collectReads(std::vector<TrakRead>& outReads, uint32_t maxRe
           }
         }
         if (!dup) outReads.push_back(TrakRead{std::move(epc), rssi});
-        offset += 14;
+        offset += stride;
       }
     }
   }
@@ -175,5 +179,36 @@ bool TrakYrm100::setTxPower(uint8_t dbm) {
     return true;
   }
   Serial.printf("[TRAKR] TX power set %u dBm falhou (sem ACK)\n", dbm);
+  return false;
+}
+
+bool TrakYrm100::writeEpc(const uint8_t* epc, uint8_t len) {
+  if (port_ == nullptr || epc == nullptr || len == 0 || len > 12) return false;
+
+  // Payload: [access password 4 bytes = 0x00000000][novo EPC len bytes].
+  // O número do comando (CMD_WRITE_EPC) é uma tentativa — valide no
+  // datasheet da sua placa. O ACK do módulo é obrigatório para reportar
+  // sucesso: falha de comunicação é reportada honestamente como falha.
+  uint8_t payload[16] = {0, 0, 0, 0};
+  memcpy(&payload[4], epc, len);
+
+  sendFrame(CMD_WRITE_EPC, payload, 4 + len);
+
+  uint8_t cmd = 0;
+  uint8_t data[16];
+  uint8_t dataLen = 0;
+  bool ack = false;
+  const uint32_t start = millis();
+  while (millis() - start < 1000) {
+    if (awaitFrame(cmd, data, dataLen, 100)) {
+      ack = true;
+      break;
+    }
+  }
+  if (ack) {
+    Serial.printf("[TRAKR] Write EPC aceito pelo módulo (cmd 0x%02X)\n", cmd);
+    return true;
+  }
+  Serial.println("[TRAKR] Write EPC sem ACK do módulo — falha honesta");
   return false;
 }

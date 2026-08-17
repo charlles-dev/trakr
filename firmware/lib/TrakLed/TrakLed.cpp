@@ -35,6 +35,10 @@ void TrakLed::show() {
       // Pisca em vermelho ~2Hz (código não-bloqueante)
       leds_[0] = ((millis() / 250) % 2 == 0) ? CRGB::Red : CRGB::Black;
       break;
+    case Color::FINDME:
+      // "Find my finder": pisca em branco ~2Hz (código não-bloqueante)
+      leds_[0] = ((millis() / 250) % 2 == 0) ? CRGB::White : CRGB::Black;
+      break;
   }
   FastLED.show();
 }

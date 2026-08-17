@@ -1,6 +1,8 @@
 #include "TrakBle.h"
 #include "ble_profile.h"
 
+#include <ArduinoJson.h>
+
 namespace {
 
 class TrakBleServerCallbacks : public NimBLEServerCallbacks {
@@ -63,6 +65,12 @@ void TrakBle::init(const char* deviceName) {
   NimBLEDevice::init(deviceName);
   NimBLEDevice::setMTU(512);
 
+  // Bonding + Secure Connections (Just Works, sem MITM): após o primeiro
+  // pareamento o link fica criptografado e o pareamento é lembrado (NVS).
+  NimBLEDevice::setSecurityAuth(true /*bonding*/, false /*mitm*/,
+                                true /*secure_conn*/);
+  NimBLEDevice::setSecurityIOCap(BLE_HS_IO_NO_INPUT_OUTPUT);
+
   NimBLEServer* server = NimBLEDevice::createServer();
   server->setCallbacks(new TrakBleServerCallbacks(*this));
   server->advertiseOnDisconnect(true);
@@ -109,17 +117,73 @@ void TrakBle::init(const char* deviceName) {
 
 void TrakBle::notifyInventory(const String& json) {
   if (!inventoryChar_ || !notificationsEnabled()) return;
-  inventoryChar_->setValue((uint8_t*)json.c_str(), json.length());
-  inventoryChar_->notify();
+  notifyChunked(inventoryChar_, "inventory", json);
 }
 
 void TrakBle::notifyEvent(const String& json) {
   if (!eventChar_ || !notificationsEnabled()) return;
-  eventChar_->setValue((uint8_t*)json.c_str(), json.length());
-  eventChar_->notify();
+  notifyChunked(eventChar_, "event", json);
+}
+
+void TrakBle::notifyChunked(NimBLECharacteristic* ch, const char* kind,
+                            const String& json) {
+  if (json.length() <= kDirectMaxBytes) {
+    // Payload pequeno: notify direto (compatível com versões antigas).
+    ch->setValue((uint8_t*)json.c_str(), json.length());
+    ch->notify();
+    return;
+  }
+
+  const size_t total = json.length();
+  const size_t count = (total + kChunkRawMaxBytes - 1) / kChunkRawMaxBytes;
+  size_t offset = 0;
+  for (size_t i = 0; i < count; ++i) {
+    size_t len = min(kChunkRawMaxBytes, total - offset);
+    if (offset + len < total) {
+      // Não cortar no meio de um caractere UTF-8: recua enquanto o byte de
+      // corte for continuação (0b10xxxxxx) ou a fatia terminar em byte
+      // inicial de sequência multibyte.
+      while (len > 0) {
+        const uint8_t next = (uint8_t)json[offset + len];
+        const uint8_t last = (uint8_t)json[offset + len - 1];
+        const bool cutIsContinuation = (next & 0xC0) == 0x80;
+        const bool lastIsAscii = last < 0x80;
+        const bool lastStartsSeq = last >= 0xC0;
+        if (!cutIsContinuation && (lastIsAscii || lastStartsSeq)) break;
+        --len;
+      }
+    }
+    if (len == 0) len = 1;  // UTF-8 inválido: não deixar loop infinito
+
+    const String slice = json.substring(offset, offset + len);
+
+    JsonDocument doc;
+    doc["t"] = "chunk";
+    doc["k"] = kind;
+    doc["n"] = count;
+    doc["i"] = i;
+    doc["d"] = slice;
+    String out;
+    serializeJson(doc, out);
+
+    ch->setValue((uint8_t*)out.c_str(), out.length());
+    ch->notify();
+    offset += len;
+  }
 }
 
 void TrakBle::setHistory(const String& json) {
   if (!historyChar_) return;
-  historyChar_->setValue((uint8_t*)json.c_str(), json.length());
+  // READ do GATT é limitado ao MTU: se o histórico exceder, mantém os
+  // eventos mais recentes (ficam no início do array) cortando numa fronteira
+  // de vírgula para o JSON continuar válido.
+  const size_t maxLen = 440;
+  if (json.length() > maxLen) {
+    size_t cut = maxLen;
+    while (cut > 0 && json[cut] != ',') --cut;
+    if (cut == 0) cut = maxLen;
+    historyChar_->setValue((uint8_t*)json.c_str(), cut + 1);
+  } else {
+    historyChar_->setValue((uint8_t*)json.c_str(), json.length());
+  }
 }

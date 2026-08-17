@@ -19,6 +19,7 @@ class TrakLed {
     READY,
     SYNC,
     ALERT,
+    FINDME,
   };
 
   void begin(uint8_t pin, uint8_t brightness = 24);

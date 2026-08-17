@@ -45,6 +45,11 @@ def main():
         board = "esp32dev"
 
     flag_block = "\n".join("  " + f for f in flags) if flags else "  ; nenhum addon customizado"
+    flash_block = (
+        "board_build.flash_size = 4MB\nboard_build.partitions = partitions/ota_4mb.csv"
+        if args.mcu == "esp32"
+        else "board_build.flash_size = 8MB\nboard_build.partitions = partitions/ota_8mb.csv"
+    )
 
     ini = f"""; TRK-Finder - Firmware {args.mcu} (gerado pelo setup customizado)
 ; Antena: {args.antenna} | MCU: {args.mcu} | HW: {", ".join(hw) or "nenhum"} | SW: {", ".join(sw) or "nenhum"}
@@ -58,6 +63,9 @@ monitor_speed = 115200
 ; Upload dos arquivos (inventory.json) para o LittleFS
 board_build.filesystem = littlefs
 upload_filesystem = pio run --target uploadfs
+
+; OTA: tabela com otadata + app0/app1 (rollback automático se o FW travar)
+{flash_block}
 
 build_flags =
   -DCORE_DEBUG_LEVEL=1
