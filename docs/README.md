@@ -22,6 +22,7 @@ graph TD
 
         YRM <-->|UART| ESP_CORE
         ESP_CORE --> BUZ[Alarme Local]
+        ESP_CORE --> OLED[OLED SSD1306 Tactical HUD]
     end
 
     subgraph "Conectividade (BLE)"
@@ -58,17 +59,19 @@ Fluxo de Operação Autônoma
 TRK-Finder (Rastreador Portátil)
 --------------------------------
 
-Produto único do ecossistema (ESP32 + YRM100 + BLE), com modos de uso:
+Produto único do ecossistema (ESP32 + YRM100 + BLE + OLED), com modos de uso:
 
 1. **Modo Estação:** o rastreador fica parado no ambiente e executa auditorias
    do inventário, notificando no app quando faltam ferramentas (agendamento
-   periódico planejado — Fase R2 do roadmap).
+   periódico planejado — Fase R2 do roadmap). O display exibe o status de 
+   ferramentas presentes.
 
 2. **Modo Radar (localização):** para a tag faltante, o operador caminha pelo
    ambiente com o dispositivo na mão; o YRM100 mede o **RSSI (dBm)** da tag e o
    firmware publica a potência via BLE e emite **bipes** com frequência
    proporcional ao sinal — o app exibe a intensidade em tempo real até a
-   ferramenta ser encontrada.
+   ferramenta ser encontrada. Além disso, o **OLED entra no modo Tactical HUD**,
+   exibindo um retículo octogonal com setas-guia e porcentagem de proximidade.
 
 Roadmap de Entregas e Features
 ------------------------------

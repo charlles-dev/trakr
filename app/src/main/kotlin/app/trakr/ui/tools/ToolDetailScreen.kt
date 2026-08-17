@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:max-line-length", "MaxLineLength")
+
 package app.trakr.ui.tools
 
 import androidx.compose.foundation.background
@@ -18,8 +20,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Radar
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -32,6 +37,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,20 +80,36 @@ fun ToolDetailScreen(
     tool: Tool,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    onLocate: () -> Unit = {},
     viewModel: ToolDetailViewModel = viewModel(key = tool.id, factory = ToolDetailViewModel.Factory),
 ) {
     val samples by viewModel.samples.collectAsStateWithLifecycle(emptyList())
+    val events by viewModel.events.collectAsStateWithLifecycle(emptyList())
+    val isLocating by viewModel.isLocating.collectAsStateWithLifecycle()
+    val message by viewModel.message.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
+    val context = androidx.compose.ui.platform.LocalContext.current
 
-    LaunchedEffect(tool.epc) {
+    LaunchedEffect(message) {
+        message?.let {
+            snackbarHostState.showSnackbar(it.resolve(context))
+            viewModel.clearMessage()
+        }
+    }
+
+    LaunchedEffect(tool.epc, tool.id) {
         viewModel.setEpc(tool.epc)
+        viewModel.setToolId(tool.id)
     }
 
     ToolDetailContent(
         tool = tool,
         samples = samples,
+        events = events,
+        isLocating = isLocating,
         onBack = onBack,
-        onLocate = onLocate,
+        onStartLocate = { viewModel.startLocating(tool.epc) },
+        onStopLocate = { viewModel.stopLocating() },
+        snackbarHostState = snackbarHostState,
         modifier = modifier,
     )
 }
@@ -98,40 +120,46 @@ fun ToolDetailScreen(
 internal fun ToolDetailContent(
     tool: Tool,
     samples: List<RssiSample>,
+    events: List<app.trakr.model.ToolEvent> = emptyList(),
+    isLocating: Boolean = false,
     onBack: () -> Unit,
+    onStartLocate: () -> Unit = {},
+    onStopLocate: () -> Unit = {},
+    snackbarHostState: androidx.compose.material3.SnackbarHostState? = null,
     modifier: Modifier = Modifier,
-    onLocate: () -> Unit = {},
 ) {
-    Column(
-        modifier =
-            modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-    ) {
-        TopAppBar(
-            title = { Text(stringResource(R.string.title_details)) },
-            navigationIcon = {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.action_back),
-                    )
-                }
-            },
-            colors =
-                TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                ),
-        )
-
+    androidx.compose.material3.Scaffold(
+        modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.title_details)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.action_back),
+                        )
+                    }
+                },
+                colors =
+                    TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                    ),
+            )
+        },
+        snackbarHost = {
+            snackbarHostState?.let { androidx.compose.material3.SnackbarHost(it) }
+        },
+    ) { padding ->
         LazyColumn(
             modifier =
                 Modifier
-                    .fillMaxWidth()
+                    .fillMaxSize()
+                    .padding(padding)
                     .maxContentWidth()
-                    .fillMaxHeight()
-                    .align(Alignment.CenterHorizontally),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                    .padding(horizontal = 16.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
@@ -177,17 +205,59 @@ internal fun ToolDetailContent(
             }
 
             item {
-                Button(
-                    onClick = onLocate,
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Icon(
-                        Icons.Filled.Radar,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.action_locate))
+                if (isLocating) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        color = NeonGreen.copy(alpha = 0.08f),
+                        border = androidx.compose.foundation.BorderStroke(1.5.dp, NeonGreen),
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Filled.Radar, contentDescription = null, tint = NeonGreen)
+                                Spacer(Modifier.width(8.dp))
+                                Text(
+                                    "RASTREANDO NO FINDER FÍSICO",
+                                    color = NeonGreen,
+                                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                    fontFamily = MonospaceTypography,
+                                )
+                            }
+                            Spacer(Modifier.height(6.dp))
+                            Text(
+                                "Aponte o TRK-Finder na direção das caixas e gavetas. Siga o ritmo do bip, o LED e o visor OLED.",
+                                style = MaterialTheme.typography.bodySmall,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Spacer(Modifier.height(12.dp))
+                            Button(
+                                onClick = onStopLocate,
+                                colors =
+                                    androidx.compose.material3.ButtonDefaults.buttonColors(
+                                        containerColor = AlertRed,
+                                    ),
+                            ) {
+                                Text("Encerrar busca no Finder")
+                            }
+                        }
+                    }
+                } else {
+                    Button(
+                        onClick = onStartLocate,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Icon(
+                            Icons.Filled.Radar,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp),
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text("Localizar com o Finder")
+                    }
                 }
             }
 
@@ -196,6 +266,7 @@ internal fun ToolDetailContent(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -221,6 +292,24 @@ internal fun ToolDetailContent(
                             },
                         )
                     }
+                }
+            }
+
+            item {
+                SectionHeader("LINHA DO TEMPO & AUDITORIA")
+            }
+
+            if (events.isEmpty()) {
+                item {
+                    Text(
+                        text = "Nenhum evento registrado ainda.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            } else {
+                items(events, key = { it.id }) { event ->
+                    ToolEventRow(event)
                 }
             }
 
@@ -278,6 +367,7 @@ private fun RssiRow(sample: RssiSample) {
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
@@ -321,6 +411,53 @@ private fun RssiRow(sample: RssiSample) {
                             .height(6.dp)
                             .clip(CircleShape)
                             .background(rssiColor(sample.rssi)),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ToolEventRow(event: app.trakr.model.ToolEvent) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.small,
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val (icon, color) =
+                when (event.eventType) {
+                    "CREATED" -> Icons.Filled.Add to NeonGreen
+                    "LOST" -> Icons.Filled.Warning to AlertRed
+                    "RECOVERED" -> Icons.Filled.CheckCircle to NeonGreen
+                    "SCAN" -> Icons.Filled.Radar to MaterialTheme.colorScheme.primary
+                    else -> Icons.Filled.Build to MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(10.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "${event.eventType}: ${event.details.ifBlank { "Operação de sistema" }}",
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.SemiBold,
+                )
+                Text(
+                    text = dateTimeFormat.format(Date(event.timestamp)),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = MonospaceTypography,
+                )
+            }
+            if (event.rssi != null) {
+                Text(
+                    text = "${event.rssi} dBm",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = MonospaceTypography,
+                    color = rssiColor(event.rssi),
                 )
             }
         }

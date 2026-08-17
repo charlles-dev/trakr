@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:max-line-length", "MaxLineLength")
+
 package app.trakr.testutil
 
 import app.trakr.data.ToolDao
@@ -162,6 +164,36 @@ class FakeToolDao : ToolDao {
 
     override suspend fun clearTrackerMutes() {
         trackerMutes.value = emptyList()
+    }
+
+    private val jobKits = MutableStateFlow<List<app.trakr.model.JobKit>>(emptyList())
+    private val toolEvents = MutableStateFlow<List<app.trakr.model.ToolEvent>>(emptyList())
+
+    override fun observeAllJobKits(): Flow<List<app.trakr.model.JobKit>> = jobKits
+
+    override suspend fun getJobKit(id: String): app.trakr.model.JobKit? = jobKits.value.find { it.id == id }
+
+    override suspend fun upsertJobKit(kit: app.trakr.model.JobKit) {
+        jobKits.value = jobKits.value.filter { it.id != kit.id } + kit
+    }
+
+    override suspend fun deleteJobKit(id: String) {
+        jobKits.value = jobKits.value.filter { it.id != id }
+    }
+
+    override suspend fun insertToolEvent(event: app.trakr.model.ToolEvent) {
+        toolEvents.value = listOf(event) + toolEvents.value
+    }
+
+    override fun observeToolEvents(
+        toolId: String,
+        limit: Int,
+    ): Flow<List<app.trakr.model.ToolEvent>> {
+        return toolEvents.map { list -> list.filter { it.toolId == toolId }.take(limit) }
+    }
+
+    override fun observeRecentEvents(limit: Int): Flow<List<app.trakr.model.ToolEvent>> {
+        return toolEvents.map { it.take(limit) }
     }
 
     override suspend fun clearScanSessions() {

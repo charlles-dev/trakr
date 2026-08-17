@@ -70,10 +70,10 @@ Para economizar bateria, o loop principal (`loop()`) raramente é executado por 
 O TRK-Finder conta com os seguintes recursos nativos integrados ao firmware e app sem necessidade de add-ons adicionais:
 
 1. **Modo Radar e Localização por Proximidade:**
-   * Disparado pelo comando `start_radar` no GATT Control.
+   * Disparado pelo comando `start_radar` no GATT Control (suporta ID da ferramenta ou EPC).
    * Varredura contínua via `TrakYrm100::collectReads()` medindo EPC + RSSI em dBm.
    * Feedback sonoro no buzzer ativo com cadência proporcional (1000 ms sem sinal → 100 ms sinal forte).
-   * Feedback visual no LED WS2812B (azul procurando → ciano sinal → verde perto).
+   * Feedback visual nativo através do display **OLED SSD1306 (Tactical HUD)**, exibindo retículo octogonal, proximidade percentual e status geral.
 
 2. **Registro Local de Eventos (Ledger):**
    * Histórico persistido em LittleFS (`events.json`) para rastreabilidade offline.

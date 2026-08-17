@@ -43,6 +43,7 @@ class TrakInventory {
   // Serializa o inventário no mesmo formato do inventory.json.
   String toJsonString() const;
 
+  void clear() { tools_.clear(); newly_missing_.clear(); }
   void replaceTools(std::vector<TrakTool>&& tools) { tools_ = std::move(tools); }
 
  private:

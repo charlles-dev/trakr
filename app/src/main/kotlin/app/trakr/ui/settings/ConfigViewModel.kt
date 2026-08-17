@@ -103,6 +103,59 @@ class ConfigViewModel(
         setPin("")
     }
 
+    fun locateFinder(durationSec: Int = 5) {
+        ble.locateFinder(durationSec) {
+            _message.value = UiMessage(R.string.msg_no_device)
+        }
+        _message.value = UiMessage("Sinalizador sonoro e luminoso acionado no TRK-Finder!")
+    }
+
+    fun setRfPower(dbm: Int) {
+        ble.setRfPower(dbm) {
+            _message.value = UiMessage(R.string.msg_no_device)
+        }
+        _message.value = UiMessage("Potência UHF configurada: $dbm dBm")
+    }
+
+    fun writeEpcTag(newEpc: String) {
+        if (newEpc.isBlank()) {
+            _message.value = UiMessage("Código EPC inválido")
+            return
+        }
+        ble.writeEpcTag(newEpc) {
+            _message.value = UiMessage(R.string.msg_no_device)
+        }
+        _message.value = UiMessage("Gravando EPC na tag virgem...")
+    }
+
+    fun fetchBlackboxLogs() {
+        ble.getBlackboxLogs {
+            _message.value = UiMessage(R.string.msg_no_device)
+        }
+        _message.value = UiMessage("Solicitando logs da caixa preta da Flash...")
+    }
+
+    fun setTacticalAlertProfile(profile: String) {
+        when (profile) {
+            "silent" -> {
+                setBeep(false)
+            }
+            "discrete" -> {
+                setBeep(true)
+                setTxPower(10)
+            }
+            "normal" -> {
+                setBeep(true)
+                setTxPower(18)
+            }
+            "industrial" -> {
+                setBeep(true)
+                setTxPower(26)
+            }
+        }
+        _message.value = UiMessage("Perfil tático aplicado: ${profile.uppercase()}")
+    }
+
     fun rescan() {
         ble.rescan()
     }

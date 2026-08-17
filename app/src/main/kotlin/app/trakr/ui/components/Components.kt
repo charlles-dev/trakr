@@ -5,6 +5,7 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,8 +22,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.SquareFoot
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -84,21 +89,34 @@ fun StatusBadge(
     Box(
         modifier =
             modifier
-                .clip(RoundedCornerShape(50))
-                .background(color.copy(alpha = 0.14f))
-                .padding(horizontal = 10.dp, vertical = 4.dp),
+                .clip(RoundedCornerShape(6.dp))
+                .background(color.copy(alpha = 0.12f))
+                .padding(horizontal = 8.dp, vertical = 4.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
             PulseDot(color = color, size = 6.dp)
-            Spacer(Modifier.width(6.dp))
             Text(
                 text = text,
                 style = MaterialTheme.typography.labelSmall,
                 color = color,
+                fontFamily = MonospaceTypography,
+                fontWeight = FontWeight.Bold,
             )
         }
     }
 }
+
+fun getCategoryIcon(category: String): ImageVector =
+    when (category.lowercase()) {
+        "eletrica" -> Icons.Filled.Bolt
+        "medicao" -> Icons.Filled.SquareFoot
+        "epi" -> Icons.Filled.Shield
+        "outro" -> Icons.Filled.Category
+        else -> Icons.Filled.Build
+    }
 
 /** Card de ferramenta com avatar, nome e slot para ações/badges. */
 @Composable
@@ -108,6 +126,9 @@ fun ToolCard(
     onClick: (() -> Unit)? = null,
     trailing: @Composable () -> Unit = {},
 ) {
+    val statusColor = if (tool.present) NeonGreen else AlertRed
+    val catIcon = getCategoryIcon(tool.category)
+
     Surface(
         modifier =
             modifier
@@ -121,7 +142,8 @@ fun ToolCard(
                 ),
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        tonalElevation = 1.dp,
+        border = BorderStroke(1.dp, if (tool.present) statusColor.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outlineVariant),
+        tonalElevation = 0.dp,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
@@ -130,15 +152,15 @@ fun ToolCard(
             Box(
                 modifier =
                     Modifier
-                        .size(42.dp)
+                        .size(44.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                        .background(statusColor.copy(alpha = 0.14f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    Icons.Filled.Build,
+                    catIcon,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = statusColor,
                     modifier = Modifier.size(22.dp),
                 )
             }
@@ -147,15 +169,38 @@ fun ToolCard(
                 Text(
                     text = tool.name,
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
-                if (tool.epc.isNotBlank()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
                     Text(
-                        text = tool.epc.takeLast(8),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = MonospaceTypography,
-                        maxLines = 1,
+                        text = tool.category.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 10.sp,
                     )
+                    if (tool.epc.isNotBlank()) {
+                        Text(
+                            text = "EPC: ${tool.epc.takeLast(8)}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = MonospaceTypography,
+                            maxLines = 1,
+                        )
+                    }
+                    if (tool.rssi != null && tool.rssi != -100 && tool.present) {
+                        Text(
+                            text = "${tool.rssi} dBm",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = NeonGreen,
+                            fontFamily = MonospaceTypography,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
             }
             trailing()
@@ -193,33 +238,48 @@ fun EmptyState(
                 .fillMaxWidth()
                 .padding(horizontal = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Box(
             modifier =
                 Modifier
-                    .size(88.dp)
+                    .size(96.dp)
                     .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(40.dp),
+            Box(
+                modifier =
+                    Modifier
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                    modifier = Modifier.size(36.dp),
+                )
+            }
+        }
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+            Text(
+                text = hint,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Text(
-            text = hint,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }
 
@@ -235,21 +295,24 @@ fun StatTile(
         modifier = modifier,
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Text(
                 text = value,
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
                 color = valueColor,
                 fontFamily = MonospaceTypography,
             )
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                letterSpacing = 0.8.sp,
             )
         }
     }
@@ -270,19 +333,19 @@ fun ConnectionBanner(
         when {
             connected ->
                 Triple(
-                    MaterialTheme.colorScheme.primary,
+                    NeonGreen,
                     stringResource(R.string.connection_live),
                     deviceName ?: stringResource(R.string.connection_connected),
                 )
             scanning ->
                 Triple(
-                    MaterialTheme.colorScheme.primary,
+                    AmberWarn,
                     stringResource(R.string.connection_scanning),
                     stringResource(R.string.dashboard_scanning),
                 )
             else ->
                 Triple(
-                    MaterialTheme.colorScheme.error,
+                    AlertRed,
                     stringResource(R.string.connection_offline),
                     stringResource(R.string.connection_none),
                 )
@@ -290,25 +353,38 @@ fun ConnectionBanner(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        color =
-            if (connected) {
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
-            } else {
-                MaterialTheme.colorScheme.error.copy(alpha = 0.06f)
-            },
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = BorderStroke(1.dp, dot.copy(alpha = 0.35f)),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            PulseDot(color = dot)
-            Spacer(Modifier.width(10.dp))
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.weight(1f),
-            )
+            Box(
+                modifier =
+                    Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(dot.copy(alpha = 0.14f)),
+                contentAlignment = Alignment.Center,
+            ) {
+                PulseDot(color = dot, size = 10.dp)
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = if (connected) "BLE 5.0 • 915 MHz UHF" else "Aguardando link de rádio",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = MonospaceTypography,
+                )
+            }
             StatusBadge(text = badge, color = dot)
         }
     }

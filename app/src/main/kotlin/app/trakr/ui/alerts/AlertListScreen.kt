@@ -41,7 +41,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.trakr.R
@@ -50,6 +52,7 @@ import app.trakr.ui.components.EmptyState
 import app.trakr.ui.components.StatusBadge
 import app.trakr.ui.components.maxContentWidth
 import app.trakr.ui.theme.AlertRed
+import app.trakr.ui.theme.MonospaceTypography
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -184,12 +187,27 @@ private fun Long.toLocalDate(): LocalDate = java.time.Instant.ofEpochMilli(this)
 
 @Composable
 private fun SectionLabel(label: Int) {
-    Text(
-        text = stringResource(label),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
-    )
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 12.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(
+            modifier =
+                Modifier
+                    .size(width = 3.dp, height = 12.dp)
+                    .clip(RoundedCornerShape(1.dp))
+                    .background(AlertRed),
+        )
+        Text(
+            text = stringResource(label).uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            fontFamily = MonospaceTypography,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 0.8.sp,
+        )
+    }
 }
 
 @Composable
@@ -197,6 +215,7 @@ private fun AlertRow(
     alert: AlertEvent,
     onClick: () -> Unit,
 ) {
+    val unreadColor = AlertRed
     Surface(
         modifier =
             Modifier
@@ -204,6 +223,11 @@ private fun AlertRow(
                 .clickable(onClick = onClick),
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border =
+            androidx.compose.foundation.BorderStroke(
+                1.dp,
+                if (!alert.read) unreadColor.copy(alpha = 0.45f) else MaterialTheme.colorScheme.outlineVariant,
+            ),
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
@@ -213,15 +237,15 @@ private fun AlertRow(
                 modifier =
                     Modifier
                         .size(42.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(AlertRed.copy(alpha = if (alert.read) 0.06f else 0.12f)),
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(unreadColor.copy(alpha = if (alert.read) 0.08f else 0.16f)),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Filled.Warning,
                     contentDescription = null,
-                    tint = if (alert.read) AlertRed.copy(alpha = 0.5f) else AlertRed,
-                    modifier = Modifier.size(22.dp),
+                    tint = if (alert.read) unreadColor.copy(alpha = 0.5f) else unreadColor,
+                    modifier = Modifier.size(20.dp),
                 )
             }
             Spacer(Modifier.width(12.dp))
@@ -229,6 +253,7 @@ private fun AlertRow(
                 Text(
                     text = alert.toolName,
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (alert.read) FontWeight.Normal else FontWeight.Bold,
                     color =
                         if (alert.read) {
                             MaterialTheme.colorScheme.onSurfaceVariant
@@ -239,8 +264,9 @@ private fun AlertRow(
                 val context = LocalContext.current
                 Text(
                     text = relativeTime(alert.createdAt, context),
-                    style = MaterialTheme.typography.labelMedium,
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontFamily = MonospaceTypography,
                 )
             }
             if (!alert.read) {

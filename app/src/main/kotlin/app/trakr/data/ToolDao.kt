@@ -118,6 +118,34 @@ interface ToolDao {
     @Query("SELECT * FROM alerts")
     suspend fun getAllAlerts(): List<AlertEvent>
 
+    // ---- Job Kits (Missões de Serviço) ----
+
+    @Query("SELECT * FROM job_kits ORDER BY name")
+    fun observeAllJobKits(): Flow<List<app.trakr.model.JobKit>>
+
+    @Query("SELECT * FROM job_kits WHERE id = :id")
+    suspend fun getJobKit(id: String): app.trakr.model.JobKit?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertJobKit(kit: app.trakr.model.JobKit)
+
+    @Query("DELETE FROM job_kits WHERE id = :id")
+    suspend fun deleteJobKit(id: String)
+
+    // ---- Linha do Tempo e Eventos de Auditoria ----
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertToolEvent(event: app.trakr.model.ToolEvent)
+
+    @Query("SELECT * FROM tool_events WHERE toolId = :toolId ORDER BY timestamp DESC LIMIT :limit")
+    fun observeToolEvents(
+        toolId: String,
+        limit: Int = 50,
+    ): Flow<List<app.trakr.model.ToolEvent>>
+
+    @Query("SELECT * FROM tool_events ORDER BY timestamp DESC LIMIT :limit")
+    fun observeRecentEvents(limit: Int = 100): Flow<List<app.trakr.model.ToolEvent>>
+
     @Query("SELECT * FROM rssi_samples")
     suspend fun getAllRssiSamples(): List<RssiSample>
 

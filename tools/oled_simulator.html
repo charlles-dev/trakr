@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRK-Finder — Tactical Military HUD OLED 128x64</title>
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --panel-bg: #0f141c;
+      --panel-border: #1f2937;
+      --oled-cyan: #00ffcc;
+      --oled-cyan-glow: rgba(0, 255, 204, 0.45);
+      --oled-green: #39ff14;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #10b981;
+      --alert-red: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 255, 204, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      letter-spacing: 3px;
+      color: var(--oled-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-shadow: 0 0 16px var(--oled-cyan-glow);
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-top: 6px;
+      letter-spacing: 1px;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+      max-width: 920px;
+      width: 100%;
+    }
+
+    @media (min-width: 820px) {
+      .container {
+        grid-template-columns: 1.15fr 0.85fr;
+      }
+    }
+
+    /* HARDWARE MODULE */
+    .module-card {
+      background: #121824;
+      border: 2px solid #233044;
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      position: relative;
+    }
+
+    .pcb-header {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      align-items: center;
+      margin-bottom: 16px;
+      border-bottom: 1px dashed #233044;
+      padding-bottom: 10px;
+    }
+
+    .pcb-pins {
+      display: flex;
+      gap: 14px;
+    }
+
+    .pin {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.65rem;
+      color: #ffd700;
+      font-family: monospace;
+      font-weight: bold;
+    }
+
+    .pin-dot {
+      width: 7px;
+      height: 7px;
+      background: #ffd700;
+      border-radius: 50%;
+      margin-bottom: 3px;
+      box-shadow: 0 0 6px #ffd700;
+    }
+
+    .hardware-tag {
+      font-size: 0.7rem;
+      font-family: monospace;
+      color: var(--oled-cyan);
+      background: rgba(0, 255, 204, 0.1);
+      padding: 3px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 255, 204, 0.25);
+    }
+
+    /* OLED CHASSIS */
+    .oled-chassis {
+      background: #020406;
+      border: 6px solid #1a2332;
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.95), 0 8px 24px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+
+    canvas#oledCanvas {
+      width: 448px; /* 128 * 3.5 */
+      height: 224px; /* 64 * 3.5 */
+      image-rendering: pixelated;
+      background: #010606;
+      display: block;
+      border-radius: 3px;
+      box-shadow: 0 0 20px var(--oled-cyan-glow);
+    }
+
+    @media (max-width: 520px) {
+      canvas#oledCanvas {
+        width: 320px;
+        height: 160px;
+      }
+    }
+
+    /* HUD SPECS BAR */
+    .hud-specs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      width: 100%;
+      margin-top: 18px;
+      gap: 8px;
+      text-align: center;
+      font-family: monospace;
+      font-size: 0.7rem;
+    }
+
+    .spec-item {
+      background: #090e17;
+      border: 1px solid #1f2937;
+      padding: 6px 4px;
+      border-radius: 6px;
+    }
+
+    .spec-label {
+      color: var(--text-muted);
+      display: block;
+      font-size: 0.65rem;
+    }
+
+    .spec-val {
+      color: var(--oled-cyan);
+      font-weight: bold;
+    }
+
+    /* CONTROLS */
+    .controls-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 16px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .panel-section-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 6px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      background: #161f2e;
+      color: var(--text-main);
+      border: 1px solid #28374d;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-align: center;
+    }
+
+    button:hover {
+      background: #1f2d42;
+      border-color: var(--oled-cyan);
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+    }
+
+    button.active {
+      background: rgba(0, 255, 204, 0.15);
+      border-color: var(--oled-cyan);
+      color: var(--oled-cyan);
+      box-shadow: 0 0 12px rgba(0, 255, 204, 0.3);
+    }
+
+    button.danger {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: #ef4444;
+      color: #f87171;
+    }
+
+    button.danger:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .control-row label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .control-row label strong {
+      color: var(--oled-cyan);
+      font-family: monospace;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--oled-cyan);
+      cursor: pointer;
+    }
+
+    .audio-box {
+      background: #090e17;
+      border: 1px solid #233044;
+      padding: 10px 14px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.82rem;
+      cursor: pointer;
+    }
+
+    .audio-box input {
+      accent-color: var(--oled-cyan);
+      width: 18px;
+      height: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>◆ TRK-FINDER TACTICAL OLED</h1>
+    <p>Simulação em tempo real da interface de alta densidade (SSD1306 128x64)</p>
+  </header>
+
+  <div class="container">
+    
+    <!-- OLED HARDWARE MODULE -->
+    <div class="module-card">
+      <div class="pcb-header">
+        <div class="pcb-pins">
+          <div class="pin"><div class="pin-dot"></div>GND</div>
+          <div class="pin"><div class="pin-dot"></div>VCC</div>
+          <div class="pin"><div class="pin-dot"></div>SCL</div>
+          <div class="pin"><div class="pin-dot"></div>SDA</div>
+        </div>
+        <div class="hardware-tag">I2C: 0x3C • SSD1306</div>
+      </div>
+
+      <div class="oled-chassis">
+        <canvas id="oledCanvas" width="128" height="64"></canvas>
+      </div>
+
+      <div class="hud-specs">
+        <div class="spec-item">
+          <span class="spec-label">TAXA DE ATUALIZ.</span>
+          <span class="spec-val">30 FPS (I2C 400k)</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">RESOLUÇÃO</span>
+          <span class="spec-val">128 × 64 PX</span>
+        </div>
+        <div class="spec-item">
+          <span class="spec-label">ESTILO</span>
+          <span class="spec-val">CYBER TACTICAL</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEST BENCH CONTROLS -->
+    <div class="controls-panel">
+      <div class="panel-section-title">
+        🎛️ Telas & Modos Táticos
+      </div>
+
+      <div class="grid-2">
+        <button id="btnStatus" class="active" onclick="setMode('STATUS')">📋 Painel Geral (Status)</button>
+        <button id="btnRadar" onclick="setMode('RADAR')">🎯 Radar HUD (Mira Ativa)</button>
+        <button id="btnBoot" onclick="setMode('BOOT')">🚀 Boot / Diagnóstico</button>
+        <button id="btnSync" onclick="setMode('SYNC')">⚡ Sincronização Flash</button>
+      </div>
+
+      <div class="panel-section-title" style="margin-top: 4px;">
+        📡 Telemetria & Rádio UHF
+      </div>
+
+      <div class="control-row">
+        <label>
+          <span>Sinal UHF (Proximidade):</span>
+          <strong id="valRssi">-42 dBm (Forte)</strong>
+        </label>
+        <input type="range" id="sliderRssi" min="-90" max="-28" value="-42" oninput="updateRssi(this.value)">
+      </div>
+
+      <div class="control-row">
+        <label>
+          <span>Potência RF (YRM100):</span>
+          <strong id="valRf">P26 (26 dBm)</strong>
+        </label>
+        <input type="range" id="sliderRf" min="10" max="26" value="26" step="2" oninput="updateRf(this.value)">
+      </div>
+
+      <div class="control-row">
+        <label>
+          <span>Bateria do Finder:</span>
+          <strong id="valBatt">85% (4 Segmentos)</strong>
+        </label>
+        <input type="range" id="sliderBatt" min="5" max="100" value="85" oninput="updateBatt(this.value)">
+      </div>
+
+      <div class="control-row">
+        <label>
+          <span>Ferramentas Presentes:</span>
+          <strong id="valTools">2 de 2 (Nominal)</strong>
+        </label>
+        <input type="range" id="sliderTools" min="0" max="4" value="2" oninput="updateTools(this.value)">
+      </div>
+
+      <label class="audio-box">
+        <input type="checkbox" id="chkAudio" onchange="toggleAudio(this.checked)">
+        <span>🔊 Sintetizar Buzzer do Radar (200Hz - 2000Hz)</span>
+      </label>
+
+      <div class="grid-2" style="margin-top: 4px;">
+        <button onclick="triggerScan()">⚡ Simular Scan Físico</button>
+        <button class="danger" onclick="triggerBeacon()">🔔 Beacon de Socorro</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const canvas = document.getElementById('oledCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Estado do Finder
+    let mode = 'STATUS';
+    let ble = true;
+    let batt = 85;
+    let rssi = -42;
+    let rfPower = 26;
+    let total = 2;
+    let present = 2;
+    let missingToolName = "PARAFUSADEIRA";
+    let activeToolName = "CHAVE PH2";
+    let activeTag = "E280116001";
+    let radarSweep = 0;
+
+    // Web Audio Synthesizer
+    let audioCtx = null;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    function toggleAudio(val) { if (val) initAudio(); }
+    function playBeep(freq, ms) {
+      if (!document.getElementById('chkAudio').checked || !audioCtx) return;
+      try {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + (ms / 1000));
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start();
+        o.stop(audioCtx.currentTime + (ms / 1000));
+      } catch(e){}
+    }
+
+    function setMode(m) {
+      mode = m;
+      document.querySelectorAll('.grid-2 button').forEach(b => b.classList.remove('active'));
+      if (m === 'STATUS') document.getElementById('btnStatus').classList.add('active');
+      if (m === 'RADAR') document.getElementById('btnRadar').classList.add('active');
+      if (m === 'BOOT') document.getElementById('btnBoot').classList.add('active');
+      if (m === 'SYNC') document.getElementById('btnSync').classList.add('active');
+    }
+
+    function updateRssi(v) {
+      rssi = parseInt(v);
+      let desc = rssi > -45 ? "Forte" : (rssi > -70 ? "Médio" : "Fraco");
+      document.getElementById('valRssi').innerText = `${rssi} dBm (${desc})`;
+    }
+
+    function updateRf(v) {
+      rfPower = parseInt(v);
+      document.getElementById('valRf').innerText = `P${rfPower} (${rfPower} dBm)`;
+    }
+
+    function updateBatt(v) {
+      batt = parseInt(v);
+      let segs = Math.round(batt / 25);
+      document.getElementById('valBatt').innerText = `${batt}% (${segs} Segmentos)`;
+    }
+
+    function updateTools(v) {
+      present = parseInt(v);
+      total = Math.max(present, 2);
+      let miss = total - present;
+      document.getElementById('valTools').innerText = miss === 0 ? `${present} de ${total} (Nominal)` : `${present} de ${total} (${miss} Ausente(s))`;
+    }
+
+    function triggerScan() {
+      setMode('SYNC');
+      setTimeout(() => setMode('STATUS'), 1100);
+    }
+
+    function triggerBeacon() {
+      let f = true;
+      let c = 0;
+      const i = setInterval(() => {
+        if (f) {
+          ctx.fillStyle = '#00ffcc';
+          ctx.fillRect(0, 0, 128, 64);
+          playBeep(2400, 60);
+        } else {
+          ctx.fillStyle = '#020406';
+          ctx.fillRect(0, 0, 128, 64);
+        }
+        f = !f;
+        c++;
+        if (c > 8) { clearInterval(i); setMode('STATUS'); }
+      }, 90);
+    }
+
+    // DRAW PRIMITIVES
+    const COLOR_CYAN = '#00ffcc';
+    const COLOR_DARK = '#020406';
+
+    function drawChamferedBox(x, y, w, h, cut = 3, fill = false) {
+      ctx.beginPath();
+      ctx.moveTo(x + cut, y);
+      ctx.lineTo(x + w - cut, y);
+      ctx.lineTo(x + w, y + cut);
+      ctx.lineTo(x + w, y + h - cut);
+      ctx.lineTo(x + w - cut, y + h);
+      ctx.lineTo(x + cut, y + h);
+      ctx.lineTo(x, y + h - cut);
+      ctx.lineTo(x, y + cut);
+      ctx.closePath();
+      if (fill) {
+        ctx.fillStyle = COLOR_CYAN;
+        ctx.fill();
+      } else {
+        ctx.strokeStyle = COLOR_CYAN;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+
+    function drawSegmentedBar(x, y, w, h, percent) {
+      percent = Math.max(0, Math.min(100, percent));
+      ctx.strokeStyle = COLOR_CYAN;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, w, h);
+      const numBlocks = Math.floor((w - 2) / 4);
+      const active = Math.round((percent * numBlocks) / 100);
+      ctx.fillStyle = COLOR_CYAN;
+      for (let i = 0; i < active; i++) {
+        ctx.fillRect(x + 2 + (i * 4), y + 2, 2, h - 4);
+      }
+    }
+
+    function drawBattery(x, y, pct) {
+      pct = Math.max(0, Math.min(100, pct));
+      ctx.strokeStyle = COLOR_CYAN;
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, 14, 7);
+      ctx.fillRect(x + 14, y + 2, 1, 3);
+      const segs = Math.min(4, Math.ceil(pct / 25));
+      ctx.fillStyle = COLOR_CYAN;
+      for (let i = 0; i < segs; i++) {
+        ctx.fillRect(x + 2 + (i * 3), y + 2, 2, 3);
+      }
+    }
+
+    function drawBleIcon(x, y) {
+      ctx.strokeStyle = COLOR_CYAN;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + 2, y); ctx.lineTo(x + 2, y + 6);
+      ctx.moveTo(x + 2, y); ctx.lineTo(x + 4, y + 2);
+      ctx.lineTo(x, y + 4); ctx.lineTo(x + 4, y + 4);
+      ctx.lineTo(x + 2, y + 6);
+      ctx.stroke();
+    }
+
+    function drawTopBar(title) {
+      ctx.fillStyle = COLOR_CYAN;
+      ctx.font = 'bold 7px monospace';
+      ctx.fillText(`■ ${title}`, 2, 7);
+
+      // RF Power Badge
+      ctx.fillRect(66, 1, 20, 7);
+      ctx.fillStyle = COLOR_DARK;
+      ctx.font = 'bold 6px monospace';
+      ctx.fillText(`P${rfPower}`, 68, 6);
+
+      // BLE & Battery
+      if (ble) drawBleIcon(92, 1);
+      drawBattery(106, 1, batt);
+
+      // Linha tática
+      ctx.fillStyle = COLOR_CYAN;
+      ctx.fillRect(0, 9, 128, 1);
+    }
+
+    // MAIN RENDER LOOP
+    function render() {
+      ctx.fillStyle = COLOR_DARK;
+      ctx.fillRect(0, 0, 128, 64);
+
+      if (mode === 'BOOT') {
+        drawChamferedBox(0, 0, 128, 64, 4, false);
+        drawChamferedBox(3, 3, 122, 58, 3, false);
+
+        ctx.fillStyle = COLOR_CYAN;
+        ctx.font = 'bold 13px monospace';
+        ctx.fillText('T R A K R', 24, 23);
+
+        ctx.font = 'bold 8px monospace';
+        ctx.fillText('TRK-FINDER v3.0', 20, 36);
+        ctx.font = '7px monospace';
+        ctx.fillText('TACTICAL EDITION', 16, 47);
+
+        drawSegmentedBar(12, 53, 104, 6, 100);
+      }
+      else if (mode === 'STATUS') {
+        drawTopBar('TRK-FINDER');
+
+        // Card Esquerdo (Total)
+        drawChamferedBox(0, 12, 46, 50, 3, false);
+        ctx.fillStyle = COLOR_CYAN;
+        ctx.font = '7px monospace';
+        ctx.fillText('TOTAL', 8, 22);
+
+        ctx.font = 'bold 15px monospace';
+        ctx.fillText(String(present).padStart(2, '0'), 5, 39);
+        ctx.font = '8px monospace';
+        ctx.fillText(`/${String(total).padStart(2, '0')}`, 29, 39);
+
+        const pct = total > 0 ? (present * 100) / total : 100;
+        drawSegmentedBar(4, 52, 38, 6, pct);
+
+        // Card Direito
+        const miss = total - present;
+        if (miss <= 0) {
+          drawChamferedBox(50, 12, 78, 16, 2, true);
+          ctx.fillStyle = COLOR_DARK;
+          ctx.font = 'bold 8px monospace';
+          ctx.fillText('● NOMINAL', 58, 23);
+
+          ctx.fillStyle = COLOR_CYAN;
+          ctx.font = '7px monospace';
+          ctx.fillText('INVENTARIO OK', 54, 40);
+          ctx.fillText('100% PROTEGIDO', 54, 52);
+        } else {
+          drawChamferedBox(50, 12, 78, 16, 2, true);
+          ctx.fillStyle = COLOR_DARK;
+          ctx.font = 'bold 8px monospace';
+          ctx.fillText(`! ${miss} AUSENTE`, 56, 23);
+
+          ctx.fillStyle = COLOR_CYAN;
+          ctx.font = 'bold 7px monospace';
+          ctx.fillText(missingToolName.slice(0, 11), 54, 39);
+          ctx.font = '7px monospace';
+          ctx.fillText('ACIONE O RADAR', 54, 52);
+        }
+      }
+      else if (mode === 'RADAR') {
+        drawTopBar('TRK-FINDER');
+
+        // Retículo Octagonal
+        const cx = 24;
+        const cy = 31;
+        const r = 18;
+        const a = 8;
+        ctx.strokeStyle = COLOR_CYAN;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(cx - a, cy - r);
+        ctx.lineTo(cx + a, cy - r);
+        ctx.lineTo(cx + r, cy - a);
+        ctx.lineTo(cx + r, cy + a);
+        ctx.lineTo(cx + a, cy + r);
+        ctx.lineTo(cx - a, cy + r);
+        ctx.lineTo(cx - r, cy + a);
+        ctx.lineTo(cx - r, cy - a);
+        ctx.closePath();
+        ctx.stroke();
+
+        // Setas
+        ctx.fillStyle = COLOR_CYAN;
+        // Top
+        ctx.beginPath(); ctx.moveTo(cx, cy - r + 3); ctx.lineTo(cx - 2, cy - r + 6); ctx.lineTo(cx + 2, cy - r + 6); ctx.fill();
+        // Bottom
+        ctx.beginPath(); ctx.moveTo(cx, cy + r - 3); ctx.lineTo(cx - 2, cy + r - 6); ctx.lineTo(cx + 2, cy + r - 6); ctx.fill();
+        // Left
+        ctx.beginPath(); ctx.moveTo(cx - r + 3, cy); ctx.lineTo(cx - r + 6, cy - 2); ctx.lineTo(cx - r + 6, cy + 2); ctx.fill();
+        // Right
+        ctx.beginPath(); ctx.moveTo(cx + r - 3, cy); ctx.lineTo(cx + r - 6, cy - 2); ctx.lineTo(cx + r - 6, cy + 2); ctx.fill();
+
+        ctx.fillRect(cx, cy, 1, 1);
+
+        // Blip
+        radarSweep += 0.08;
+        if (rssi > -88) {
+          const d = Math.max(2, Math.min(r - 5, ((-30 - rssi) / 55) * (r - 5)));
+          const bx = cx + Math.cos(radarSweep + 1.2) * d;
+          const by = cy + Math.sin(radarSweep + 1.2) * d;
+          ctx.beginPath();
+          ctx.arc(bx, by, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Right Panel
+        const rx = 48;
+        ctx.font = '7px monospace';
+        
+        ctx.fillText(`TAG:${activeToolName.slice(0,9)}`, rx, 18);
+        ctx.fillText(`SINAL:${rssi}dBm`, rx, 28);
+        
+        ctx.fillText(`PROX:`, rx, 38);
+        const prox = Math.round(Math.max(0, Math.min(100, ( (rssi - (-90)) / 60 ) * 100)));
+        drawSegmentedBar(rx + 30, 32, 26, 7, prox);
+        ctx.fillText(`${prox}%`, rx + 58, 38);
+
+        let guia = '.....';
+        if (rssi > -45) guia = 'AVANCE';
+        else if (rssi < -75) guia = 'RECUE';
+        else guia = 'BUSCANDO';
+        ctx.fillText(`GUIA:${guia}`, rx, 48);
+
+        // Footer
+        ctx.fillRect(0, 52, 128, 1);
+        if (rssi <= -88) {
+          ctx.fillText(`! ALERTA: SEM SINAL !`, 2, 61);
+        } else if (rssi < -75) {
+          ctx.fillText(`! ALERTA: SINAL FRACO`, 2, 61);
+        } else {
+          ctx.fillText(`* RASTREAMENTO ATIVO`, 2, 61);
+        }
+
+        // Audio
+        const interval = 120 + (( -30 - Math.max(-85, rssi) ) / 55) * 450;
+        if (Math.sin(Date.now() / interval) > 0.85) {
+          const freq = 200 + ((Math.max(-85, rssi) - (-85)) / 55) * 1800;
+          playBeep(freq, 35);
+        }
+      }
+      else if (mode === 'SYNC') {
+        drawTopBar('SYNC FLASH');
+        drawChamferedBox(10, 16, 108, 42, 3, false);
+        ctx.fillStyle = COLOR_CYAN;
+        ctx.font = 'bold 8px monospace';
+        ctx.fillText('SINCRONIZANDO FLASH', 16, 28);
+        ctx.font = '7px monospace';
+        ctx.fillText(`TOTAL: ${total} FERRAMENTAS`, 16, 40);
+        drawSegmentedBar(16, 46, 96, 6, 85);
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    render();
+  </script>
+</body>
+</html>

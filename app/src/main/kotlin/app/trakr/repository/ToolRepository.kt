@@ -77,6 +77,47 @@ class ToolRepository(private val dao: ToolDao) {
         limit: Int = 50,
     ): Flow<List<RssiSample>> = dao.observeRssiSamples(epc, limit)
 
+    // Job Kits (Missões de Serviço)
+    fun observeJobKits(): Flow<List<app.trakr.model.JobKit>> = dao.observeAllJobKits()
+
+    suspend fun getJobKit(id: String): app.trakr.model.JobKit? = dao.getJobKit(id)
+
+    suspend fun saveJobKit(kit: app.trakr.model.JobKit) = dao.upsertJobKit(kit)
+
+    suspend fun deleteJobKit(id: String) = dao.deleteJobKit(id)
+
+    // Eventos & Linha do Tempo
+    suspend fun recordToolEvent(
+        toolId: String,
+        eventType: String,
+        details: String = "",
+        rssi: Int? = null,
+    ) {
+        dao.insertToolEvent(
+            app.trakr.model.ToolEvent(
+                toolId = toolId,
+                timestamp = System.currentTimeMillis(),
+                eventType = eventType,
+                details = details,
+                rssi = rssi,
+            ),
+        )
+    }
+
+    fun observeToolEvents(
+        toolId: String,
+        limit: Int = 50,
+    ): Flow<List<app.trakr.model.ToolEvent>> = dao.observeToolEvents(toolId, limit)
+
+    fun observeRecentEvents(limit: Int = 100): Flow<List<app.trakr.model.ToolEvent>> = dao.observeRecentEvents(limit)
+
+    suspend fun importBatchTools(tools: List<Tool>) {
+        dao.upsertTools(tools)
+        tools.forEach { tool ->
+            recordToolEvent(tool.id, "CREATED", "Importação em lote")
+        }
+    }
+
     // Backup/restore
     suspend fun exportBackupJson(): String {
         val tools = dao.getAllTools()

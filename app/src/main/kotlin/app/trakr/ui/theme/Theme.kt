@@ -15,10 +15,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.trakr.R
 
-// Cores da marca: verde-teal "ops room" sobre grafite profundo.
-val NeonGreen = Color(0xFF20B898)
-val AmberWarn = Color(0xFFF0AE4E)
-val AlertRed = Color(0xFFFF6B6B)
+// Cores da marca: verde-neon tático "ops room" sobre grafite obsidiana profundo.
+val NeonGreen = Color(0xFF00F5B4)
+val AmberWarn = Color(0xFFFFB300)
+val AlertRed = Color(0xFFFF453A)
 
 // ---------------- Tipografia da marca ----------------
 // Space Grotesk: títulos e interface (industrial, geométrica).
@@ -49,35 +49,35 @@ val MonospaceTypography: FontFamily = MonoFont
 private val DarkColors =
     darkColorScheme(
         primary = NeonGreen,
-        onPrimary = Color(0xFF06231A),
-        primaryContainer = Color(0xFF0E3B2A),
-        onPrimaryContainer = Color(0xFF9BF5CF),
-        secondary = Color(0xFF5BC9A4),
-        onSecondary = Color(0xFF06231A),
-        secondaryContainer = Color(0xFF11402F),
-        onSecondaryContainer = Color(0xFFA8EFD3),
+        onPrimary = Color(0xFF003826),
+        primaryContainer = Color(0xFF00523A),
+        onPrimaryContainer = Color(0xFF74FFD1),
+        secondary = Color(0xFF4EE8B8),
+        onSecondary = Color(0xFF003826),
+        secondaryContainer = Color(0xFF0D3D2F),
+        onSecondaryContainer = Color(0xFF86F8CF),
         tertiary = AmberWarn,
-        onTertiary = Color(0xFF3A2A08),
-        tertiaryContainer = Color(0xFF4A3810),
-        onTertiaryContainer = Color(0xFFFFE2AE),
+        onTertiary = Color(0xFF452B00),
+        tertiaryContainer = Color(0xFF633F00),
+        onTertiaryContainer = Color(0xFFFFDF9E),
         error = AlertRed,
-        onError = Color(0xFF3A0B0B),
-        errorContainer = Color(0xFF4A1F1F),
-        onErrorContainer = Color(0xFFFFD3D3),
-        background = Color(0xFF0B1210),
-        onBackground = Color(0xFFE4EDE8),
-        surface = Color(0xFF111A16),
-        onSurface = Color(0xFFE4EDE8),
-        surfaceVariant = Color(0xFF1B2621),
-        onSurfaceVariant = Color(0xFF9FB3A9),
-        surfaceContainer = Color(0xFF0F1814),
-        surfaceContainerHigh = Color(0xFF151F1A),
-        surfaceContainerHighest = Color(0xFF1B2621),
-        outline = Color(0xFF3A4A42),
-        outlineVariant = Color(0xFF26332D),
-        inverseSurface = Color(0xFFE4EDE8),
-        inverseOnSurface = Color(0xFF0B1210),
-        inversePrimary = Color(0xFF0E7A52),
+        onError = Color(0xFF410002),
+        errorContainer = Color(0xFF5C0007),
+        onErrorContainer = Color(0xFFFFDAD6),
+        background = Color(0xFF080D0B),
+        onBackground = Color(0xFFF0F5F2),
+        surface = Color(0xFF0E1613),
+        onSurface = Color(0xFFF0F5F2),
+        surfaceVariant = Color(0xFF141F1A),
+        onSurfaceVariant = Color(0xFF90A89C),
+        surfaceContainer = Color(0xFF0D1411),
+        surfaceContainerHigh = Color(0xFF15221C),
+        surfaceContainerHighest = Color(0xFF1D2E26),
+        outline = Color(0xFF2D4238),
+        outlineVariant = Color(0xFF1C2C24),
+        inverseSurface = Color(0xFFF0F5F2),
+        inverseOnSurface = Color(0xFF080D0B),
+        inversePrimary = Color(0xFF00A878),
         scrim = Color(0xFF000000),
         surfaceTint = NeonGreen,
     )

@@ -2,11 +2,11 @@
 <resources>
     <!-- App / navegação -->
     <string name="app_name">Trakr</string>
-    <string name="tab_dashboard">Dashboard</string>
-    <string name="tab_tools">Ferramentas</string>
+    <string name="tab_dashboard">Início</string>
+    <string name="tab_tools">Itens</string>
     <string name="tab_alerts">Alertas</string>
     <string name="tab_radar">Radar</string>
-    <string name="tab_stats">Estatísticas</string>
+    <string name="tab_stats">Stats</string>
     <string name="tab_config">Config</string>
     <string name="action_open_config">Configurações</string>
 
@@ -52,6 +52,13 @@
     <string name="msg_removed_remote">Removido do rastreador</string>
     <string name="msg_confirm_remove_title">Remover %1$s?</string>
     <string name="msg_confirm_remove_hint">A ferramenta será removida do app e do rastreador.</string>
+    <string name="msg_approaching_tag">Aproxime a tag da antena do TRK-Finder…</string>
+    <string name="msg_tag_captured">Tag capturada com sucesso!</string>
+    <string name="msg_no_tag_detected">Nenhuma tag detectada na aproximação.</string>
+    <string name="msg_syncing_flash">Sincronizando inventário com a Flash do TRK-Finder…</string>
+    <string name="msg_sync_ok">Inventário gravado na Flash do TRK-Finder!</string>
+    <string name="action_capture_tag">Capturar no Finder</string>
+    <string name="action_sync_finder">Sincronizar Flash</string>
     <string name="action_remove">Remover</string>
     <string name="dashboard_scanning">Procurando rastreador…</string>
     <string name="action_locate">Localizar</string>
@@ -200,4 +207,22 @@
     <string name="msg_backup_exported">Backup exportado — compartilhe o JSON</string>
     <string name="msg_backup_imported">Backup importado com sucesso</string>
     <string name="msg_backup_failed">Falha no backup/restore</string>
+
+    <!-- Categorias & Auditoria -->
+    <string name="category_all">Todos</string>
+    <string name="category_absent">Ausentes</string>
+    <string name="category_manual">Manual</string>
+    <string name="category_eletrica">Elétrica</string>
+    <string name="category_medicao">Medição</string>
+    <string name="category_epi">EPI</string>
+    <string name="category_outro">Outro</string>
+    <string name="dialog_label_category">Categoria</string>
+    <string name="action_export_report">Relatório de Auditoria</string>
+    <string name="export_report_subject">Relatório de Auditoria Trakr — %1$s</string>
+    <string name="stats_weekly_title">Taxa de Conformidade Semanal</string>
+    <string name="stats_top_missing_title">Ferramentas Mais Ausentes</string>
+    <string name="stats_recovery_time_title">Tempo Médio de Recuperação</string>
+    <string name="stats_incident_count">%1$d incidentes</string>
+    <string name="tab_kits">Kits</string>
+    <string name="kits_title">Kits de Serviço</string>
 </resources>

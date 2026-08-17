@@ -2,8 +2,8 @@
 <resources>
     <!-- App / navigation -->
     <string name="app_name">Trakr</string>
-    <string name="tab_dashboard">Dashboard</string>
-    <string name="tab_tools">Tools</string>
+    <string name="tab_dashboard">Home</string>
+    <string name="tab_tools">Items</string>
     <string name="tab_alerts">Alerts</string>
     <string name="tab_radar">Radar</string>
     <string name="tab_stats">Stats</string>
@@ -52,6 +52,13 @@
     <string name="msg_removed_remote">Removed from tracker</string>
     <string name="msg_confirm_remove_title">Remove %1$s?</string>
     <string name="msg_confirm_remove_hint">The tool will be removed from the app and the tracker.</string>
+    <string name="msg_approaching_tag">Bring tag close to TRK-Finder antenna…</string>
+    <string name="msg_tag_captured">Tag captured successfully!</string>
+    <string name="msg_no_tag_detected">No tag detected nearby.</string>
+    <string name="msg_syncing_flash">Syncing inventory to TRK-Finder Flash…</string>
+    <string name="msg_sync_ok">Inventory written to TRK-Finder Flash!</string>
+    <string name="action_capture_tag">Capture from Finder</string>
+    <string name="action_sync_finder">Sync Flash</string>
     <string name="action_remove">Remove</string>
     <string name="dashboard_scanning">Looking for tracker…</string>
     <string name="action_locate">Locate</string>
@@ -200,4 +207,20 @@
     <string name="msg_backup_exported">Backup exported — share the JSON</string>
     <string name="msg_backup_imported">Backup imported successfully</string>
     <string name="msg_backup_failed">Backup/restore failed</string>
+
+    <!-- Categories & Audit -->
+    <string name="category_all">All</string>
+    <string name="category_absent">Absent</string>
+    <string name="category_manual">Manual</string>
+    <string name="category_eletrica">Power Tool</string>
+    <string name="category_medicao">Measuring</string>
+    <string name="category_epi">PPE</string>
+    <string name="category_outro">Other</string>
+    <string name="dialog_label_category">Category</string>
+    <string name="action_export_report">Audit Report</string>
+    <string name="export_report_subject">Trakr Audit Report — %1$s</string>
+    <string name="stats_weekly_title">Weekly Compliance Rate</string>
+    <string name="stats_top_missing_title">Most Absent Tools</string>
+    <string name="stats_recovery_time_title">Avg Recovery Time</string>
+    <string name="stats_incident_count">%1$d incidents</string>
 </resources>

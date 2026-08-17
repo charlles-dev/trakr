@@ -11,11 +11,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -78,6 +80,9 @@ fun ConfigScreen(
     val backupJson by viewModel.backupJson.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+
+    var showWriteEpcDialog by remember { mutableStateOf(false) }
+    var epcToRecord by remember { mutableStateOf("") }
 
     LaunchedEffect(backupJson) {
         backupJson?.let { json ->
@@ -252,6 +257,76 @@ fun ConfigScreen(
                         Text(stringResource(R.string.action_reload))
                     }
                 }
+
+                // Modo Localizar Finder (Find My Finder Beacon)
+                Button(
+                    onClick = { viewModel.locateFinder(5) },
+                    enabled = isConnected,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp),
+                    colors =
+                        androidx.compose.material3.ButtonDefaults.buttonColors(
+                            containerColor = app.trakr.ui.theme.NeonGreen,
+                            contentColor = androidx.compose.ui.graphics.Color(0xFF003826),
+                        ),
+                ) {
+                    Icon(
+                        Icons.Filled.NotificationsActive,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("LOCALIZAR FINDER (BEACON SONORO/LED)", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                }
+
+                // Perfis Táticos de Operação
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                SectionHeader("PERFIS TÁTICOS DE OPERAÇÃO")
+                val profiles =
+                    listOf(
+                        "silent" to "Silencioso",
+                        "discrete" to "Discreto",
+                        "normal" to "Padrão",
+                        "industrial" to "Galpão Industrial",
+                    )
+                androidx.compose.foundation.lazy.LazyRow(
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    items(profiles) { (profId, profName) ->
+                        androidx.compose.material3.FilterChip(
+                            selected = false,
+                            onClick = { viewModel.setTacticalAlertProfile(profId) },
+                            label = { Text(profName) },
+                        )
+                    }
+                }
+
+                // Caixa Preta e Gravador de Tags
+                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                SectionHeader("UTILITÁRIOS AVANÇADOS DO FINDER")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+                ) {
+                    OutlinedButton(
+                        onClick = viewModel::fetchBlackboxLogs,
+                        enabled = isConnected,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text("CAIXA PRETA", style = MaterialTheme.typography.labelSmall)
+                    }
+                    OutlinedButton(
+                        onClick = { showWriteEpcDialog = true },
+                        enabled = isConnected,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text("GRAVAR EPC", style = MaterialTheme.typography.labelSmall)
+                    }
+                }
+
                 Text(
                     stringResource(R.string.settings_rescan_hint),
                     style = MaterialTheme.typography.bodySmall,
@@ -622,6 +697,44 @@ fun ConfigScreen(
                 )
             }
         }
+    }
+
+    if (showWriteEpcDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showWriteEpcDialog = false },
+            title = { Text("Gravar EPC em Tag UHF") },
+            text = {
+                Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Posicione a tag virgem próxima à antena do TRK-Finder e digite o novo código EPC em hexadecimal:",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    OutlinedTextField(
+                        value = epcToRecord,
+                        onValueChange = { epcToRecord = it.uppercase() },
+                        label = { Text("Novo Código EPC (ex: E280116001)") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(
+                    onClick = {
+                        viewModel.writeEpcTag(epcToRecord)
+                        showWriteEpcDialog = false
+                    },
+                    enabled = epcToRecord.isNotBlank(),
+                ) {
+                    Text("Gravar Tag")
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showWriteEpcDialog = false }) {
+                    Text("Cancelar")
+                }
+            },
+        )
     }
 }
 

@@ -95,4 +95,34 @@ interface BleGateway {
         dbm: Int,
         onUnavailable: () -> Unit,
     )
+
+    /** Dispara leitura de proximidade para auto-captura de tag no cadastro. */
+    fun captureTag(onUnavailable: () -> Unit)
+
+    /** Envia todo o inventário local para a Flash (LittleFS) do TRK-Finder. */
+    fun syncInventory(
+        tools: List<app.trakr.model.Tool>,
+        onUnavailable: () -> Unit,
+    )
+
+    /** Aciona o buzzer e LED no TRK-Finder para localização física. */
+    fun locateFinder(
+        durationSec: Int = 5,
+        onUnavailable: () -> Unit,
+    )
+
+    /** Configura a potência de emissão RF do módulo UHF YRM100 (0 a 26 dBm). */
+    fun setRfPower(
+        dbm: Int,
+        onUnavailable: () -> Unit,
+    )
+
+    /** Grava um novo código EPC em uma tag virgem pelo YRM100. */
+    fun writeEpcTag(
+        newEpc: String,
+        onUnavailable: () -> Unit,
+    )
+
+    /** Solicita o histórico de varreduras offline gravadas na Flash do Finder. */
+    fun getBlackboxLogs(onUnavailable: () -> Unit)
 }

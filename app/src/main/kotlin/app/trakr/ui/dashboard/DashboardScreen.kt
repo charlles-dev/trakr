@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:max-line-length", "MaxLineLength")
+
 package app.trakr.ui.dashboard
 
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -59,6 +62,7 @@ fun DashboardScreen(
     modifier: Modifier = Modifier,
     onOpenTools: () -> Unit = {},
     onOpenConfig: () -> Unit = {},
+    onOpenKits: () -> Unit = {},
     viewModel: DashboardViewModel = viewModel(factory = DashboardViewModel.Factory),
 ) {
     val tools by viewModel.tools.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -99,6 +103,13 @@ fun DashboardScreen(
                     ),
                 title = { TrakrWordmark() },
                 actions = {
+                    IconButton(onClick = onOpenKits) {
+                        Icon(
+                            imageVector = Icons.Filled.Checklist,
+                            contentDescription = "Kits & Missões",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     IconButton(onClick = onOpenConfig) {
                         Icon(
                             imageVector = Icons.Filled.Settings,

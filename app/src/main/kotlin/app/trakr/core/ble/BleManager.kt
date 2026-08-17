@@ -592,6 +592,56 @@ object BleManager : BleGateway {
         sendControl("""{"cmd":"set_tx_power","dbm":$dbm}""", onUnavailable)
     }
 
+    override fun captureTag(onUnavailable: () -> Unit) {
+        sendControl("""{"cmd":"capture_tag"}""", onUnavailable)
+    }
+
+    override fun syncInventory(
+        tools: List<app.trakr.model.Tool>,
+        onUnavailable: () -> Unit,
+    ) {
+        val doc = JSONObject()
+        doc.put("cmd", "sync_inventory")
+        val arr = org.json.JSONArray()
+        tools.forEach { tool ->
+            val obj = JSONObject()
+            obj.put("id", tool.id)
+            obj.put("name", tool.name)
+            obj.put("epc", tool.epc)
+            arr.put(obj)
+        }
+        doc.put("tools", arr)
+        sendControl(doc.toString(), onUnavailable)
+    }
+
+    override fun locateFinder(
+        durationSec: Int,
+        onUnavailable: () -> Unit,
+    ) {
+        sendControl("""{"cmd":"find_device","duration_sec":$durationSec}""", onUnavailable)
+    }
+
+    override fun setRfPower(
+        dbm: Int,
+        onUnavailable: () -> Unit,
+    ) {
+        sendControl("""{"cmd":"set_rf_power","power_dbm":$dbm}""", onUnavailable)
+    }
+
+    override fun writeEpcTag(
+        newEpc: String,
+        onUnavailable: () -> Unit,
+    ) {
+        val doc = JSONObject()
+        doc.put("cmd", "write_epc")
+        doc.put("new_epc", newEpc.trim().uppercase())
+        sendControl(doc.toString(), onUnavailable)
+    }
+
+    override fun getBlackboxLogs(onUnavailable: () -> Unit) {
+        sendControl("""{"cmd":"get_blackbox_logs"}""", onUnavailable)
+    }
+
     // ---------------- OTA (firmware) ----------------
 
     /** Abre a sessÃ£o OTA no rastreador: {"cmd":"ota_begin","size":N} */

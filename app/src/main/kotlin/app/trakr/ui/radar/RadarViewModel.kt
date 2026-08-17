@@ -14,14 +14,18 @@ import app.trakr.model.RadarReport
 import app.trakr.model.Tool
 import app.trakr.repository.ToolRepository
 import app.trakr.ui.UiMessage
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class RadarViewModel(
@@ -42,11 +46,41 @@ class RadarViewModel(
     private val _running = MutableStateFlow(false)
     val running: StateFlow<Boolean> = _running.asStateFlow()
 
+    private val simulationRunningState = MutableStateFlow(false)
+    val simulationRunning: StateFlow<Boolean> = simulationRunningState.asStateFlow()
+
+    private val simulatedReportState = MutableStateFlow<RadarReport?>(null)
+
+    val activeReport: StateFlow<RadarReport?> =
+        combine(radarReport, simulatedReportState) { real, sim ->
+            real ?: sim
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    private val _rssiHistory = MutableStateFlow<List<Int>>(emptyList())
+    val rssiHistory: StateFlow<List<Int>> = _rssiHistory.asStateFlow()
+
     private val _message = MutableStateFlow<UiMessage?>(null)
     val message: StateFlow<UiMessage?> = _message.asStateFlow()
 
     val hasRadarDevice: StateFlow<Boolean> =
         devices.map { it.isNotEmpty() }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+
+    init {
+        viewModelScope.launch {
+            activeReport.collectLatest { report ->
+                if (report != null && report.present) {
+                    val current = _rssiHistory.value.toMutableList()
+                    current.add(report.rssi)
+                    if (current.size > 30) current.removeAt(0)
+                    _rssiHistory.value = current
+                } else if (!_running.value && !simulationRunningState.value) {
+                    _rssiHistory.value = emptyList()
+                }
+            }
+        }
+    }
+
+    private var simulationJob: Job? = null
 
     fun selectTarget(id: String) {
         _targetId.value = id
@@ -58,13 +92,22 @@ class RadarViewModel(
 
     fun start() {
         val id = _targetId.value
-        val tool = toolsSnapshot.value.firstOrNull { it.id == id }
-        if (id == null || tool == null) {
-            _message.value = UiMessage(R.string.msg_choose_target)
+        val tool =
+            toolsSnapshot.value.firstOrNull { it.id == id }
+                ?: toolsSnapshot.value.firstOrNull()
+                ?: Tool(id = "demo", name = "Alvo de Teste", epc = "E280116001")
+
+        if (_targetId.value == null) {
+            _targetId.value = tool.id
+        }
+
+        if (devices.value.isEmpty()) {
+            startSimulation(tool)
             return
         }
+
         _running.value = true
-        ble.startRadar(id, tool.epc) {
+        ble.startRadar(tool.id, tool.epc) {
             _running.value = false
             _message.value = UiMessage(R.string.msg_no_device)
         }
@@ -72,8 +115,47 @@ class RadarViewModel(
 
     fun stop() {
         _running.value = false
+        simulationRunningState.value = false
+        simulationJob?.cancel()
+        simulationJob = null
+        simulatedReportState.value = null
         ble.stopRadar { }
         ble.stopLive { }
+    }
+
+    fun startSimulation(tool: Tool? = null) {
+        stop()
+        val targetTool =
+            tool ?: toolsSnapshot.value.firstOrNull() ?: Tool(id = "demo", name = "Alvo de Teste", epc = "E280116001")
+        simulationRunningState.value = true
+        simulationJob =
+            viewModelScope.launch {
+                var currentRssi = -80
+                var step = 1
+                while (isActive) {
+                    delay(700)
+                    currentRssi += (step * (2..6).random())
+                    if (currentRssi >= -35) {
+                        step = -1
+                    } else if (currentRssi <= -78) {
+                        step = 1
+                    }
+                    val hint =
+                        when {
+                            currentRssi > -45 -> "hold"
+                            step > 0 -> "continue"
+                            else -> "turn_around"
+                        }
+                    simulatedReportState.value =
+                        RadarReport(
+                            tag = targetTool.epc,
+                            rssi = currentRssi,
+                            delta = if (step > 0) (1..4).random() else -(1..4).random(),
+                            present = true,
+                            hint = hint,
+                        )
+                }
+            }
     }
 
     fun startLive() {

@@ -1,5 +1,8 @@
+@file:Suppress("ktlint:standard:max-line-length", "MaxLineLength")
+
 package app.trakr.ui.tools
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,12 +18,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Contactless
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -40,7 +50,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.trakr.R
@@ -60,7 +72,6 @@ fun ToolListScreen(
     modifier: Modifier = Modifier,
     pendingToolId: String? = null,
     onPendingConsumed: () -> Unit = {},
-    onLocate: (String) -> Unit = {},
     viewModel: ToolListViewModel = viewModel(factory = ToolListViewModel.Factory),
 ) {
     val tools by viewModel.tools.collectAsStateWithLifecycle(initialValue = emptyList())
@@ -86,7 +97,6 @@ fun ToolListScreen(
         ToolDetailScreen(
             tool = tool,
             onBack = { selectedTool = null },
-            onLocate = { onLocate(tool.id) },
             modifier = Modifier.fillMaxSize(),
         )
         return
@@ -101,17 +111,46 @@ fun ToolListScreen(
         }
     }
 
+    val selectedCategoryFilter by viewModel.selectedCategoryFilter.collectAsStateWithLifecycle()
+    val isCapturingTag by viewModel.isCapturingTag.collectAsStateWithLifecycle()
+    val capturedTag by viewModel.capturedTag.collectAsStateWithLifecycle()
+    val isNfcReading by viewModel.isNfcReading.collectAsStateWithLifecycle()
+    val nfcTag by viewModel.nfcTag.collectAsStateWithLifecycle()
+
+    val fileImportLauncher =
+        androidx.activity.compose.rememberLauncherForActivityResult(
+            contract = androidx.activity.result.contract.ActivityResultContracts.OpenDocument(),
+        ) { uri ->
+            uri?.let { viewModel.importBatch(context, it) }
+        }
+
     val filtered =
-        remember(tools, query) {
-            if (query.isBlank()) {
-                tools
-            } else {
-                tools.filter {
-                    it.name.contains(query.trim(), ignoreCase = true) ||
-                        it.epc.contains(query.trim(), ignoreCase = true)
-                }
+        remember(tools, query, selectedCategoryFilter) {
+            tools.filter { tool ->
+                val matchesQuery =
+                    query.isBlank() ||
+                        tool.name.contains(query.trim(), ignoreCase = true) ||
+                        tool.epc.contains(query.trim(), ignoreCase = true)
+                val matchesCategory =
+                    when (selectedCategoryFilter) {
+                        null -> true
+                        "absent" -> !tool.present
+                        else -> tool.category.equals(selectedCategoryFilter, ignoreCase = true)
+                    }
+                matchesQuery && matchesCategory
             }
         }
+
+    val filterOptions =
+        listOf(
+            null to stringResource(R.string.category_all),
+            "absent" to stringResource(R.string.category_absent),
+            "manual" to stringResource(R.string.category_manual),
+            "eletrica" to stringResource(R.string.category_eletrica),
+            "medicao" to stringResource(R.string.category_medicao),
+            "epi" to stringResource(R.string.category_epi),
+            "outro" to stringResource(R.string.category_outro),
+        )
 
     Scaffold(
         modifier = modifier,
@@ -123,6 +162,47 @@ fun ToolListScreen(
                     TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.background,
                     ),
+                actions = {
+                    IconButton(
+                        onClick = { fileImportLauncher.launch(arrayOf("text/*", "application/json", "*/*")) },
+                    ) {
+                        Icon(
+                            Icons.Filled.UploadFile,
+                            contentDescription = "Importar Planilha / JSON",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    IconButton(
+                        onClick = { viewModel.exportPdf(context, tools) },
+                        enabled = tools.isNotEmpty(),
+                    ) {
+                        Icon(
+                            Icons.Filled.Description,
+                            contentDescription = "Exportar PDF Formatado",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    IconButton(
+                        onClick = { viewModel.exportReport(context, tools) },
+                        enabled = tools.isNotEmpty(),
+                    ) {
+                        Icon(
+                            Icons.Filled.Share,
+                            contentDescription = stringResource(R.string.action_export_report),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    IconButton(
+                        onClick = { viewModel.syncInventoryToFinder(tools) },
+                        enabled = tools.isNotEmpty(),
+                    ) {
+                        Icon(
+                            Icons.Filled.Refresh,
+                            contentDescription = stringResource(R.string.action_sync_finder),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -138,89 +218,116 @@ fun ToolListScreen(
             }
         },
     ) { padding ->
-        PullToRefreshBox(
-            isRefreshing = refreshing,
-            onRefresh = viewModel::refresh,
+        Box(
             modifier =
                 Modifier
                     .fillMaxSize()
                     .padding(padding),
+            contentAlignment = Alignment.TopCenter,
         ) {
-            Box(
+            PullToRefreshBox(
+                isRefreshing = refreshing,
+                onRefresh = viewModel::refresh,
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.TopCenter,
             ) {
-                Box(
+                Column(
                     modifier =
                         Modifier
-                            .fillMaxWidth()
+                            .fillMaxSize()
                             .maxContentWidth()
-                            .fillMaxHeight(),
+                            .padding(horizontal = 16.dp),
                 ) {
-                    if (tools.isEmpty()) {
-                        EmptyState(
-                            icon = Icons.Filled.Build,
-                            title = stringResource(R.string.tools_empty),
-                            hint = stringResource(R.string.tools_empty_hint),
-                            modifier = Modifier.align(Alignment.Center),
-                        )
-                    } else {
-                        Column(Modifier.fillMaxSize()) {
-                            OutlinedTextField(
-                                value = query,
-                                onValueChange = { query = it },
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                                placeholder = { Text(stringResource(R.string.search_placeholder)) },
-                                leadingIcon = {
-                                    Icon(Icons.Filled.Search, contentDescription = null)
-                                },
-                                singleLine = true,
+                    OutlinedTextField(
+                        value = query,
+                        onValueChange = { query = it },
+                        placeholder = { Text(stringResource(R.string.search_placeholder)) },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Filled.Search,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
-                            if (filtered.isEmpty()) {
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxSize()
-                                            .padding(top = 48.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    EmptyState(
-                                        icon = Icons.Filled.Search,
-                                        title = stringResource(R.string.search_no_results),
-                                        hint = stringResource(R.string.search_no_results_hint, query.trim()),
-                                    )
-                                }
-                            } else {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentPadding = PaddingValues(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                                ) {
-                                    items(filtered, key = { it.id }) { tool ->
-                                        ToolCard(
-                                            tool = tool,
-                                            onClick = { selectedTool = tool },
-                                            trailing = {
-                                                StatusBadge(
-                                                    text =
-                                                        if (tool.present) {
-                                                            stringResource(R.string.status_detected)
-                                                        } else {
-                                                            stringResource(R.string.status_absent)
-                                                        },
-                                                    color = if (tool.present) NeonGreen else AlertRed,
-                                                )
-                                                CardActionButton(
-                                                    onClick = { toolToRemove = tool },
-                                                    contentDescription = stringResource(R.string.action_remove_tool, tool.name),
-                                                )
-                                            },
+                        },
+                        singleLine = true,
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 6.dp),
+                    )
+
+                    // Barra de chips de filtros por categoria
+                    androidx.compose.foundation.lazy.LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                    ) {
+                        items(filterOptions) { (catId, label) ->
+                            val isSelected = selectedCategoryFilter == catId
+                            androidx.compose.material3.FilterChip(
+                                selected = isSelected,
+                                onClick = { viewModel.setCategoryFilter(if (isSelected) null else catId) },
+                                label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                                colors =
+                                    androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    ),
+                            )
+                        }
+                    }
+
+                    if (filtered.isEmpty()) {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            EmptyState(
+                                icon = if (query.isBlank()) Icons.Filled.Build else Icons.Filled.Search,
+                                title =
+                                    if (query.isBlank()) {
+                                        stringResource(R.string.tools_empty)
+                                    } else {
+                                        stringResource(R.string.search_no_results)
+                                    },
+                                hint =
+                                    if (query.isBlank()) {
+                                        stringResource(R.string.tools_empty_hint)
+                                    } else {
+                                        stringResource(R.string.search_no_results_hint, query.trim())
+                                    },
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(bottom = 80.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                        ) {
+                            items(filtered, key = { it.id }) { tool ->
+                                ToolCard(
+                                    tool = tool,
+                                    onClick = { selectedTool = tool },
+                                    trailing = {
+                                        StatusBadge(
+                                            text =
+                                                if (tool.present) {
+                                                    stringResource(R.string.status_detected)
+                                                } else {
+                                                    stringResource(R.string.status_absent)
+                                                },
+                                            color = if (tool.present) NeonGreen else AlertRed,
                                         )
-                                    }
-                                }
+                                        CardActionButton(
+                                            onClick = { toolToRemove = tool },
+                                            contentDescription = stringResource(R.string.action_remove_tool, tool.name),
+                                        )
+                                    },
+                                )
                             }
                         }
                     }
@@ -230,11 +337,26 @@ fun ToolListScreen(
     }
 
     if (showAddDialog) {
+        val activity = context as? android.app.Activity
         AddToolDialog(
-            onDismiss = { showAddDialog = false },
-            onConfirm = { name, epc ->
-                viewModel.addTool(name, epc)
+            isCapturing = isCapturingTag,
+            capturedTag = capturedTag,
+            isNfcReading = isNfcReading,
+            nfcTag = nfcTag,
+            onCapture = viewModel::captureTagFromFinder,
+            onNfcCapture = { activity?.let { viewModel.startNfcScan(it) } },
+            onDismiss = {
                 showAddDialog = false
+                activity?.let { viewModel.stopNfcScan(it) }
+                viewModel.clearCapturedTag()
+                viewModel.clearNfcTag()
+            },
+            onConfirm = { name, epc, category ->
+                viewModel.addTool(name, epc, category)
+                showAddDialog = false
+                activity?.let { viewModel.stopNfcScan(it) }
+                viewModel.clearCapturedTag()
+                viewModel.clearNfcTag()
             },
         )
     }
@@ -263,34 +385,127 @@ fun ToolListScreen(
 
 @Composable
 private fun AddToolDialog(
+    isCapturing: Boolean,
+    capturedTag: String?,
+    isNfcReading: Boolean,
+    nfcTag: String?,
+    onCapture: () -> Unit,
+    onNfcCapture: () -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: (name: String, epc: String) -> Unit,
+    onConfirm: (name: String, epc: String, category: String) -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
     var epc by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("manual") }
+
+    val categories =
+        listOf(
+            "manual" to stringResource(R.string.category_manual),
+            "eletrica" to stringResource(R.string.category_eletrica),
+            "medicao" to stringResource(R.string.category_medicao),
+            "epi" to stringResource(R.string.category_epi),
+            "outro" to stringResource(R.string.category_outro),
+        )
+
+    LaunchedEffect(capturedTag, nfcTag) {
+        nfcTag?.let { epc = it } ?: capturedTag?.let { epc = it }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.dialog_title_new_tool)) },
         text = {
-            Column {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     label = { Text(stringResource(R.string.dialog_label_name)) },
                     singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                Spacer(Modifier.size(8.dp))
                 OutlinedTextField(
                     value = epc,
                     onValueChange = { epc = it },
                     label = { Text(stringResource(R.string.dialog_label_epc)) },
                     singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
                 )
+
+                Text(
+                    text = stringResource(R.string.dialog_label_category),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                androidx.compose.foundation.lazy.LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    items(categories) { (catId, catName) ->
+                        val selected = selectedCategory == catId
+                        androidx.compose.material3.FilterChip(
+                            selected = selected,
+                            onClick = { selectedCategory = catId },
+                            label = { Text(catName, fontSize = 12.sp) },
+                            colors =
+                                androidx.compose.material3.FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                ),
+                        )
+                    }
+                }
+
+                // Botão Primário: NFC no Celular (Precisão de Contato Físico)
+                OutlinedButton(
+                    onClick = onNfcCapture,
+                    enabled = !isNfcReading,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .pressScale(),
+                    border = BorderStroke(1.dp, NeonGreen),
+                ) {
+                    Icon(
+                        Icons.Filled.Contactless,
+                        contentDescription = null,
+                        tint = NeonGreen,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.size(8.dp))
+                    Text(
+                        if (isNfcReading) "Aproxime tag na traseira do celular..." else "Ler NFC no Celular (Contato)",
+                        color = NeonGreen,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+
+                // Botão Secundário: UHF no Finder
+                OutlinedButton(
+                    onClick = onCapture,
+                    enabled = !isCapturing,
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .pressScale(),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                ) {
+                    Icon(
+                        Icons.Filled.Build,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(Modifier.size(8.dp))
+                    Text(
+                        if (isCapturing) "Aguardando aproximação..." else stringResource(R.string.action_capture_tag),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         },
         confirmButton = {
-            TextButton(onClick = { onConfirm(name, epc) }) {
+            TextButton(onClick = { onConfirm(name, epc, selectedCategory) }) {
                 Text(stringResource(R.string.action_add))
             }
         },

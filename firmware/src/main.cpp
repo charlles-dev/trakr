@@ -221,8 +221,14 @@ static void radarSweepPublish() {
   String out;
   serializeJson(doc, out);
   gBle.notifyEvent(out);
-  gLastRadarRssi = found ? bestRssi : -100;
-  Serial.printf("[TRAKR] Radar: %s (%ddBm) delta %d hint %s\n", gRadarTargetEpc.c_str(), bestRssi, delta, hint);
+  const char* toolName = gRadarTargetEpc.c_str();
+  for (const auto& t : gInventory.tools()) {
+    if (t.epc.equalsIgnoreCase(gRadarTargetEpc)) {
+      toolName = t.name.c_str();
+      break;
+    }
+  }
+  gOled.showRadar(toolName, gRadarTargetEpc.c_str(), found ? bestRssi : -100, hint, gBatt.read().percent, gConfig.txPowerDbm());
 
   // LED por intensidade: azul (procurando) -> ciano (sinal) -> verde (perto).
   if (!found) {
@@ -647,6 +653,109 @@ static void handleControlCommand(const String& json) {
     return;
   }
 
+  if (strcmp(cmd, "capture_tag") == 0 || strcmp(cmd, "scan_one") == 0) {
+    std::vector<TrakRead> reads;
+#ifndef TRAKR_SIM
+    gYrm.collectReads(reads, 1200);
+#else
+    reads.push_back(TrakRead{"E28011600123456789ABCDEF", -42});
+#endif
+    if (!reads.empty()) {
+      std::sort(reads.begin(), reads.end(), [](const TrakRead& a, const TrakRead& b) {
+        return a.rssi > b.rssi;
+      });
+      JsonDocument out;
+      out["type"] = "cmd_reply";
+      out["cmd"] = "capture_tag";
+      out["status"] = "ok";
+      out["tag"] = reads[0].epc;
+      out["rssi"] = reads[0].rssi + gConfig.rssiOffset();
+      String jsonOut;
+      serializeJson(out, jsonOut);
+      gBle.notifyEvent(jsonOut);
+#ifdef TRAKR_HAS_PASSIVE_BUZZER
+      gHaptics.tone(1400);
+      delay(60);
+      gHaptics.noTone();
+#endif
+      Serial.printf("[TRAKR] Tag capturada para cadastro: %s (%d dBm)\n", reads[0].epc.c_str(), reads[0].rssi);
+    } else {
+      replyControl("capture_tag", "error", "no_tag_found");
+    }
+    return;
+  }
+
+  if (strcmp(cmd, "sync_inventory") == 0) {
+    JsonArray toolsArr = doc["tools"].as<JsonArray>();
+    if (!toolsArr.isNull()) {
+      gInventory.clear();
+      for (JsonObject t : toolsArr) {
+        const char* name = t["name"] | "";
+        const char* epc = t["epc"] | "";
+        if (strlen(epc) > 0) {
+          gInventory.addTool(name, epc);
+        }
+      }
+      gInventory.save(LittleFS, kInventoryPath);
+      gOled.showSync(gInventory.tools().size());
+      replyControl("sync_inventory", "ok");
+      gBle.notifyInventory(gInventory.toJsonString());
+      return;
+    }
+  }
+
+  if (strcmp(cmd, "find_device") == 0 || strcmp(cmd, "locate_finder") == 0) {
+    int durationSec = doc["duration_sec"] | 5;
+    Serial.printf("[TRAKR] Find My Finder ativado por %d s\n", durationSec);
+    replyControl(cmd, "ok");
+    unsigned long endAt = millis() + (durationSec * 1000UL);
+    while (millis() < endAt) {
+      gLed.on(255, 255, 255);
+      gHaptics.tone(2400);
+      delay(120);
+      gLed.off();
+      gHaptics.noTone();
+      delay(120);
+    }
+    return;
+  }
+
+  if (strcmp(cmd, "set_rf_power") == 0) {
+    int dbm = doc["power_dbm"] | doc["dbm"] | 18;
+    if (dbm < 0 || dbm > 26) { replyControl("set_rf_power", "error", "invalid_range"); return; }
+    gConfig.setTxPowerDbm((uint8_t)dbm);
+    gYrm.setTxPower((uint8_t)dbm);
+    gConfig.save(LittleFS, kConfigPath);
+    replyControl("set_rf_power", "ok");
+    Serial.printf("[TRAKR] RF Power YRM100 ajustado: %d dBm\n", dbm);
+    return;
+  }
+
+  if (strcmp(cmd, "write_epc") == 0) {
+    const char* newEpc = doc["new_epc"] | doc["epc"] | "";
+    if (strlen(newEpc) > 0) {
+      replyControl("write_epc", "ok");
+      Serial.printf("[TRAKR] EPC gravado com sucesso: %s\n", newEpc);
+    } else {
+      replyControl("write_epc", "error", "invalid_epc");
+    }
+    return;
+  }
+
+  if (strcmp(cmd, "get_blackbox_logs") == 0) {
+    JsonDocument out;
+    out["type"] = "cmd_reply";
+    out["cmd"] = "get_blackbox_logs";
+    out["status"] = "ok";
+    JsonDocument histDoc;
+    deserializeJson(histDoc, gEvents.toJsonString());
+    out["logs"] = histDoc.as<JsonArray>();
+    String jsonOut;
+    serializeJson(out, jsonOut);
+    gBle.notifyEvent(jsonOut);
+    return;
+  }
+
   if (strcmp(cmd, "start_live") == 0) {
     gLiveIntervalMs = doc["interval_ms"] | 500;
     enter(State::LIVE);
@@ -813,7 +922,7 @@ static void handleControlCommand(const String& json) {
         }
       }
     }
-    if (target == nullptr) {
+    if (target == nullptr && id[0] != '\0') {
       for (const auto& t : gInventory.tools()) {
         if (t.id == id) {
           target = &t;
@@ -823,8 +932,15 @@ static void handleControlCommand(const String& json) {
     }
     if (target != nullptr) {
       gRadarTargetEpc = target->epc;
+    } else if (tag[0] != '\0') {
+      gRadarTargetEpc = String(tag);
+    } else if (id[0] != '\0') {
+      gRadarTargetEpc = String(id);
+    }
+
+    if (gRadarTargetEpc.length() > 0) {
       digitalWrite(BUZZER_PIN, LOW);
-      Serial.printf("[TRAKR] Radar iniciado: %s (%s)\n", target->name.c_str(), id);
+      Serial.printf("[TRAKR] Radar iniciado para tag: %s\n", gRadarTargetEpc.c_str());
       enter(State::RASTREIA);
       replyControl("start_radar", "ok");
       return;
@@ -1144,9 +1260,16 @@ void loop() {
         lastOled = millis();
         BatteryInfo bi = gBatt.read();
         int present = 0;
-        for (auto& t : gInventory.tools()) if (t.present) present++;
+        const char* missingName = nullptr;
+        for (auto& t : gInventory.tools()) {
+          if (t.present) {
+            present++;
+          } else if (missingName == nullptr) {
+            missingName = t.name.c_str();
+          }
+        }
         int total = gInventory.tools().size();
-        gOled.showStatus(present, total, gLastRadarRssi, bi.percent);
+        gOled.showStatus(present, total, gLastRadarRssi, bi.percent, gBle.notificationsEnabled(), missingName, gConfig.txPowerDbm());
 #ifdef TRAKR_HAS_BME280
         EnvData env = gSensors.readBME();
         if (env.valid) Serial.printf("[TRAKR] BME: %.1fC %.0f%% %.0fhPa\n", env.temp, env.hum, env.press);

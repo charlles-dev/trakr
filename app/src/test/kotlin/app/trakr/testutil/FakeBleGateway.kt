@@ -150,4 +150,58 @@ class FakeBleGateway : BleGateway {
     ) {
         setTxPowerCalls += dbm
     }
+
+    var captureTagCalls = 0
+
+    var captureTagUnavailable: (() -> Unit)? = null
+
+    override fun captureTag(onUnavailable: () -> Unit) {
+        captureTagCalls++
+        captureTagUnavailable = onUnavailable
+    }
+
+    val syncInventoryCalls = mutableListOf<List<app.trakr.model.Tool>>()
+
+    var syncInventoryUnavailable: (() -> Unit)? = null
+
+    override fun syncInventory(
+        tools: List<app.trakr.model.Tool>,
+        onUnavailable: () -> Unit,
+    ) {
+        syncInventoryCalls += tools
+        syncInventoryUnavailable = onUnavailable
+    }
+
+    var locateFinderCalls = 0
+
+    override fun locateFinder(
+        durationSec: Int,
+        onUnavailable: () -> Unit,
+    ) {
+        locateFinderCalls++
+    }
+
+    var setRfPowerCalls = mutableListOf<Int>()
+
+    override fun setRfPower(
+        dbm: Int,
+        onUnavailable: () -> Unit,
+    ) {
+        setRfPowerCalls += dbm
+    }
+
+    var writeEpcTagCalls = mutableListOf<String>()
+
+    override fun writeEpcTag(
+        newEpc: String,
+        onUnavailable: () -> Unit,
+    ) {
+        writeEpcTagCalls += newEpc
+    }
+
+    var getBlackboxLogsCalls = 0
+
+    override fun getBlackboxLogs(onUnavailable: () -> Unit) {
+        getBlackboxLogsCalls++
+    }
 }

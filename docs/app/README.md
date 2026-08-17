@@ -48,11 +48,13 @@ O app escaneia por dispositivos com nome iniciado em **`TRK-`** (firmware
 publica `TRK-FINDER`) e conecta-se a todos os rastreadores encontrados na
 mesma sessão:
 
-* **Aba Radar:** lista as ferramentas cadastradas, permite escolher a
-  **ferramenta alvo** e iniciar/parar o modo radar no rastreador. Enquanto
-  procura, o firmware publica relatórios `radar_report` (via Event notify)
-  com o **RSSI em dBm**; a tela mostra a intensidade em tempo real (barra de
-  proximidade) e o estado da busca.
+* **Aba Ferramentas / Kits:** As abas principais do app permitem visualizar o inventário
+  e agrupar as ferramentas por kits. É possível clicar em uma ferramenta específica
+  (mesmo as não cadastradas no inventário local, passando a Tag EPC diretamente) 
+  para acionar a tela de Busca.
+* **Tela de Busca (Radar):** Abre de forma sobreposta ao clicar em uma ferramenta 
+  ausente. O app envia o comando de radar para o rastreador, que passa a publicar 
+  relatórios `radar_report` (via Event notify) com o **RSSI em dBm**; a tela mostra 
+  a intensidade em tempo real (barra de proximidade) e o estado da busca.
 * O radar também faz a varredura de inventário normal (botão físico ou
-  comando `rescan`), então as telas de Dashboard/Ferramentas funcionam
-  igualmente com ele.
+  comando `rescan`), atualizando em tempo real o Dashboard e os Kits.
