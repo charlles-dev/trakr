@@ -1,60 +1,96 @@
-Guia de Configuração: App Android (Kotlin)
-==========================================
+# 📱 Guia do Aplicativo Android (Kotlin + Jetpack Compose)
 
-Este aplicativo foi desenvolvido nativamente para Android utilizando **Kotlin** e **Jetpack Compose** para a interface (UI). O uso de código nativo garante a máxima estabilidade da conexão Bluetooth LE (BLE) em segundo plano (background).
+O aplicativo do **Trakr** foi desenvolvido nativamente para a plataforma Android, utilizando **Kotlin**, **Jetpack Compose** (Material 3) e **Room Database** para persistência offline local.
 
-Pré-requisitos
---------------
+O uso de código nativo puro com um **Foreground Service dedicado** garante máxima estabilidade na conexão Bluetooth Low Energy (BLE) em segundo plano, mesmo com a tela do smartphone desligada ou durante deslocamentos.
 
-* Android Studio (Iguana ou superior)
+---
 
-* SDK Android API 35+
+## 🛠️ Pré-requisitos e Ambiente
 
-* Celular físico com Android 8.0+ para testar o Bluetooth (Emuladores não suportam BLE nativo bem).
+* **Android Studio:** Iguana (2023.2.1) ou superior.
+* **SDK Android:** API 35 (mínimo suportado: API 26 / Android 8.0).
+* **Hardware recomendado:** Dispositivo Android físico com Bluetooth 5.0+ e suporte a NFC (emuladores não possuem stack BLE/NFC completa).
 
-Dependências Principais (build.gradle)
---------------------------------------
+---
 
-O projeto utiliza bibliotecas modernas do ecossistema Android:
+## 🔒 Permissões do Sistema (`AndroidManifest.xml`)
 
-* **Jetpack Compose:** Para construção da UI (Dark Mode nativo).
+Para operação completa e autônoma, o app requer as seguintes permissões:
 
-* **Room Database:** Para o cache local do inventário (`inventory.json` espelhado do ESP32).
+```xml
+<uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- BLE em Androids legados e detecção de velocidade GPS -->
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<uses-permission android:name="android.permission.NFC" />
+```
 
-* **Coroutines / Flow:** Para lidar com a assincronicidade da comunicação BLE.
+---
 
-* **AndroidX Bluetooth:** Ou acesso direto ao `BluetoothGatt` do SDK padrão.
+## 🏗️ Estrutura de Telas e Navegação
 
-Permissões Necessárias (AndroidManifest.xml)
---------------------------------------------
+O app é estruturado em 5 seções principais na barra de navegação inferior mais a tela de Configurações centralizada:
 
-Para que o app consiga parear com o TRK-Finder e manter o serviço rodando, as seguintes permissões são exigidas e devem ser aceitas pelo usuário no primeiro uso:
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" /> <!-- Necessário em Androids antigos para BLE -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+### 1. 🚀 Setup & Onboarding (`SetupScreen.kt`)
+* Fluxo inicial obrigatório para novos usuários.
+* Busca e emparelhamento com o rastreador TRK-Finder via filtro inteligente.
+* Solicitação e configuração do PIN de segurança (SHA-256) com fallback de falha.
 
-O Segredo da Estabilidade: Foreground Service
----------------------------------------------
+### 2. 🏠 Painel Geral (Dashboard — `DashboardScreen.kt`)
+* Exibe a contagem total de ferramentas, presentes e ausentes em tempo real.
+* Monitor de status dos rastreadores conectados (tensão e porcentagem de bateria, RSSI de conexão, status de sincronização).
+* Botão de disparo de varredura imediata (`rescan`) e atalhos rápidos para Kits e Configurações.
 
-Ao contrário de frameworks híbridos, aqui utilizamos um **Serviço de Primeiro Plano** (`Foreground Service`). O Android exibirá uma notificação silenciosa e fixa ("Trakr conectado ao TRK-Finder"), o que impede o sistema operacional de "matar" a conexão BLE para economizar bateria. Isso garante que o alerta de ferramenta não encontrada chegue mesmo se seu celular estiver bloqueado no bolso a tarde inteira.
+### 2. 🧰 Lista e Detalhes de Ferramentas (`ToolListScreen.kt` & `ToolDetailScreen.kt`)
+* Busca rápida e filtros por status (Todas, Presentes, Ausentes, Por Kit).
+* **Auto-captura de tags (`capture_tag`):** Permite ler a tag mais próxima para cadastrar uma nova ferramenta em segundos sem digitar o EPC.
+* **Gravação de EPC (`write_epc`):** Permite programar um novo código EPC diretamente em tags RFID virgens pelo módulo YRM100.
+* **Disparo de Radar Direto:** Clique em qualquer ferramenta ausente para abrir a mira de localização.
+* **Personalização de Alertas:** Definição individual de importância, som de notificação (padrão, longo, silencioso) e vibração por ferramenta.
 
-Conexão com o TRK-Finder
-------------------------
+### 3. 📋 Kits de Trabalho (Job Kits — `JobKitsScreen.kt`)
+* Permite criar e agrupar ferramentas por tipos de serviço ou maletas de trabalho (ex: "Kit Elétrica", "Kit Hidráulica").
+* Checklist de conferência com barra de progresso visual de conclusão do kit.
 
-O app escaneia por dispositivos com nome iniciado em **`TRK-`** (firmware
-publica `TRK-FINDER`) e conecta-se a todos os rastreadores encontrados na
-mesma sessão:
+### 4. 🔔 Central de Alertas (`AlertListScreen.kt`)
+* Histórico cronológico de notificações de ausência e eventos de sistema.
+* Deep-linking: ao tocar em um alerta, o app navega diretamente para a ferramenta correspondente.
 
-* **Aba Ferramentas / Kits:** As abas principais do app permitem visualizar o inventário
-  e agrupar as ferramentas por kits. É possível clicar em uma ferramenta específica
-  (mesmo as não cadastradas no inventário local, passando a Tag EPC diretamente) 
-  para acionar a tela de Busca.
-* **Tela de Busca (Radar):** Abre de forma sobreposta ao clicar em uma ferramenta 
-  ausente. O app envia o comando de radar para o rastreador, que passa a publicar 
-  relatórios `radar_report` (via Event notify) com o **RSSI em dBm**; a tela mostra 
-  a intensidade em tempo real (barra de proximidade) e o estado da busca.
-* O radar também faz a varredura de inventário normal (botão físico ou
-  comando `rescan`), atualizando em tempo real o Dashboard e os Kits.
+### 5. 📊 Estatísticas e Métricas Locais (`StatsScreen.kt`)
+* **Mais Esquecidas:** Ranking com agregação local (`GROUP BY`) das ferramentas com maior índice de ausência.
+* **Taxa de Presença:** Porcentagem histórica de ferramentas presentes durante as conferências.
+* **Frequência de Uso:** Histórico diário de varreduras e disparos de alertas.
+* **Sessões de Varredura:** Registro temporal das auditorias de inventário realizadas.
+
+### 6. ⚙️ Configurações & Diagnóstico (`ConfigScreen.kt`)
+* **Calibração de RF:** Ajuste fino de `rssi_offset`, `rssi_threshold` e perfis de ambiente (`env_profile`).
+* **Potência de Transmissão UHF:** Ajuste dinâmico de 0 a 33 dBm (`tx_power_dbm`).
+* **Segurança por PIN:** Configuração de senha de 4 a 32 dígitos com hash SHA-256 e expiração de sessão de 5 minutos.
+* **Diagnóstico de Hardware:** Painel de telemetria dos sensores (tensão/bateria INA219, temperatura/umidade/pressão BME280, acelerômetro MPU6050) e lista de add-ons detectados.
+* **Backup e Restauração:** Exportação e importação de toda a base em JSON unificado para migração ou segurança de dados.
+
+---
+
+## ⚡ Módulos Core e Recursos Avançados
+
+### 🎯 Modos de Radar e Localização (`RadarScreen.kt`)
+* **Single Target:** Mira radar com estimativa de proximidade em dBm e indicação direcional por delta (`continue`, `turn_around`, `hold`).
+* **Multi-Alvo (`start_radar_multi`):** Localização simultânea de múltiplas ferramentas com ranking ordenado de potência.
+* **Live Streaming (`start_live`):** Transmissão contínua de todas as tags visíveis no campo do leitor.
+* **Sincronia com Display OLED:** O app e o Tactical HUD do rastreador físico operam em perfeita sintonia durante a busca.
+* **Feedback Multissensorial:** Cadência de bipes sonoros e vibração háptica no smartphone proporcionais à proximidade.
+
+### 🚗 Alerta de Deslocamento / Anti-Esquecimento em Trânsito (`MovementAlertManager.kt`)
+* Monitora a velocidade de deslocamento via GPS integrado do smartphone.
+* Caso o usuário inicie deslocamento veicular (> 15 km/h) e o inventário possua ferramentas faltantes, um **Alerta Crítico de Deslocamento** em tela cheia com alarme sonoro é disparado imediatamente.
+
+### 🏷️ Integração NFC (`NfcPairingManager.kt` & `NfcReaderHelper.kt`)
+* Pareamento automático por toque com o rastreador físico TRK-Finder.
+* Leitura direta de tags NFC para consulta instantânea de status da ferramenta.
+
+### 🔄 Atualização de Firmware OTA BLE (`OtaManager.kt`)
+* Gerencia o particionamento duplo do ESP32, transmitindo binários `.bin` em chunks sem fio via GATT com verificação de integridade e feedback de progresso percentual.

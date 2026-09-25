@@ -154,10 +154,16 @@ object BleManager : BleGateway {
 
     // ---------------- Escaneamento ----------------
 
+    private val _discoveredDevices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
+    val discoveredDevices: StateFlow<List<BluetoothDevice>> = _discoveredDevices.asStateFlow()
+
+    var discoverMode: Boolean = false
+
     private fun startScanWindow() {
         if (!running || scanning) return
         scanning = true
         foundDevices.clear()
+        if (discoverMode) _discoveredDevices.value = emptyList()
 
         val adapter =
             context?.let {
@@ -168,10 +174,7 @@ object BleManager : BleGateway {
                 ScanSettings.Builder()
                     .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
                     .build()
-            val filters =
-                listOf(
-                    ScanFilter.Builder().setServiceUuid(android.os.ParcelUuid(BleProfile.SERVICE_UUID)).build(),
-                )
+            val filters: List<ScanFilter>? = null
             _status.value = BleStatus.Scanning
             adapter.bluetoothLeScanner.startScan(filters, settings, scanCallback)
         } catch (e: SecurityException) {
@@ -184,9 +187,13 @@ object BleManager : BleGateway {
             scope.launch {
                 delay(SCAN_WINDOW_MS)
                 stopScanNow()
-                connectFoundDevices()
+                if (discoverMode) {
+                    _discoveredDevices.value = foundDevices.values.toList()
+                } else {
+                    connectFoundDevices()
+                }
                 scanning = false
-                scheduleRescan()
+                if (!discoverMode) scheduleRescan()
             }
     }
 
@@ -217,22 +224,25 @@ object BleManager : BleGateway {
                 callbackType: Int,
                 result: ScanResult,
             ) {
-                val name = result.device.name ?: result.scanRecord?.deviceName
-                if (name?.startsWith("TRK-") != true) return
                 foundDevices[result.device.address] = result.device
+                if (discoverMode) {
+                    _discoveredDevices.value = foundDevices.values.toList()
+                }
             }
 
             override fun onScanFailed(errorCode: Int) {
                 _status.value = BleStatus.Error(str(R.string.ble_error_scan_failed, errorCode))
                 scanning = false
-                scheduleRescan()
+                if (!discoverMode) scheduleRescan()
             }
         }
 
     private fun connectFoundDevices() {
+        val targetMac = context?.let { app.trakr.ui.settings.SettingsPrefs.getTrackerMac(it) } ?: return
+        
         var newConnections = 0
         foundDevices.values.forEach { device ->
-            if (!sessions.containsKey(device.address)) {
+            if (device.address == targetMac && !sessions.containsKey(device.address)) {
                 val session = BleSession(device)
                 sessions[device.address] = session
                 session.connect()
@@ -249,6 +259,14 @@ object BleManager : BleGateway {
                         str(R.string.ble_multiple_devices, sessions.size)
                     },
                 )
+        }
+    }
+
+    fun connectSpecificDevice(device: BluetoothDevice) {
+        if (!sessions.containsKey(device.address)) {
+            val session = BleSession(device)
+            sessions[device.address] = session
+            session.connect()
         }
     }
 
@@ -346,11 +364,19 @@ object BleManager : BleGateway {
                 // completo (notify) e entra em sincronização.
                 service.getCharacteristic(BleProfile.CONTROL_UUID)?.let { control ->
                     try {
-                        val epochMs = System.currentTimeMillis()
-                        writeCharacteristic(gatt, control, """{"cmd":"set_clock","epoch_ms":$epochMs}""")
-                        // Pequeno delay para evitar colisão de WRITE no GATT
-                        // (stack BLE não tem fila de escrita nesta implementação).
+                        // NOVO: Primeiro enviamos o auth(pin) se houver PIN salvo
+                        val pin = context?.let { app.trakr.ui.settings.SettingsPrefs.getTrackerPin(it) }
+                        if (!pin.isNullOrEmpty()) {
+                            writeCharacteristic(gatt, control, """{"cmd":"auth","pin":"$pin"}""")
+                        }
+
                         scope.launch {
+                            delay(200) // Aguarda auth
+                            val epochMs = System.currentTimeMillis()
+                            try {
+                                writeCharacteristic(gatt, control, """{"cmd":"set_clock","epoch_ms":$epochMs}""")
+                            } catch (e: Exception) { }
+                            
                             delay(350)
                             try {
                                 writeCharacteristic(gatt, control, """{"cmd":"rescan"}""")
@@ -390,8 +416,9 @@ object BleManager : BleGateway {
             ) {
                 handleCharacteristic(session, characteristic, value)
             }
+        }
 
-/** Descartar sessão e buffers de chunks órfãos ao desconectar/expirar. */
+    /** Descartar sessão e buffers de chunks órfãos ao desconectar/expirar. */
     private fun dropSessionBuffers(session: BleSession) {
         chunkBuffers.keys.retainAll { it.first != session.device.address }
     }
@@ -459,7 +486,6 @@ object BleManager : BleGateway {
         var received = 0
         val parts = arrayOfNulls<String>(total)
     }
-        }
 
     // ---------------- Utilidades GATT ----------------
 

@@ -886,12 +886,12 @@ Alarme instantâneo
                             <div class="h-[300px] lg:h-[calc(50%-0.75rem)] bento-card cursor-default overflow-hidden">
                                 <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(#20B898 1px, transparent 1px); background-size: 10px 10px;"></div>
                                 <div class="flex-1 flex justify-center items-center relative z-10">
-                                    <iconify-icon icon="lucide:file-json" class="text-6xl text-[#20B898] group-hover:-translate-y-2 transition-transform duration-300"></iconify-icon>
+                                    <iconify-icon icon="lucide:crosshair" class="text-6xl text-[#20B898] group-hover:scale-110 transition-transform duration-300 animate-pulse"></iconify-icon>
                                 </div>
                                 <div class="relative z-10">
-                                    <div class="text-[#20B898] font-mono text-xs tracking-widest mb-2">[ MÓDULO 08: EXPORTAÇÃO ]</div>
-                                    <h3 class="text-xl font-bold uppercase tracking-tight text-white mb-1">API e webhooks</h3>
-                                    <p class="text-[#888] text-xs">Envie estados para o seu ERP.</p>
+                                    <div class="text-[#20B898] font-mono text-xs tracking-widest mb-2">[ MÓDULO 08: DISPLAY TÁTICO OLED ]</div>
+                                    <h3 class="text-xl font-bold uppercase tracking-tight text-white mb-1">Radar com Display HUD</h3>
+                                    <p class="text-[#888] text-xs">Mira octogonal e proximidade em tempo real direto na tela do aparelho.</p>
                                 </div>
                             </div>
                         </div>
@@ -930,7 +930,23 @@ Alarme instantâneo
                         <iconify-icon icon="lucide:plus" class="group-open:hidden"></iconify-icon>
                         <iconify-icon icon="lucide:minus" class="hidden group-open:block text-[#20B898]"></iconify-icon>
                     </summary>
-                    <p class="mt-4 text-[#888] text-sm">Sim. O modo radar varre a tag perdida e te guia com bipes que aceleram conforme você se aproxima da ferramenta — sem precisar do celular.</p>
+                    <p class="mt-4 text-[#888] text-sm">Sim. O modo radar varre a tag perdida e te guia com bipes que aceleram conforme você se aproxima da ferramenta — além de suporte a radar multi-alvo e indicador de direção.</p>
+                </details>
+                <details class="bg-[#111] border border-[#222] rounded-lg p-6 group cursor-pointer">
+                    <summary class="font-bold text-lg text-white flex justify-between items-center outline-none">
+                        Como funciona o Radar com Display no próprio aparelho?
+                        <iconify-icon icon="lucide:plus" class="group-open:hidden"></iconify-icon>
+                        <iconify-icon icon="lucide:minus" class="hidden group-open:block text-[#20B898]"></iconify-icon>
+                    </summary>
+                    <p class="mt-4 text-[#888] text-sm">O TRK-Finder conta com display OLED SSD1306 integrado com interface Tactical HUD: ele desenha um retículo de mira octogonal, setas-guia de aproximação e porcentagem de sinal em tempo real para você achar suas ferramentas sem precisar tocar no celular.</p>
+                </details>
+                <details class="bg-[#111] border border-[#222] rounded-lg p-6 group cursor-pointer">
+                    <summary class="font-bold text-lg text-white flex justify-between items-center outline-none">
+                        O que acontece se eu esquecer ferramentas e sair com o carro?
+                        <iconify-icon icon="lucide:plus" class="group-open:hidden"></iconify-icon>
+                        <iconify-icon icon="lucide:minus" class="hidden group-open:block text-[#20B898]"></iconify-icon>
+                    </summary>
+                    <p class="mt-4 text-[#888] text-sm">O app conta com o Alerta de Deslocamento: ao detectar velocidade acima de 15 km/h com ferramentas faltantes, ele dispara um alarme crítico imediato na tela do celular.</p>
                 </details>
                 <details class="bg-[#111] border border-[#222] rounded-lg p-6 group cursor-pointer">
                     <summary class="font-bold text-lg text-white flex justify-between items-center outline-none">
@@ -954,7 +970,7 @@ Alarme instantâneo
                         <iconify-icon icon="lucide:plus" class="group-open:hidden"></iconify-icon>
                         <iconify-icon icon="lucide:minus" class="hidden group-open:block text-[#20B898]"></iconify-icon>
                     </summary>
-                    <p class="mt-4 text-[#888] text-sm">Como o rastreador dorme entre as varreduras, uma única bateria 18650 pode durar vários meses com uma carga.</p>
+                    <p class="mt-4 text-[#888] text-sm">Como o rastreador dorme em Deep Sleep entre as varreduras, uma única bateria 18650 pode durar meses com uma única carga.</p>
                 </details>
             </div>
         </section>
@@ -1054,26 +1070,26 @@ Alarme instantâneo
             <!-- Open Source Tech Marquee -->
             <div class="mt-20 border-t border-[#222] pt-6 overflow-hidden flex w-full relative group cursor-default">
                 <div class="flex items-center gap-12 text-[#444] font-mono text-xs uppercase tracking-[0.2em] whitespace-nowrap animate-marquee group-hover:text-[#20B898] transition-colors duration-500 w-max shrink-0">
-                    <span>ESP32-S3</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>Kotlin</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>LITTLEFS</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>LoRaWAN</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>BLE 5.0</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>React</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>Supabase</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>Astro</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>TailwindCSS</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
+                    <span>ESP32-S3</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>UHF RFID (YRM100)</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>Kotlin & Compose</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>LITTLEFS</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>Room SQLite</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>BLE 5.0 GATT</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>INA219 & BME280</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>NFC Pairing</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>Astro & TailwindCSS</span> <span class="text-[#222] opacity-50">•</span>
                 </div>
                 <div class="flex items-center gap-12 text-[#444] font-mono text-xs uppercase tracking-[0.2em] whitespace-nowrap animate-marquee group-hover:text-[#20B898] transition-colors duration-500 w-max shrink-0 absolute top-6 left-[100%]">
-                    <span>ESP32-S3</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>Kotlin</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>LITTLEFS</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>LoRaWAN</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>BLE 5.0</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>React</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>Supabase</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>Astro</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
-                    <span>TailwindCSS</span> <span class="text-[#222] opacity-50">Ã¢â‚¬Â¢</span>
+                    <span>ESP32-S3</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>UHF RFID (YRM100)</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>Kotlin & Compose</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>LITTLEFS</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>Room SQLite</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>BLE 5.0 GATT</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>INA219 & BME280</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>NFC Pairing</span> <span class="text-[#222] opacity-50">•</span>
+                    <span>Astro & TailwindCSS</span> <span class="text-[#222] opacity-50">•</span>
                 </div>
             </div>
         </footer>
@@ -1520,11 +1536,11 @@ Alarme instantâneo
         // 31. Boot Sequence (RFID Calibration + SVG Draw)
         const bootLines = [
             "Inicializando Trakr Edge...",
-            "Montando LITTLEFS... OK.",
-            "Iniciando transceptor LoRa... OK.",
-            "Verificação da antena RFID UHF... OK.",
-            "Estabelecendo link neural... ESPERA.",
-            "Pronto."
+            "Montando LITTLEFS (/inventory.json)... OK.",
+            "Iniciando leitor UHF YRM100 & UART2... OK.",
+            "Calibrando antena cerâmica 865-928MHz... OK.",
+            "Inicializando Servidor BLE GATT MTU 512... OK.",
+            "Pronto para rastreamento."
         ];
         const bootScreen = document.getElementById('boot-screen');
         const bootLogs = document.getElementById('boot-logs');

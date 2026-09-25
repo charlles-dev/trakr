@@ -459,6 +459,15 @@ fun ConfigScreen(
                     onCheckedChange = viewModel::setBeep,
                 )
 
+                SettingSwitchRow(
+                    icon = null,
+                    title = "Modo Stealth (Tático)",
+                    hint = "Desativa painel OLED, LEDs e bipes para operação completamente invisível.",
+                    checked = config?.stealth ?: false,
+                    enabled = trackerAvailable,
+                    onCheckedChange = viewModel::setStealth,
+                )
+
                 val listenOptions = listOf(15_000, 30_000, 60_000)
                 val listenLabel =
                     stringResource(

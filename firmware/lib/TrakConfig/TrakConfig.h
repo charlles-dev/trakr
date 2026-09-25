@@ -16,6 +16,7 @@ class TrakConfig {
   unsigned long listenMs() const { return listen_ms_; }
   unsigned long radarMs() const { return radar_ms_; }
   bool beep() const { return beep_; }
+  bool stealth() const { return stealth_; }
 
   // Delta do relógio sincronizado: epoch_ms - millis() no momento do sync
   // (0 = sem sync; ts dos eventos fica relativo ao boot).
@@ -28,6 +29,7 @@ class TrakConfig {
   void setListenMs(unsigned long v) { listen_ms_ = v; }
   void setRadarMs(unsigned long v) { radar_ms_ = v; }
   void setBeep(bool v) { beep_ = v; }
+  void setStealth(bool v) { stealth_ = v; }
   void setClockDeltaMs(int64_t v) { clock_delta_ms_ = v; }
   void setPinHash(const String& h) { pin_hash_ = h; }
   void clearPin() { pin_hash_ = ""; }
@@ -55,6 +57,7 @@ class TrakConfig {
   unsigned long listen_ms_ = 30000;
   unsigned long radar_ms_ = 120000;
   bool beep_ = true;
+  bool stealth_ = false;
   int64_t clock_delta_ms_ = 0;
   String pin_hash_ = "";
   uint8_t tx_power_dbm_ = 26;

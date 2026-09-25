@@ -21,4 +21,26 @@ object SettingsPrefs {
             .putBoolean(KEY_ABSENCE_ALERTS, enabled)
             .apply()
     }
+
+    fun getTrackerMac(context: Context): String? =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("tracker_mac", null)
+
+    fun setTrackerMac(context: Context, mac: String?) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString("tracker_mac", mac)
+            .apply()
+    }
+
+    fun getTrackerPin(context: Context): String? =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("tracker_pin", null)
+
+    fun setTrackerPin(context: Context, pin: String?) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString("tracker_pin", pin)
+            .apply()
+    }
 }

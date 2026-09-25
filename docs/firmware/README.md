@@ -1,128 +1,71 @@
-Guia de Firmware (ESP32 + LittleFS)
-===================================
+# 🧠 Guia do Firmware (ESP32 / ESP32-S3 + LittleFS)
 
-O firmware do Trakr é o cérebro autônomo do **TRK-Finder** (rastreador
-portátil). Ele foi escrito em C++ e é recomendado utilizar o **PlatformIO**
-(extensão do VS Code) para compilação.
+O firmware do Trakr é o núcleo autônomo do **TRK-Finder** (rastreador portátil de ferramentas). Ele foi escrito em C++ moderno no ecossistema Arduino/ESP-IDF e gerenciado via **PlatformIO**.
 
-Ambiente de Desenvolvimento
----------------------------
+---
 
-1. Instale o VS Code.
+## 🛠️ Ambiente de Desenvolvimento e Compilação
 
-2. Instale a extensão PlatformIO IDE.
+1. Instale o [VS Code](https://code.visualstudio.com/) e a extensão **PlatformIO IDE**.
+2. Abra a pasta `firmware/` no VS Code. O PlatformIO fará o download automático da toolchain e dependências.
 
-3. Abra a pasta `trakr/firmware/` no VS Code. O PlatformIO fará o download do SDK do ESP32 automaticamente.
+### Ambientes de Build (`platformio.ini`):
+* `esp32radar`: Build padrão para ESP32-WROOM-32 com módulo YRM100 real via UART2.
+* `esp32radar-sim`: Build de simulação com flag `-DTRAKR_SIM` para desenvolvimento do app sem o módulo UHF.
+* `esp32s3radar`: Build para placas ESP32-S3 (USB nativo e maior performance).
+* `esp32s3radar-sim`: Build de simulação para ESP32-S3.
 
-Dependências (platformio.ini)
------------------------------
+---
 
-* `bblanchon/ArduinoJson` (Para manipular o `inventory.json`)
+## ⚙️ Máquina de Estados Finita (FSM)
 
-* `h2zero/NimBLE-Arduino` (Servidor GATT para notificar o app Android)
+O loop principal opera em uma máquina de estados não-bloqueante:
 
-* `fastled/FastLED` (Driver do LED RGB WS2812B — ver `lib/TrakLed`)
+```mermaid
+stateDiagram-v2
+    [*] --> DORME
+    DORME --> LEITURA: Wake-up por Botão Físico (GPIO 33 / ext0)
+    DORME --> ESCUTA: Wake-up por Reset / LDO
+    ESCUTA --> LEITURA: Botão Físico / Movimento IMU
+    ESCUTA --> DORME: Timeout de Inatividade (listen_ms)
+    LEITURA --> SINCRONIZA: Varredura UHF Completa (~500ms)
+    SINCRONIZA --> RASTREIA: Comando BLE "start_radar"
+    SINCRONIZA --> LIVE: Comando BLE "start_live"
+    SINCRONIZA --> MULTI: Comando BLE "start_radar_multi"
+    SINCRONIZA --> FINDME: Comando BLE "find_device"
+    SINCRONIZA --> DORME: Janela BLE Expirada (sem conexão)
+    RASTREIA --> SINCRONIZA: "stop_radar" / Timeout (radar_ms)
+    LIVE --> SINCRONIZA: "stop_live"
+    MULTI --> SINCRONIZA: Timeout / Botão
+    FINDME --> SINCRONIZA: Duração Concluída (1 a 60s)
+```
 
-* **YRM100** comunicação via **UART2 de hardware** (`Serial2`) — GPIO16/17. Não é necessário `SoftwareSerial`.
+### Detalhamento dos Estados:
+1. **`ESCUTA`:** Espera ativa (~30 s). O LED permanece em verde suave aguardando comando BLE ou acionamento de botão.
+2. **`RASTREIA` (Modo Radar):** Varreduras em ciclos curtos (~400 ms) buscando uma tag alvo. Publica `radar_report` com **RSSI (dBm)**, delta de aproximação e hint direcional, modulando bipes e feedback visual.
+3. **`LIVE` (Varredura ao Vivo):** Streaming contínuo de todas as tags UHF detectadas no alcance do leitor.
+4. **`MULTI` (Radar Multi-Alvo):** Rastreia uma lista de tags simultaneamente, ordenando-as em tempo real por potência de sinal.
+5. **`LEITURA`:** Disparada pelo botão físico. Executa a leitura de todas as ferramentas e publica o inventário via GATT.
+6. **`SINCRONIZA`:** Mantém o link BLE ativo. Se o app estiver conectado, executa re-varreduras automáticas a cada 10 s para manter o inventário espelhado.
+7. **`FINDME`:** Modo "Encontre meu Rastreador" — pulsa LED branco e buzzer em cadência de 2 Hz de forma não bloqueante para localização física do aparelho.
+8. **`DORME` (Deep Sleep):** Desliga o módulo UHF (corte via `YRM100_EN_PIN`), desliga memórias RTC desnecessárias e coloca o ESP32 em sono profundo consumindo microamperes, despertando apenas via `ext0` no botão.
 
-A pinagem de todo o projeto está centralizada em `firmware/include/pins.h`
-e documentada em [`docs/hardware/README.md`](../hardware/README.md). O pino
-`YRM100_EN_PIN` (GPIO14) controla a energia do módulo UHF no deep sleep —
-desligue a `#define` se a sua placa YRM100 não tiver pino de habilitação.
+---
 
-O protocolo GATT (UUIDs, características e comandos) é definido em
-`firmware/include/ble_profile.h` e descrito em [`docs/protocol/gatt.md`](../protocol/gatt.md).
+## 🧩 Bibliotecas e Módulos Internos (`lib/`)
 
-Ambientes
----------
+* **`TrakYrm100`:** Driver de comunicação serial com o módulo UHF YRM100. Suporta coleta de EPCs em massa, extração de RSSI em dBm, controle dinâmico de potência TX (0 a 33 dBm) e gravação de novos EPCs (`writeEpc`).
+* **`TrakBattery`:** Leitura real de tensão e porcentagem de bateria via sensor I2C **INA219** (endereço `0x40`) com fallback automático para divisor resistivo via ADC.
+* **`TrakSensors`:** Monitoramento ambiental com sensor **BME280** (`0x76` - temperatura, umidade, pressão) e acelerômetro **MPU6050** (`0x68` - detecção de movimento e impacto).
+* **`TrakOled`:** Display SSD1306 I2C (`0x3C`) com interface "Tactical HUD", retículo de mira, percentual de proximidade e indicação de status.
+* **`TrakHaptics`:** Controle de buzzer passivo com modulação contínua de frequência (200 Hz a 2400 Hz) e acionamento de motor vibratório em aproximação crítica (`rssi > -45 dBm`).
+* **`TrakEvents`:** Gerenciador do livro-razão de eventos offline persistido em Flash (`events.json`), com rotação automática mensal (`/events_YYYYMM.json`).
+* **`TrakConfig`:** Armazenamento seguro de configurações, calibrações de RF e hash SHA-256 do PIN em `/config.json`.
 
-O produto é único (TRK-Finder); os ambientes variam apenas pelo modo de leitura:
+---
 
-* `esp32radar` — build padrão com o YRM100 real;
-* `esp32radar-sim` — mesmo código com `-DTRAKR_SIM`: gera leituras simuladas
-  para testar o app sem o módulo UHF.
+## 🔄 Sistema de Atualização OTA e Segurança de Boot
 
-Gravando o Banco de Dados Local (LittleFS)
-------------------------------------------
-
-A grande sacada desta arquitetura é que as ferramentas ficam salvas no próprio chip do ESP32. Nós usamos o LittleFS para particionar a memória.
-
-1. Dentro da pasta `firmware/`, crie uma pasta chamada `data/`.
-
-2. Crie um arquivo `inventory.json` vazio (ou com ferramentas padrão) dentro de `data/`.
-
-3. Conecte o ESP32 via USB-C.
-
-4. No menu lateral do PlatformIO, clique em **Platform -> Upload Filesystem Image**.
-   _(Isso envia o arquivo JSON para a memória particionada)._
-
-Gravando o Código (Upload)
---------------------------
-
-Com o FileSystem gravado, basta clicar em **Upload** no PlatformIO para compilar o código `.cpp` e enviar para o ESP32.
-
-### Lógica de Deep Sleep
-
-Para economizar bateria, o loop principal (`loop()`) raramente é executado por muito tempo. O código prepara o **botão físico** (GPIO 33) como `ext0 wake up` e entra em `esp_deep_sleep_start()`. Ele só acorda com a pressão do botão.
-
-### Recursos Nativos (Sempre Inclusos no Produto Base)
-
-O TRK-Finder conta com os seguintes recursos nativos integrados ao firmware e app sem necessidade de add-ons adicionais:
-
-1. **Modo Radar e Localização por Proximidade:**
-   * Disparado pelo comando `start_radar` no GATT Control (suporta ID da ferramenta ou EPC).
-   * Varredura contínua via `TrakYrm100::collectReads()` medindo EPC + RSSI em dBm.
-   * Feedback sonoro no buzzer ativo com cadência proporcional (1000 ms sem sinal → 100 ms sinal forte).
-   * Feedback visual nativo através do display **OLED SSD1306 (Tactical HUD)**, exibindo retículo octogonal, proximidade percentual e status geral.
-
-2. **Registro Local de Eventos (Ledger):**
-   * Histórico persistido em LittleFS (`events.json`) para rastreabilidade offline.
-   * Leitura sob demanda via characteristic *History* (array JSON com rotação circular de até 100 registros).
-
-3. **Sincronização de Relógio via BLE (`set_clock`):**
-   * Dispensa módulo RTC externo (DS3231).
-   * O app Android envia `{"cmd":"set_clock","epoch_ms":<timestamp>}` no pareamento.
-   * O firmware calcula o delta em relação ao `millis()`, persiste `clock_delta_ms` em `config.json` e gera timestamps absolutos UTC (`uint64_t`) nos eventos.
-
-4. **Gerenciamento de Energia e Deep Sleep:**
-   * Controle de corte de energia do YRM100 via pino `YRM100_EN_PIN` (GPIO14).
-   * Entrada automática em sono profundo após 30 s de inatividade no estado `ESCUTA`.
-   * Despertar imediato por botão físico (`ext0 wake up` no GPIO33).
-
-5. **Atualização OTA sem Fio via BLE:**
-   * Particionamento duplo de OTA no flash do ESP32.
-   * Recebimento de chunks binários via characteristic `Ota` com validação de integridade antes do reboot.
-
-6. **Notificação de Ausência (App Android):**
-   * Implementada no app através do `AbsenceWatcher.kt`.
-   * Monitora os relatórios de presença e gera notificações locais push caso uma ferramenta monitorada não responda no intervalo esperado.
-
-7. **Histórico com rotação mensal (sem perdas):**
-   * `events.json` mantém os 200 eventos mais recentes em RAM/Flash.
-   * Ao exceder, o mais antigo é arquivado automaticamente em `/events_YYYYMM.json` (ou `events_boot.json` quando sem epoch).
-   * Comandos BLE `get_history` e `list_archives` permitem leitura paginada por mês, evitando perda por limite de 100.
-
-8. **PIN de acesso e sessão autenticada:**
-   * SHA-256 do PIN em `config.json` (`pin_hash`, 64 hex).
-   * Comando `auth` abre sessão de 5 min para `add_tool`/`remove_tool` e troca de PIN via `set_config`.
-
-### Modo radar (RASTREIA)
-
-O núcleo do produto:
-
-* **Botão físico** no GPIO 33 (pull-down interno) serve como wake `ext0`; o
-  dispositivo acorda em `LEITURA` (varredura imediata) quando acordou pelo
-  botão, senão entra em `ESCUTA` (espera ativa ~30 s → dorme).
-* **Estado `RASTREIA` (modo radar):** disparado por
-  `{"cmd":"start_radar","id":"<id>"}` (ou por tag) no GATT Control. A cada
-  ciclo (~400 ms) o `TrakYrm100::collectReads()` mede o EPC + **RSSI (dBm)**
-  da tag alvo e o firmware publica `{"type":"radar_report",...}` via Event
-  notify — sem persistir no histórico. O buzzer bipa com intervalo
-  proporcional à potência (1000 ms sem sinal → 100 ms com sinal forte) e o
-  LED muda de cor (azul procurando → ciano sinal → verde perto).
-* `TrakYrm100::collectEpc()` delega para `collectReads()` — o esquema de
-  parsing é o mesmo, o RSSI é extraído do byte após o EPC quando presente no
-  payload.
-
-Detalhes do protocolo: [`docs/protocol/gatt.md`](../protocol/gatt.md).
-Roadmap e próximos passos: [`docs/roadmap.md`](../roadmap.md).
+O firmware conta com particionamento duplo OTA (`ota_4mb.csv` / `ota_8mb.csv`):
+* Recebimento de chunks binários via característica GATT **Ota** (200 bytes sem resposta).
+* **Healthcheck de Boot:** Ao reiniciar no novo firmware, o ESP32 roda em estado `PENDING_VERIFY`. Se o sistema permanecer saudável por 10 segundos sem travamento do Watchdog, a nova partição é validada permanentemente via `esp_ota_mark_app_valid_cancel_rollback()`. Caso ocorra falha de boot, o bootloader reverte automaticamente para a versão anterior.

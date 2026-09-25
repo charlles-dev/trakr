@@ -51,6 +51,12 @@ class ConfigViewModel(
         }
     }
 
+    fun setStealth(enabled: Boolean) {
+        ble.setConfig(mapOf("stealth" to enabled)) {
+            _message.value = UiMessage(R.string.msg_no_device)
+        }
+    }
+
     fun setListenMs(ms: Int) {
         ble.setConfig(mapOf("listen_ms" to ms)) {
             _message.value = UiMessage(R.string.msg_no_device)

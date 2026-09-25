@@ -47,22 +47,24 @@ O **TRK-Finder** é um rastreador portátil UHF (ESP32 + YRM100) que pode ser de
 
 ## ✨ Principais Funcionalidades
 
-* 🧠 **Edge Intelligence (Autonomia Total):** O ESP32 armazena o inventário (`inventory.json` via LittleFS). Cada varredura (botão físico ou comando do app) é resolvida localmente, sem precisar do celular.
-* 📡 **Varredura UHF RFID:** Utiliza o módulo YRM100 com antena cerâmica para ler todas as tags de uma só vez, captando múltiplas tags flexíveis *anti-metal* simultaneamente.
-* 🎯 **Modo Radar:** varre a tag da ferramenta faltante e mede a potência do sinal (**RSSI**) pelo YRM100, guiando o usuário por bipes até localizar a peça (modo "detector de metais"), com tela de localização no app.
-* 🗄️ **Modo Estação:** deixe o TRK-Finder parado no ambiente de trabalho para varreduras periódicas do inventário (agendamento planejado — Fase R2 do roadmap).
-* 🔋 **Ultra Low-Power:** Deep Sleep com wake-up via **botão físico** (ext0), alimentado por bateria 18650 carregada via TP4056 (USB-C).
-* 📱 **App Offline-First (Thin Client):** Aplicativo Kotlin com interface *tech-oriented* em *Dark Mode*. Ele se conecta via Bluetooth LE (BLE), espelha o banco de dados do rastreador no cache local do celular (Room/SQLite) e emite notificações push locais (ex: *"Ferramenta não encontrada: Chave Phillips 1/4"*).
-* ⚙️ **Design Mecânico Paramétrico:** Gerado via script nativo no Autodesk Fusion 360. A estrutura inclui suportes para insertos térmicos de latão (M3), *cable management* integrado, guias de luz (*Light Pipe*) para o LED de status interno e cutouts para pés em TPU.
+* 🧠 **Edge Intelligence (Autonomia Total):** O ESP32 armazena o inventário (`inventory.json` via LittleFS). Cada varredura (botão físico ou comando do app) é resolvida localmente, sem precisar do celular ou de nuvem.
+* 📡 **Varredura UHF RFID em Lote:** Módulo YRM100 com antena cerâmica/SMA para ler dezenas de tags flexíveis *anti-metal* simultaneamente em ~500ms.
+* 🎯 **Radar com Display (Tactical HUD):** O próprio rastreador possui display **OLED SSD1306** com retículo de mira octogonal, setas-guia de aproximação e porcentagem de sinal em tempo real, permitindo localizar ferramentas no escuro ou no campo guiado apenas pela tela e bipes do aparelho.
+* 🔍 **Modo Radar Multimodo:** Modos *Single-Target*, *Multi-Alvo* e *Live Stream*, com cadência sonora no buzzer, LED RGB de proximidade e vibração háptica no celular.
+* 🚗 **Alerta de Deslocamento em Trânsito:** O app monitora deslocamentos veiculares via GPS (> 15 km/h) e emite alarme crítico imediato se ferramentas forem esquecidas para trás.
+* 🏷️ **Gravação e Pareamento NFC/UHF:** Pareamento BLE por toque via NFC e capacidade de reprogramar novos códigos EPC diretamente nas tags físicas.
+* 🌡️ **Sensoriamento & Diagnóstico:** Telemetria de bateria real (INA219), temperatura/umidade/pressão (BME280) e acelerômetro (MPU6050).
+* 🔄 **Atualização OTA sem Fio:** Upload de novos firmwares `.bin` via Bluetooth LE com particionamento duplo e healthcheck com rollback automático.
+* 🔋 **Ultra Low-Power:** Deep Sleep com consumo em microamperes e despertar instantâneo via botão físico (`ext0 wake-up`).
 
 ## 🏗️ Arquitetura do Sistema
 
 O fluxo de dados foi desenhado para resiliência e privacidade:
 
-1. **Hardware (TRK-Finder):** Botão físico (ou comando via BLE) dispara a varredura -> ESP32 desperta do *Deep Sleep* -> Módulo YRM100 varre as tags RFID -> ESP32 compara a leitura com seu banco Flash interno (LittleFS).
-2. **Conectividade (BLE):** ESP32 transmite o status e o array de IDs via Bluetooth GATT (baixo consumo) e recebe novos cadastros de tags do app.
-3. **Mobile (App):** O app em Kotlin recebe a carga via BLE, cruza com seu cache (Room/SQLite) e apresenta a interface para o usuário, permitindo também cadastrar novas tags, que são enviadas de volta para o ESP32.
-4. **Modo radar:** mesma varredura UHF → resolução local → BLE, com medida de RSSI da tag faltante + bipes de guia até a ferramenta.
+1. **Hardware (TRK-Finder):** Botão físico (ou comando BLE) dispara a varredura -> ESP32 desperta do *Deep Sleep* -> Módulo YRM100 varre as tags RFID -> ESP32 compara a leitura com seu banco Flash interno (LittleFS).
+2. **Conectividade (BLE GATT MTU 512):** ESP32 transmite inventário, eventos, relatórios de radar e telemetria de sensores via características dedicadas.
+3. **Mobile (App Android):** O app em Kotlin com *Foreground Service* espelha o banco no Room/SQLite local, gerencia Job Kits e emite notificações de ausência.
+4. **Modos de Busca:** Single, Multi-alvo e Live stream com cálculo de delta direcional e alertas de trânsito em alta velocidade.
 
 > 📌 Um diagrama Mermaid detalhado do fluxo (Hardware -> BLE -> App) está disponível em [`docs/README.md`](./docs/README.md).
 
@@ -70,11 +72,12 @@ O fluxo de dados foi desenhado para resiliência e privacidade:
 
 | Camada      | Tecnologia                                          |
 | ----------- | --------------------------------------------------- |
-| **Firmware** | C++ (PlatformIO) · ESP32-WROOM-32 · NimBLE-Arduino · ArduinoJson |
-| **RFID**    | Módulo YRM100 (UHF) + Antena cerâmica IPEX 2dBi + Tags Anti-Metal + medição de RSSI (dBm) |
-| **Mobile**  | Kotlin · Jetpack Compose · Room (SQLite) · Foreground Service BLE |
-| **CAD**     | Autodesk Fusion 360 (script paramétrico em Python)  |
-| **Docs**    | Markdown + Mermaid                                  |
+| **Firmware** | C++ (PlatformIO) · ESP32-WROOM-32 / ESP32-S3 · NimBLE-Arduino · ArduinoJson · LittleFS · FreeRTOS |
+| **RFID UHF**| Módulo YRM100 (UHF 865–928 MHz) + Antena cerâmica IPEX 2dBi / SMA + Tags Anti-Metal + medição de RSSI (dBm) + Escrita EPC |
+| **Mobile**  | Kotlin · Jetpack Compose · Room (SQLite) · Foreground Service BLE · GPS Movement Detection · PDF Box Generator · NFC |
+| **Sensores**| INA219 (Bateria I2C) · BME280 (Temp/Hum/Press) · MPU6050 (IMU) · SSD1306 OLED (Tactical HUD) · Buzzer Passivo |
+| **CAD**     | Autodesk Fusion 360 (script paramétrico em Python) · Snap-fit · IP54 Gasket · Bumper TPU |
+| **Web Setup**| Astro · TailwindCSS · Web Serial API · ESP Web Tools (`landing/`) |
 
 ## 📂 Estrutura do Repositório (Monorepo)
 

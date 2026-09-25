@@ -1,84 +1,69 @@
-Visão Geral da Arquitetura (Trakr)
-=================================
+# 🏗️ Visão Geral da Arquitetura (Trakr)
 
-O Trakr opera em uma arquitetura **Edge-Master / Thin-Client**, desenhada para ambientes offline. Isso significa que o microcontrolador do rastreador portátil (**TRK-Finder**) é o cérebro autônomo da operação, e o aplicativo Android atua como uma interface de visualização e configuração.
+O Trakr opera em uma arquitetura **Edge-Master / Thin-Client**, desenhada especificamente para ambientes industriais e remotos 100% offline. O microcontrolador do rastreador portátil (**TRK-Finder**) é o cérebro autônomo da operação e detentor da fonte da verdade, enquanto o aplicativo Android atua como central de visualização, auditoria, localização guiada e configuração.
 
-Diagrama do Sistema
--------------------
+---
 
-    ```mermaid
+## 📡 Diagrama do Sistema Completo
+
+```mermaid
 graph TD
     subgraph "Hardware (TRK-Finder Edge-Master)"
-        TAG[Tags UHF Anti-Metal] <.. RF ..> ANT[Antena 2dBi]
+        TAG[Tags UHF Anti-Metal] <.. RF UHF ..> ANT[Antena Cerâmica / SMA]
         ANT <--> YRM[Leitor UHF YRM100]
         BTN[Botão Físico] --> |ext0 Wake| ESP
-        PWR[Bateria 18650] --> ESP
+        PWR[Bateria 18650] --> INA[Sensor INA219] --> ESP
+        SENS[BME280 & MPU6050] --> |I2C| ESP
 
-        subgraph "ESP32 (Cérebro)"
-            ESP_CORE[Máquina de Estados]
-            MEM[(LittleFS: inventory.json)]
+        subgraph "ESP32 (Cérebro Autônomo)"
+            ESP_CORE[Máquina de Estados FSM]
+            MEM[(LittleFS: inventory.json & events.json)]
             ESP_CORE <--> MEM
         end
 
-        YRM <-->|UART| ESP_CORE
-        ESP_CORE --> BUZ[Alarme Local]
+        YRM <-->|UART2| ESP_CORE
+        ESP_CORE --> HAPT[Buzzer + Motor Vibratório]
         ESP_CORE --> OLED[OLED SSD1306 Tactical HUD]
     end
 
-    subgraph "Conectividade (BLE)"
-        ESP_CORE <-->|GATT Server| BLE[Bluetooth Low Energy]
+    subgraph "Conectividade (BLE GATT MTU 512)"
+        ESP_CORE <-->|Inventory / Event / Control / History / Ota| BLE[Bluetooth Low Energy]
     end
 
-    subgraph "Mobile (App Android Kotlin)"
+    subgraph "Mobile (App Android Kotlin + Compose)"
         BLE <--> SVC[Foreground Service BLE]
-        SVC <--> APP[App Jetpack Compose]
-        APP <--> ROOM[(Room SQLite Cache)]
-        SVC --> PUSH[Notificação Push Local]
+        SVC <--> APP[Interface Jetpack Compose]
+        APP <--> ROOM[(Room SQLite Database)]
+        APP --> NFC[Módulo Pareamento NFC]
+        APP --> MOT[Alerta de Trânsito GPS >15km/h]
+        SVC --> PUSH[Notificações Push Locais]
     end
 
     classDef hardware fill:#2b2d42,stroke:#8d99ae,stroke-width:2px,color:#fff;
     classDef mobile fill:#023e8a,stroke:#0077b6,stroke-width:2px,color:#fff;
 
-    class ESP_CORE,MEM,YRM,ANT,BTN,BUZ,TAG,PWR hardware;
-    class APP,ROOM,PUSH,BLE,SVC mobile;
+    class ESP_CORE,MEM,YRM,ANT,BTN,HAPT,TAG,PWR,INA,SENS,OLED hardware;
+    class APP,ROOM,PUSH,BLE,SVC,NFC,MOT mobile;
 ```
 
-Fluxo de Operação Autônoma
---------------------------
+---
 
-1. **Gatilho Físico:** O botão do TRK-Finder é pressionado (ou o app envia um comando BLE).
+## ⚙️ Fluxo de Operação Autônoma
 
-2. **Despertar:** O ESP32 sai do _Deep Sleep_ (wake-up `ext0` pelo botão).
+1. **Gatilho Físico / Detecção:** O operador pressiona o botão físico no TRK-Finder (ou aciona o comando pelo app, ou o acelerômetro detecta movimento).
+2. **Despertar Instantâneo:** O ESP32 sai do *Deep Sleep* (`ext0 wake-up` em menos de 15ms) e energiza o módulo YRM100.
+3. **Varredura UHF:** Em ~500ms, o módulo YRM100 lê simultaneamente todos os EPCs das tags anti-metal no raio de alcance.
+4. **Resolução Edge-Master:** O microcontrolador cruza os EPCs lidos com seu banco local `inventory.json` na memória Flash (LittleFS).
+5. **Feedback Imediato:**
+   * Caso falte alguma ferramenta cadastrada: dispara bipes no buzzer, acende LED de alerta e exibe o nome da peça faltante no display OLED.
+   * Se um smartphone com o app Trakr estiver por perto, o alerta é transmitido via BLE e o *Foreground Service* emite notificação push local.
 
-3. **Varredura (Sweep):** O YRM100 é energizado e lê todos os EPCs (IDs) das ferramentas em 500ms.
+---
 
-4. **Resolução Local:** O ESP32 cruza as leituras com seu `inventory.json`. Se faltar um ID, ele aciona o Buzzer interno instantaneamente.
+## 🎯 Modos de Operação do TRK-Finder
 
-5. **Notificação Remota:** Se houver um celular Android pareado por perto, o ESP32 envia o pacote de erro via BLE. O _Foreground Service_ do Kotlin intercepta e exibe a notificação no celular.
-
-TRK-Finder (Rastreador Portátil)
---------------------------------
-
-Produto único do ecossistema (ESP32 + YRM100 + BLE + OLED), com modos de uso:
-
-1. **Modo Estação:** o rastreador fica parado no ambiente e executa auditorias
-   do inventário, notificando no app quando faltam ferramentas (agendamento
-   periódico planejado — Fase R2 do roadmap). O display exibe o status de 
-   ferramentas presentes.
-
-2. **Modo Radar (localização):** para a tag faltante, o operador caminha pelo
-   ambiente com o dispositivo na mão; o YRM100 mede o **RSSI (dBm)** da tag e o
-   firmware publica a potência via BLE e emite **bipes** com frequência
-   proporcional ao sinal — o app exibe a intensidade em tempo real até a
-   ferramenta ser encontrada. Além disso, o **OLED entra no modo Tactical HUD**,
-   exibindo um retículo octogonal com setas-guia e porcentagem de proximidade.
-
-Roadmap de Entregas e Features
-------------------------------
-
-O registro do que **já foi entregue** e das **próximas sugestões** (fases,
-sempre offline) vive em [`roadmap.md`](./roadmap.md).
-
-O **Catálogo de Melhorias** (add-ons opcionais de hardware e software, com
-esforço/impacto/status por item) é o documento de discussão:
-[`improvements.md`](./improvements.md).
+* **Auditoria Instantânea (Varredura):** Auditoria rápida de inventário com 1 clique no botão, espelhando status no app e registrando no histórico.
+* **Modo Radar de Localização (Single-Target):** Procura uma ferramenta específica medindo a potência do sinal (**RSSI em dBm**), guiando o operador por cadência de bipes, vibração háptica no celular, LED de proximidade e retículo de mira direcional no display OLED.
+* **Modo Radar Multi-Alvo:** Rastreamento simultâneo de múltiplos itens com ranking de proximidade em tempo real.
+* **Live Streaming:** Transmissão contínua de todas as tags captadas para conferência dinâmica de estoque ou bancada.
+* **Find My Finder:** Aciona LED pulsante e alarme sonoro contínuo no rastreador para encontrá-lo dentro de caixas ou veículos.

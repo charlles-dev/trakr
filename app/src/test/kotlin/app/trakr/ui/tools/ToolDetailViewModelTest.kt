@@ -20,11 +20,12 @@ class ToolDetailViewModelTest {
 
     private val dao = FakeToolDao()
     private val repository = ToolRepository(dao)
+    private val ble = app.trakr.testutil.FakeBleGateway()
 
     @Test
     fun setEpc_nullEmitsEmptyList() =
         runTest(mainDispatcherRule.dispatcher) {
-            val vm = ToolDetailViewModel(repository)
+            val vm = ToolDetailViewModel(repository, ble)
             val collected = mutableListOf<List<RssiSample>>()
             val job = launch { vm.samples.collect { collected += it } }
 
@@ -41,7 +42,7 @@ class ToolDetailViewModelTest {
             dao.insertRssiSample(RssiSample(epc = "EPC-A", rssi = -50))
             dao.insertRssiSample(RssiSample(epc = "EPC-A", rssi = -62))
             dao.insertRssiSample(RssiSample(epc = "EPC-B", rssi = -70))
-            val vm = ToolDetailViewModel(repository)
+            val vm = ToolDetailViewModel(repository, ble)
             val collected = mutableListOf<List<RssiSample>>()
             val job = launch { vm.samples.collect { collected += it } }
 
@@ -58,7 +59,7 @@ class ToolDetailViewModelTest {
         runTest(mainDispatcherRule.dispatcher) {
             dao.insertRssiSample(RssiSample(epc = "EPC-A", rssi = -50))
             dao.insertRssiSample(RssiSample(epc = "EPC-B", rssi = -70))
-            val vm = ToolDetailViewModel(repository)
+            val vm = ToolDetailViewModel(repository, ble)
             val collected = mutableListOf<List<RssiSample>>()
             val job = launch { vm.samples.collect { collected += it } }
 

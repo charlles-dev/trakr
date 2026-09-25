@@ -34,6 +34,7 @@ bool TrakConfig::load(fs::FS& fs, const char* path) {
   listen_ms_ = doc["listen_ms"] | listen_ms_;
   radar_ms_ = doc["radar_ms"] | radar_ms_;
   beep_ = doc["beep"] | beep_;
+  stealth_ = doc["stealth"] | stealth_;
   clock_delta_ms_ = doc["clock_delta_ms"] | (int64_t)0;
   tx_power_dbm_ = doc["tx_power_dbm"] | tx_power_dbm_;
   rssi_offset_ = doc["rssi_offset"] | rssi_offset_;
@@ -53,6 +54,7 @@ bool TrakConfig::save(fs::FS& fs, const char* path) const {
   doc["listen_ms"] = listen_ms_;
   doc["radar_ms"] = radar_ms_;
   doc["beep"] = beep_;
+  doc["stealth"] = stealth_;
   doc["clock_delta_ms"] = clock_delta_ms_;
   doc["tx_power_dbm"] = tx_power_dbm_;
   doc["rssi_offset"] = rssi_offset_;
@@ -85,6 +87,7 @@ String TrakConfig::toJsonString() const {
   doc["listen_ms"] = listen_ms_;
   doc["radar_ms"] = radar_ms_;
   doc["beep"] = beep_;
+  doc["stealth"] = stealth_;
   doc["clock_delta_ms"] = clock_delta_ms_;
   doc["tx_power_dbm"] = tx_power_dbm_;
   doc["rssi_offset"] = rssi_offset_;

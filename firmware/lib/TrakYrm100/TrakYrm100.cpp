@@ -30,6 +30,8 @@ void TrakYrm100::disablePower() {
   sendFrame(CMD_STOP_INVENTORY, nullptr, 0);
 #endif
   if (port_) port_->end();  // encerra UART2 (economiza corrente e evita ruído)
+  pinMode(rx_pin_, INPUT);  // Evita fuga de corrente pelo RX
+  pinMode(tx_pin_, INPUT);  // Evita fuga de corrente pelo TX
 #ifdef YRM100_EN_PIN
   digitalWrite(YRM100_EN_PIN, LOW);
   pinMode(YRM100_EN_PIN, INPUT_PULLDOWN);  // trava LOW no deep sleep

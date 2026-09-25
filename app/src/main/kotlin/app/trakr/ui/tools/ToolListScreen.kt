@@ -173,16 +173,6 @@ fun ToolListScreen(
                         )
                     }
                     IconButton(
-                        onClick = { viewModel.exportPdf(context, tools) },
-                        enabled = tools.isNotEmpty(),
-                    ) {
-                        Icon(
-                            Icons.Filled.Description,
-                            contentDescription = "Exportar PDF Formatado",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    IconButton(
                         onClick = { viewModel.exportReport(context, tools) },
                         enabled = tools.isNotEmpty(),
                     ) {

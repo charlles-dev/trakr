@@ -252,15 +252,20 @@ static void radarSweepPublish() {
       break;
     }
   }
-  gOled.showRadar(toolName, gRadarTargetEpc.c_str(), found ? bestRssi : -100, hint, gBatt.read().percent, gConfig.txPowerDbm());
-
-  // LED por intensidade: azul (procurando) -> ciano (sinal) -> verde (perto).
-  if (!found) {
-    gLed.set(TrakLed::Color::SCANNING);
-  } else if (bestRssi > -45) {
-    gLed.set(TrakLed::Color::READY);
+  if (gConfig.stealth()) {
+    gOled.clear();
+    gLed.set(TrakLed::Color::OFF);
   } else {
-    gLed.set(TrakLed::Color::SYNC);
+    gOled.showRadar(toolName, gRadarTargetEpc.c_str(), found ? bestRssi : -100, hint, gBatt.read().percent, gConfig.txPowerDbm());
+
+    // LED por intensidade: azul (procurando) -> ciano (sinal) -> verde (perto).
+    if (!found) {
+      gLed.set(TrakLed::Color::SCANNING);
+    } else if (bestRssi > -45) {
+      gLed.set(TrakLed::Color::READY);
+    } else {
+      gLed.set(TrakLed::Color::SYNC);
+    }
   }
 }
 
@@ -342,7 +347,7 @@ static void multiRadarPublish() {
 
 // Bip "detector de metais": ativo (intervalo) ou passivo (frequência variável)
 static void radarBeep(int8_t rssi) {
-  if (!gConfig.beep()) {
+  if (!gConfig.beep() || gConfig.stealth()) {
 #ifdef TRAKR_HAS_PASSIVE_BUZZER
     gHaptics.noTone();
 #else
@@ -429,6 +434,7 @@ static void handleControlCommand(const String& json) {
     out["listen_ms"] = gConfig.listenMs();
     out["radar_ms"] = gConfig.radarMs();
     out["beep"] = gConfig.beep();
+    out["stealth"] = gConfig.stealth();
     out["tx_power_dbm"] = gConfig.txPowerDbm();
     out["rssi_offset"] = gConfig.rssiOffset();
     out["rssi_threshold"] = gConfig.rssiThreshold();
@@ -452,12 +458,13 @@ static void handleControlCommand(const String& json) {
     const bool hasListen = !doc["listen_ms"].isNull();
     const bool hasRadar = !doc["radar_ms"].isNull();
     const bool hasBeep = !doc["beep"].isNull();
+    const bool hasStealth = !doc["stealth"].isNull();
     const bool hasPin = !doc["pin"].isNull();
     const bool hasTx = !doc["tx_power_dbm"].isNull();
     const bool hasRssiOff = !doc["rssi_offset"].isNull();
     const bool hasRssiTh = !doc["rssi_threshold"].isNull();
     const bool hasEnv = !doc["env_profile"].isNull();
-    if (!hasListen && !hasRadar && !hasBeep && !hasPin && !hasTx && !hasRssiOff && !hasRssiTh && !hasEnv) {
+    if (!hasListen && !hasRadar && !hasBeep && !hasStealth && !hasPin && !hasTx && !hasRssiOff && !hasRssiTh && !hasEnv) {
       replyControl("set_config", "error", "missing_fields");
       return;
     }
@@ -473,6 +480,7 @@ static void handleControlCommand(const String& json) {
     const unsigned long oldListen = gConfig.listenMs();
     const unsigned long oldRadar = gConfig.radarMs();
     const bool oldBeep = gConfig.beep();
+    const bool oldStealth = gConfig.stealth();
     const String oldPinHash = gConfig.pinHash();
     const uint8_t oldTx = gConfig.txPowerDbm();
     const int8_t oldRssiOff = gConfig.rssiOffset();
@@ -496,6 +504,7 @@ static void handleControlCommand(const String& json) {
       gConfig.setRadarMs(v);
     }
     if (hasBeep) gConfig.setBeep(doc["beep"] | true);
+    if (hasStealth) gConfig.setStealth(doc["stealth"] | false);
 
     if (hasTx) {
       const int v = doc["tx_power_dbm"] | 26;
@@ -1426,7 +1435,11 @@ void loop() {
           }
         }
         int total = gInventory.tools().size();
-        gOled.showStatus(present, total, gLastRadarRssi, bi.percent, gBle.notificationsEnabled(), missingName, gConfig.txPowerDbm());
+        if (gConfig.stealth()) {
+          gOled.clear();
+        } else {
+          gOled.showStatus(present, total, gLastRadarRssi, bi.percent, gBle.notificationsEnabled(), missingName, gConfig.txPowerDbm());
+        }
 #ifdef TRAKR_HAS_BME280
         EnvData env = gSensors.readBME();
         if (env.valid) Serial.printf("[TRAKR] BME: %.1fC %.0f%% %.0fhPa\n", env.temp, env.hum, env.press);

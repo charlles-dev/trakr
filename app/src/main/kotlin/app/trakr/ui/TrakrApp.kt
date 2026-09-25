@@ -96,6 +96,12 @@ fun TrakrApp(
         }
     }
 
+    // Verifica se já temos um rastreador pareado
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var hasSetup by rememberSaveable { 
+        mutableStateOf(app.trakr.ui.settings.SettingsPrefs.getTrackerMac(context) != null) 
+    }
+
     // Deep link de notificação: abre a aba Ferramentas no detalhe da ferramenta.
     LaunchedEffect(initialTargetId) {
         val id = initialTargetId ?: return@LaunchedEffect
@@ -105,8 +111,13 @@ fun TrakrApp(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.background,
+        if (!hasSetup) {
+            app.trakr.ui.setup.SetupScreen(
+                onSetupComplete = { hasSetup = true }
+            )
+        } else {
+            Scaffold(
+                containerColor = MaterialTheme.colorScheme.background,
             bottomBar = {
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceContainer,
@@ -207,6 +218,7 @@ fun TrakrApp(
                 }
             }
         }
+        } // End of else block (Scaffold)
 
         // Overlay de Alarme Anti-Esquecimento em Movimento (> 15 km/h)
         motionAlert?.let { alertText ->

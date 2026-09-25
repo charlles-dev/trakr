@@ -130,17 +130,6 @@ class ToolListViewModel(
         }
     }
 
-    fun exportPdf(
-        context: android.content.Context,
-        currentTools: List<Tool>,
-    ) {
-        if (currentTools.isEmpty()) {
-            _message.value = UiMessage(R.string.tools_empty)
-            return
-        }
-        app.trakr.core.export.ToolPdfExportHelper.generateAndSharePdfReport(context, currentTools)
-    }
-
     private val _selectedCategoryFilter = MutableStateFlow<String?>(null)
     val selectedCategoryFilter: StateFlow<String?> = _selectedCategoryFilter.asStateFlow()
 
